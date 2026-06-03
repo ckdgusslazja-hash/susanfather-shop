@@ -79,7 +79,7 @@ function P(cfg) {
     organic: !!cfg.organic,
     localDirect: !!cfg.localDirect,
     freeShipping: !!cfg.freeShipping,
-    adminImages: [{ id: `${cfg.id}-a1`, url: cfg.img, label: '대표 상품컷' }],
+    adminImages: [{ id: `${cfg.id}-a1`, url: `/images/products/${cfg.id}.png`, label: '대표 상품컷' }],
     options: cfg.options || [
       { id: `${cfg.id}-o1`, label: cfg.unit, price: cfg.price, originalPrice: cfg.originalPrice },
     ],
@@ -639,8 +639,12 @@ function getCategoryName(categoryId) {
   return PRODUCT_CAT_NAMES[categoryId] || '';
 }
 
+function getAllProducts() {
+  return window.PRODUCTS_FROM_API?.length ? window.PRODUCTS_FROM_API : PRODUCTS;
+}
+
 function filterProductsByCategory(categoryId, searchQuery = '') {
-  let list = [...PRODUCTS];
+  let list = [...getAllProducts()];
   switch (categoryId) {
     case 'fruit':
       list = list.filter((p) => p.category === 'fruit');
@@ -727,10 +731,27 @@ Object.values(REVIEW_IMG)
   .forEach((url) => REVIEW_ONLY_IMAGE_URLS.add(url.split('?')[0]));
 
 function getAdminProductImages(product) {
-  if (!product?.adminImages?.length) return [];
+  if (!product?.adminImages?.length) {
+    if (product?.id) {
+      return [{ url: `/images/products/${product.id}.png`, label: '대표 상품컷' }];
+    }
+    return [];
+  }
   return product.adminImages
     .map((img) => (typeof img === 'string' ? { url: img, label: '' } : img))
-    .filter((img) => img.url && !REVIEW_ONLY_IMAGE_URLS.has(img.url.split('?')[0]));
+    .filter((img) => img.url);
+}
+
+function renderProductThumbHtml(product, className) {
+  const img = getAdminProductImages(product)[0];
+  if (!img?.url) {
+    return `<div class="${className}" style="background:${product.gradient}">${product.emoji}</div>`;
+  }
+  return `<div class="${className}" style="background:${product.gradient}">
+    <img src="${img.url}" alt="" loading="lazy"
+      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+    <span class="${className}__fallback" style="display:none">${product.emoji}</span>
+  </div>`;
 }
 
 const REVIEW_AUTHORS = [

@@ -908,7 +908,7 @@ function renderHome() {
         recentAll,
         recentAll.length ? "document.getElementById('home-product-list')?.scrollIntoView({behavior:'smooth'})" : null
       )}
-      ${renderHomeScrollSection('🛍️ 이 상품 놓치지 마세요!', PRODUCTS, "selectCategory('all')")}
+      ${renderHomeScrollSection('🛍️ 이 상품 놓치지 마세요!', getAllProducts(), "selectCategory('all')")}
       ${renderHomeScrollSection(
         '🔥 고민하는 사이 품절! 산지 마감특가',
         filterProductsByCategory('sale'),
@@ -1156,8 +1156,8 @@ function renderCart() {
       const p = getProduct(item.productId);
       if (!p) return '';
       return `
-        <div class="cart-item">
-          <div class="cart-item__visual" style="background:${p.gradient}">${p.emoji}</div>
+          <div class="cart-item">
+          ${renderProductThumbHtml(p, 'cart-item__visual')}
           <div class="cart-item__info">
             <h3 class="cart-item__name">${p.name}</h3>
             <p class="cart-item__unit">${p.unit}</p>

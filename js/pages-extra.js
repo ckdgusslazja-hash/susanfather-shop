@@ -336,7 +336,7 @@ function renderMypageOrderCard(order) {
   const isDone = ['delivered', 'completed', 'paid'].includes(order.status);
   const dateStr = (order.created_at || '').slice(0, 10).replace(/-/g, '.');
   const thumb = product
-    ? `<div class="mypage-order-card__thumb" style="background:${product.gradient}">${product.emoji}</div>`
+    ? renderProductThumbHtml(product, 'mypage-order-card__thumb')
     : `<div class="mypage-order-card__thumb mypage-order-card__thumb--empty">📦</div>`;
   const reorderBtn = product
     ? `<button type="button" class="mypage-order-card__reorder" title="다시 담기" onclick="event.stopPropagation();addToCart('${product.id}')">🛒<span>+</span></button>`
@@ -382,7 +382,7 @@ function renderMypageProductPanel(title, products) {
           .map(
             (p) => `
           <button type="button" class="mypage-product-card" onclick="navigate('detail',{productId:'${p.id}'})">
-            <div class="mypage-product-card__thumb" style="background:${p.gradient}">${p.emoji}</div>
+            ${renderProductThumbHtml(p, 'mypage-product-card__thumb')}
             <p class="mypage-product-card__name">${escapeHtml(p.name)}</p>
             <p class="mypage-product-card__price">${formatPrice(p.price)}</p>
           </button>`
