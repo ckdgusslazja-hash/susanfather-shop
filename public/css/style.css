@@ -3167,6 +3167,42 @@ body.is-mypage .header {
   color: var(--color-text-muted);
 }
 
+.legal-doc {
+  max-width: 720px;
+  line-height: 1.75;
+  padding-bottom: 32px;
+}
+
+.legal-doc__date {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-bottom: 20px;
+}
+
+.legal-doc h3 {
+  margin: 28px 0 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.legal-doc p {
+  margin-bottom: 12px;
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+}
+
+.legal-doc ol,
+.legal-doc ul {
+  margin: 0 0 14px;
+  padding-left: 1.35rem;
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+}
+
+.legal-doc li {
+  margin-bottom: 6px;
+}
+
 .cs-box {
   background: var(--color-surface);
   border-radius: var(--radius-lg);
