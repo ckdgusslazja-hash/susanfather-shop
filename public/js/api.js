@@ -4,7 +4,6 @@ const API = {
   user: JSON.parse(localStorage.getItem('gh_user') || 'null'),
   shopSettings: null,
   orderSettings: null,
-  kakaoEnabled: false,
 
   setAuth(token, user) {
     this.token = token || '';
@@ -29,15 +28,6 @@ const API = {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || '요청에 실패했습니다.');
     return data;
-  },
-
-  async loadKakaoStatus() {
-    try {
-      const data = await this.request('/api/auth/kakao/status');
-      this.kakaoEnabled = !!data.enabled;
-    } catch {
-      this.kakaoEnabled = false;
-    }
   },
 
   async loadShopSettings() {

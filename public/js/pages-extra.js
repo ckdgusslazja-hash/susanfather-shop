@@ -123,22 +123,6 @@ function renderAuthWrap(title, body, linksHtml) {
   `;
 }
 
-function renderKakaoAuthBlock() {
-  const hint = API.kakaoEnabled
-    ? ''
-    : '<p class="auth-social__hint">카카오 로그인 사용: 프로젝트 폴더 .env 파일에 KAKAO_REST_API_KEY를 설정하세요.</p>';
-  return `
-    <div class="auth-social">
-      <p class="auth-social__or"><span>또는</span></p>
-      ${hint}
-      <button type="button" class="btn-kakao btn--block" onclick="startKakaoLogin()">카카오로 시작하기</button>
-    </div>`;
-}
-
-function startKakaoLogin() {
-  window.location.href = '/api/auth/kakao';
-}
-
 function renderLogin() {
   const u = API.user;
   if (u && u.role !== 'admin') {
@@ -168,8 +152,7 @@ function renderSignup() {
       <div class="form-group"><label>비밀번호 (8자+) <span class="required">*</span></label><input type="password" name="password" required minlength="8" /></div>
       <div class="form-group"><label>비밀번호 확인</label><input type="password" name="password2" required minlength="8" /></div>
       <button type="submit" class="btn btn--primary btn--lg btn--block">가입하기</button>
-    </form>
-    ${renderKakaoAuthBlock()}`,
+    </form>`,
     `<a href="#" onclick="navigate('login');return false">로그인</a>
      <a href="#" onclick="navigate('home');return false">홈으로</a>`
   );
@@ -210,7 +193,6 @@ function renderMypage() {
     <div class="mypage-card">
       <p><strong>${u.name}</strong>님</p>
       <p class="text-muted">${u.email}</p>
-      ${u.provider === 'kakao' ? '<p class="text-muted">카카오 연동 계정</p>' : ''}
       ${u.phone ? `<p>연락처 ${u.phone}</p>` : ''}
       <div class="mypage-actions">
         <button class="btn btn--outline" type="button" onclick="loadMyOrders()">주문 내역 불러오기</button>
@@ -514,29 +496,4 @@ window.render = function () {
   updateNavAuth();
 };
 
-async function initAppWithAuth() {
-  await initApp();
-  const params = new URLSearchParams(location.search);
-  if (params.get('authSuccess')) {
-    API.token = localStorage.getItem('gh_token') || '';
-    try {
-      API.user = JSON.parse(localStorage.getItem('gh_user') || 'null');
-    } catch {
-      API.user = null;
-    }
-    state.reviewEligibility = {};
-    history.replaceState({}, '', location.pathname);
-    showToast('카카오 로그인되었습니다');
-    navigate('mypage');
-    return;
-  }
-  if (params.get('authError')) {
-    const err = localStorage.getItem('gh_auth_error') || '카카오 로그인에 실패했습니다.';
-    localStorage.removeItem('gh_auth_error');
-    state.authMessage = err;
-    history.replaceState({}, '', location.pathname);
-    navigate('login');
-  }
-}
-
-initAppWithAuth();
+initApp();

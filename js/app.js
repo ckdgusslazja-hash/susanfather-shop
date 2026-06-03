@@ -1450,7 +1450,7 @@ function goMypage() {
 async function initApp() {
   loadCart();
   if (typeof API !== 'undefined') {
-    await Promise.all([API.loadShopSettings(), API.loadProducts(), API.loadKakaoStatus()]);
+    await Promise.all([API.loadShopSettings(), API.loadProducts()]);
   }
   render();
 }
