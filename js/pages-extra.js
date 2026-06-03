@@ -150,8 +150,7 @@ function renderLogin() {
       <div class="form-group"><label>이메일</label><input type="email" name="email" required placeholder="you@email.com" /></div>
       <div class="form-group"><label>비밀번호</label><input type="password" name="password" required minlength="8" /></div>
       <button type="submit" class="btn btn--primary btn--lg btn--block">로그인</button>
-    </form>
-    ${renderKakaoAuthBlock()}`,
+    </form>`,
     `<a href="#" onclick="navigate('signup');return false">회원가입</a>
      <a href="#" onclick="navigate('find-id');return false">아이디 찾기</a>
      <a href="#" onclick="navigate('find-pw');return false">비밀번호 찾기</a>
