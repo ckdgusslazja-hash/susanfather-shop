@@ -1825,12 +1825,29 @@ function goMypage() {
 }
 
 async function initApp() {
-  loadCart();
-  if (typeof API !== 'undefined') {
-    await Promise.all([API.loadShopSettings(), API.loadProducts(), API.loadPaymentSettings(), loadNotifications()]);
+  try {
+    loadCart();
+    if (typeof API !== 'undefined') {
+      await Promise.all([API.loadShopSettings(), API.loadProducts(), API.loadPaymentSettings(), loadNotifications()]);
+    }
+    await handlePaymentReturn();
+    render();
+  } finally {
+    hideAppLoader();
   }
-  await handlePaymentReturn();
-  render();
+}
+
+function hideAppLoader() {
+  const el = document.getElementById('app-loader');
+  if (!el) return;
+  document.body.classList.remove('is-app-loading');
+  el.classList.add('is-hiding');
+  el.setAttribute('aria-busy', 'false');
+  const remove = () => {
+    el.remove();
+  };
+  el.addEventListener('transitionend', remove, { once: true });
+  setTimeout(remove, 500);
 }
 
 /* initApp()는 pages-extra.js에서 호출 */
