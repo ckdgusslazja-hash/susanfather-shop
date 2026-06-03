@@ -100,6 +100,7 @@ function getDefaultSettings() {
       mailOrderNo: '2020-부산북구-0891',
       address: '부산광역시 북구 금곡대로470번길 29',
       email: 'reven9269@naver.com',
+      phone: '010 4730 9269',
       hours: '09:00~18:00',
     },
     payment: {

@@ -72,6 +72,7 @@ function getShopInfo() {
       mailOrderNo: '2020-부산북구-0891',
       address: '부산광역시 북구 금곡대로470번길 29',
       email: 'reven9269@naver.com',
+      phone: '010 4730 9269',
       hours: '09:00~18:00',
     }
   );
@@ -105,6 +106,7 @@ function renderSiteFooter() {
         <p class="footer__meta">통신판매업 ${shop.mailOrderNo || ''}</p>
         <p class="footer__meta">${shop.address || ''}</p>
         <p class="footer__meta">이메일 ${shop.email || ''}</p>
+        <p class="footer__meta">연락처 ${shop.phone || '010 4730 9269'}</p>
         <p class="footer__meta">영업시간 ${shop.hours || ''}</p>
       </div>
       <nav class="footer__links" aria-label="쇼핑몰 정보">
@@ -399,6 +401,7 @@ function renderShopInfo() {
       <dt>통신판매업</dt><dd>${s.mailOrderNo || ''}</dd>
       <dt>주소</dt><dd>${s.address || ''}</dd>
       <dt>이메일</dt><dd>${s.email || ''}</dd>
+      <dt>연락처</dt><dd>${s.phone || '010 4730 9269'}</dd>
       <dt>영업시간</dt><dd>${s.hours || ''}</dd>
     </dl>
   `;
