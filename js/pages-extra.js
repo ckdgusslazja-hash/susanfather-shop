@@ -65,8 +65,8 @@ async function ensureReviews(productId) {
 function getShopInfo() {
   return (
     API.shopSettings || {
-      name: '그린하베스트',
-      company: '(주)그린하베스트',
+      name: '수산아빠',
+      company: '수산아빠',
       ceo: '홍길동',
       businessNo: '123-45-67890',
       address: '서울특별시 강남구 테헤란로 123',
@@ -97,7 +97,7 @@ function renderSiteFooter() {
   el.innerHTML = `
     <div class="footer__grid">
       <div>
-        <p class="footer__brand">${shop.name || '그린하베스트'}</p>
+        <p class="footer__brand">${shop.name || '수산아빠'}</p>
         <p class="footer__meta">${shop.company || ''} · 대표 ${shop.ceo || ''}</p>
         <p class="footer__meta">사업자등록번호 ${shop.businessNo || ''}</p>
       </div>
@@ -108,7 +108,7 @@ function renderSiteFooter() {
         <a href="/admin/" target="_blank" rel="noopener">관리자</a>
       </nav>
     </div>
-    <p class="footer__copy">© 2026 ${shop.name || '그린하베스트'} · 실서비스 데모</p>
+    <p class="footer__copy">© 2026 ${shop.name || '수산아빠'} · 실서비스 데모</p>
   `;
 }
 

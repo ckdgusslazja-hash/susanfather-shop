@@ -27,7 +27,7 @@ module.exports = {
   isProduction,
   port: Number(process.env.PORT) || 3000,
   siteUrl: getSiteUrl(),
-  siteName: process.env.SITE_NAME || 'Susan Father',
+  siteName: process.env.SITE_NAME || '수산아빠',
   jwtSecret: getJwtSecret(),
   dbPath: process.env.DB_PATH || path.join(__dirname, 'shop.db'),
   trustProxy: process.env.TRUST_PROXY !== '0',

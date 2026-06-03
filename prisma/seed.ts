@@ -8,8 +8,8 @@ const prisma = new PrismaClient();
 export function getDefaultSettings(): Record<string, unknown> {
   return {
     shop: {
-      name: 'Susan Father',
-      company: 'Susan Father',
+      name: '수산아빠',
+      company: '수산아빠',
       ceo: '홍길동',
       businessNo: '123-45-67890',
       mailOrderNo: '2026-서울강남-0001',

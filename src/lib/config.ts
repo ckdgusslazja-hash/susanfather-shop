@@ -9,7 +9,7 @@ export function getSiteUrl(): string {
 }
 
 export const siteUrl = getSiteUrl();
-export const siteName = process.env.SITE_NAME || 'Susan Father';
+export const siteName = process.env.SITE_NAME || '수산아빠';
 export const nodeEnv = process.env.NODE_ENV || 'development';
 export const isProduction = nodeEnv === 'production';
 

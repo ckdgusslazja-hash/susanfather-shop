@@ -337,7 +337,7 @@ const Admin = {
     root.innerHTML = `
       <div class="admin-wrap">
         <header class="admin-header">
-          <h1>🌿 그린하베스트 관리자</h1>
+          <h1><img src="../images/logo.png" alt="수산아빠" style="height:40px;vertical-align:middle;margin-right:8px" /> 관리자</h1>
           <button class="btn btn--ghost" onclick="Admin.logout()">로그아웃</button>
         </header>
         <nav class="admin-tabs">

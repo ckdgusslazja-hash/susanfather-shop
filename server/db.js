@@ -93,8 +93,8 @@ function migrateUsers() {
 function getDefaultSettings() {
   return {
     shop: {
-      name: '그린하베스트',
-      company: '(주)그린하베스트',
+      name: '수산아빠',
+      company: '수산아빠',
       ceo: '홍길동',
       businessNo: '123-45-67890',
       mailOrderNo: '2026-서울강남-0001',

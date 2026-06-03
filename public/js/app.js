@@ -367,7 +367,7 @@ function renderRpReviewItem(review, product) {
             <span class="rp-item__stars">${renderStars(review.rating)}</span>
             <span class="rp-item__date">${review.date}</span>
           </div>
-          <p class="rp-item__seller">그린하베스트 · ${escapeHtml(product.name)}</p>
+          <p class="rp-item__seller">수산아빠 · ${escapeHtml(product.name)}</p>
         </div>
       </div>
       ${review.images?.length ? `
@@ -460,7 +460,7 @@ function renderReviewsPage() {
           ${escapeHtml(product.name)} 구매 고객들은 <strong>신선도</strong>와 <strong>맛</strong>에 만족한다는 평가가 많습니다.
           산지 직송 포장이 꼼꼼하다는 의견도 자주 보입니다. 재구매 의사가 높은 인기 상품입니다.
         </p>
-        <p class="rp-ai__foot">그린하베스트 AI 요약 · <button type="button" onclick="showToast('피드백 감사합니다')">👍</button> <button type="button" onclick="showToast('피드백 감사합니다')">👎</button></p>
+        <p class="rp-ai__foot">수산아빠 AI 요약 · <button type="button" onclick="showToast('피드백 감사합니다')">👍</button> <button type="button" onclick="showToast('피드백 감사합니다')">👎</button></p>
       </section>
 
       <div class="rp-toolbar">
@@ -839,8 +839,7 @@ function renderHome() {
     <div class="home">
       <header class="home-header">
         <a class="home-header__logo" href="#" onclick="navigate('home');return false">
-          <span class="home-header__logo-icon">🌿</span>
-          <span>그린하베스트</span>
+          <img class="home-header__logo-img" src="images/logo.png" alt="수산아빠" width="130" height="52" />
         </a>
         <div class="home-header__actions">
           <button type="button" class="home-header__bell" onclick="showToast('알림 3건 (데모)')" title="알림">
@@ -1114,7 +1113,7 @@ function toggleWishlist(productId) {
 function shareProduct() {
   const product = getProduct(state.selectedProductId);
   if (!product) return;
-  const text = `${product.name} - 그린하베스트`;
+  const text = `${product.name} - 수산아빠`;
   if (navigator.share) {
     navigator.share({ title: product.name, text }).catch(() => showToast('공유가 취소되었습니다'));
   } else {
