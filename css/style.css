@@ -917,7 +917,88 @@ body.is-home {
 }
 
 .products-grid--home {
-  padding: 0 16px 24px;
+  padding: 0 12px 24px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.products-grid--home .product-card {
+  border-radius: var(--radius-md);
+}
+
+.products-grid--home .product-card:hover {
+  transform: none;
+}
+
+.products-grid--home .product-card__visual {
+  height: auto;
+  aspect-ratio: 1;
+  font-size: 3rem;
+}
+
+.products-grid--home .product-card__badge {
+  top: 8px;
+  left: 8px;
+  font-size: 0.62rem;
+  padding: 3px 7px;
+}
+
+.products-grid--home .product-card__body {
+  padding: 10px;
+}
+
+.products-grid--home .product-card__origin {
+  font-size: 0.65rem;
+  margin-bottom: 2px;
+}
+
+.products-grid--home .product-card__name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.products-grid--home .product-card__rating {
+  font-size: 0.68rem;
+  margin-bottom: 6px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.products-grid--home .product-card__price {
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.products-grid--home .product-card__price-current {
+  font-size: 0.92rem;
+}
+
+.products-grid--home .product-card__price-original {
+  font-size: 0.68rem;
+}
+
+.products-grid--home .product-card__price span[style] {
+  font-size: 0.68rem !important;
+}
+
+.products-grid--home .product-card__actions {
+  margin-top: 8px;
+  gap: 6px;
+}
+
+.products-grid--home .product-card__actions .btn {
+  padding: 7px 6px;
+  font-size: 0.72rem;
+  min-height: 32px;
 }
 
 .home-empty {
