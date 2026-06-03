@@ -1,4 +1,4 @@
-# Susan Father → GitHub (셀러비온과 동일)
+﻿# Susan Father → GitHub (셀러비온과 동일)
 # Usage: .\scripts\push-github.ps1
 # GitHub에서 빈 저장소 susanfather-shop 만든 뒤 실행하거나, 없으면 웹에서 New repository 생성
 

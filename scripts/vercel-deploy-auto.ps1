@@ -1,4 +1,4 @@
-# Susan Father — Vercel 자동 배포 (셀러비온과 동일 방식)
+﻿# Susan Father — Vercel 자동 배포 (셀러비온과 동일 방식)
 $ErrorActionPreference = "Stop"
 chcp 65001 | Out-Null
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -46,17 +46,20 @@ function Set-VercelEnv($name, $value) {
 }
 
 Write-Host "Vercel 프로젝트 연결 (susanfather-shop)..."
+Write-Host "  >> 30초~1분 정도 걸릴 수 있습니다. 창을 닫지 마세요."
 $prevEAP = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
-npx vercel@latest link --yes --project susanfather-shop 2>&1 | Out-Null
+npx vercel@latest link --yes --project susanfather-shop 2>&1 | ForEach-Object { Write-Host "  $_" }
 $ErrorActionPreference = $prevEAP
+Write-Host "  >> 연결 완료"
 
-Write-Host "환경 변수 설정..."
+Write-Host "환경 변수 업로드 중..."
 if ($dbUrl) { Set-VercelEnv "DATABASE_URL" $dbUrl }
 Set-VercelEnv "JWT_SECRET" $jwt
 Set-VercelEnv "NEXT_PUBLIC_SITE_URL" $prodUrl
 Set-VercelEnv "SITE_URL" $prodUrl
 Set-VercelEnv "SITE_NAME" "Susan Father"
+Write-Host "  >> 환경 변수 완료"
 
 $kakao = Get-EnvValue "KAKAO_REST_API_KEY"
 if ($kakao) {
@@ -75,7 +78,13 @@ if ($dbUrl) {
 }
 
 Write-Host "Vercel 배포 중 (2~5분)..."
+Write-Host "  >> 빌드 로그가 아래에 표시됩니다."
+$prevEAP = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
 npx vercel@latest deploy --prod --yes
+$deployOk = ($LASTEXITCODE -eq 0)
+$ErrorActionPreference = $prevEAP
+if (-not $deployOk) { exit 1 }
 
 Write-Host ""
 Write-Host "완료: https://susanfather.com"

@@ -1,4 +1,4 @@
-# 셀러비온처럼 한 번에: GitHub 푸시 + Vercel 배포
+﻿# 셀러비온처럼 한 번에: GitHub 푸시 + Vercel 배포
 # Usage: .\scripts\deploy-all.ps1
 
 $ErrorActionPreference = "Stop"

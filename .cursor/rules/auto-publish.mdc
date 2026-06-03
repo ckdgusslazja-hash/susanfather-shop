@@ -1,0 +1,33 @@
+---
+description: susanfather-shop 수정 후 GitHub push 및 Vercel 자동 배포
+alwaysApply: true
+---
+
+# Susan Father — 수정 후 자동 반영
+
+프로젝트 경로: `C:\Users\User\Desktop\이커머스 쇼핑몰`
+배포: GitHub `ckdgusslazja-hash/susanfather-shop` → Vercel `susanfather-shop` → https://susanfather.com
+
+## 필수: 코드 수정 작업 완료 후
+
+사용자가 수정을 요청했고 **코드/설정을 변경했다면**, 작업 마무리 전에 반드시 publish 실행:
+
+```powershell
+cd "C:\Users\User\Desktop\이커머스 쇼핑몰"
+npm run publish -- "한 줄 요약: 무엇을 바꿨는지"
+```
+
+또는: `powershell -ExecutionPolicy Bypass -File scripts/publish.ps1 -Message "요약"`
+
+- Git commit + GitHub push → Vercel GitHub 연동으로 **자동 프로덕션 배포**
+- 사용자에게 `배포하기.bat` 실행을 요청하지 말 것 (에이전트가 직접 publish)
+- 질문만 답하거나 코드를 건드리지 않았으면 publish 생략
+
+## 예외
+
+- `prisma/schema.prisma` 변경 시: publish 전후로 `npm run db:setup` 시도 (로컬 DB 실패해도 publish는 진행)
+- publish 실패 시 원인 보고 후 재시도
+
+## 사용자에게 보고
+
+publish 성공 시: "https://susanfather.com 에 1~3분 내 반영됩니다" 한 줄 안내.
