@@ -795,11 +795,18 @@ function renderHomeScrollSection(title, products, moreOnClick) {
 
 function renderProductCard(product) {
   const discount = Math.round((1 - product.price / product.originalPrice) * 100);
+  const img = getAdminProductImages(product)[0];
   return `
     <article class="product-card">
       <div class="product-card__visual" style="background:${product.gradient}">
         <span class="product-card__badge">${product.badge}</span>
-        ${product.emoji}
+        ${
+          img?.url
+            ? `<img src="${img.url}" alt="" class="product-card__img" loading="lazy"
+                onerror="this.style.display='none';this.nextElementSibling.style.display='inline'" />
+               <span class="product-card__emoji" style="display:none">${product.emoji}</span>`
+            : product.emoji
+        }
       </div>
       <div class="product-card__body">
         <p class="product-card__origin">${product.origin}</p>
