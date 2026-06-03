@@ -114,6 +114,9 @@ const API = {
   getAddresses() {
     return this.request('/api/addresses');
   },
+  getNotifications() {
+    return this.request('/api/notifications');
+  },
   createAddress(body) {
     return this.request('/api/addresses', { method: 'POST', body: JSON.stringify(body) });
   },

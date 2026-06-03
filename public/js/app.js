@@ -24,7 +24,171 @@ let state = {
   mypageTab: 'orders',
   myOrders: [],
   passwordMessage: '',
+  notifications: [],
+  notificationsOpen: false,
 };
+
+const NOTIF_READ_KEY = 'greenharvest_notif_read';
+
+function loadNotificationsRead() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(NOTIF_READ_KEY) || '[]'));
+  } catch {
+    return new Set();
+  }
+}
+
+function saveNotificationsRead(set) {
+  localStorage.setItem(NOTIF_READ_KEY, JSON.stringify([...set]));
+}
+
+function getUnreadNotificationCount() {
+  const read = loadNotificationsRead();
+  return (state.notifications || []).filter((n) => !read.has(n.id)).length;
+}
+
+async function loadNotifications() {
+  if (typeof API === 'undefined' || !API.getNotifications) return;
+  try {
+    state.notifications = await API.getNotifications();
+  } catch {
+    state.notifications = [];
+  }
+}
+
+function toggleNotificationPanel(e) {
+  if (e) e.stopPropagation();
+  state.notificationsOpen = !state.notificationsOpen;
+  updateNotificationPanel();
+}
+
+function closeNotificationPanel() {
+  state.notificationsOpen = false;
+  updateNotificationPanel();
+}
+
+function markNotificationRead(id) {
+  const read = loadNotificationsRead();
+  read.add(id);
+  saveNotificationsRead(read);
+  updateNotificationPanel();
+  updateNotificationBellBadge();
+}
+
+function markAllNotificationsRead() {
+  const read = loadNotificationsRead();
+  (state.notifications || []).forEach((n) => read.add(n.id));
+  saveNotificationsRead(read);
+  updateNotificationPanel();
+  updateNotificationBellBadge();
+}
+
+function handleNotificationClick(id) {
+  const n = (state.notifications || []).find((item) => item.id === id);
+  if (!n) return;
+  markNotificationRead(n.id);
+  closeNotificationPanel();
+  if (n.link === 'mypage') {
+    if (typeof API !== 'undefined' && API.user) {
+      state.mypageTab = n.type === 'inquiry' ? 'menu' : 'orders';
+      navigate('mypage');
+    } else {
+      navigate('login');
+    }
+    return;
+  }
+  navigate(n.link || 'home');
+}
+
+function formatNotifDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 86400000) return '오늘';
+  if (diff < 172800000) return '어제';
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+function updateNotificationBellBadge() {
+  const badge = document.querySelector('.home-header__bell-badge');
+  const unread = getUnreadNotificationCount();
+  if (!badge) return;
+  if (unread > 0) {
+    badge.textContent = unread > 99 ? '99+' : String(unread);
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function updateNotificationPanel() {
+  let panel = document.getElementById('notif-panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'notif-panel';
+    panel.className = 'notif-panel';
+    panel.setAttribute('hidden', '');
+    document.body.appendChild(panel);
+    document.addEventListener('click', (ev) => {
+      if (state.notificationsOpen && !ev.target.closest('.notif-panel') && !ev.target.closest('.home-header__bell')) {
+        closeNotificationPanel();
+      }
+    });
+  }
+
+  const read = loadNotificationsRead();
+  const list = state.notifications || [];
+  const unread = getUnreadNotificationCount();
+
+  if (!state.notificationsOpen) {
+    panel.setAttribute('hidden', '');
+    panel.innerHTML = '';
+    return;
+  }
+
+  panel.removeAttribute('hidden');
+  panel.innerHTML = `
+    <div class="notif-panel__head">
+      <h2 class="notif-panel__title">알림 ${unread ? `<span class="notif-panel__count">${unread}</span>` : ''}</h2>
+      <div class="notif-panel__actions">
+        ${unread ? `<button type="button" class="notif-panel__read-all" onclick="markAllNotificationsRead()">모두 읽음</button>` : ''}
+        <button type="button" class="notif-panel__close" onclick="closeNotificationPanel()" aria-label="닫기">✕</button>
+      </div>
+    </div>
+    <div class="notif-panel__list">
+      ${
+        list.length
+          ? list
+              .map((n) => {
+                const isRead = read.has(n.id);
+                const icon = n.type === 'order' ? '📦' : n.type === 'inquiry' ? '💬' : '📢';
+                return `
+          <button type="button" class="notif-item ${isRead ? 'is-read' : ''}" onclick="handleNotificationClick('${n.id}')">
+            <span class="notif-item__icon">${icon}</span>
+            <span class="notif-item__body">
+              <strong class="notif-item__title">${escapeHtml(n.title)}</strong>
+              <span class="notif-item__text">${escapeHtml(n.body || '')}</span>
+              <span class="notif-item__date">${formatNotifDate(n.createdAt)}</span>
+            </span>
+            ${isRead ? '' : '<span class="notif-item__dot" aria-hidden="true"></span>'}
+          </button>`;
+              })
+              .join('')
+          : `<p class="notif-panel__empty">${API.user ? '새 알림이 없습니다.' : '로그인하면 주문·문의 알림을 받을 수 있습니다.'}</p>`
+      }
+    </div>
+  `;
+}
+
+function renderNotificationBell() {
+  const unread = getUnreadNotificationCount();
+  return `
+    <button type="button" class="home-header__bell" onclick="toggleNotificationPanel(event)" title="알림" aria-label="알림 ${unread}건">
+      🔔
+      ${unread ? `<span class="home-header__bell-badge">${unread > 99 ? '99+' : unread}</span>` : ''}
+    </button>`;
+}
 
 function loadCart() {
   try {
@@ -855,10 +1019,7 @@ function renderHome() {
           <span class="home-header__logo-text">수산아빠</span>
         </a>
         <div class="home-header__actions">
-          <button type="button" class="home-header__bell" onclick="showToast('알림 3건 (데모)')" title="알림">
-            🔔
-            <span class="home-header__bell-badge">3</span>
-          </button>
+          ${renderNotificationBell()}
         </div>
       </header>
 
@@ -1419,6 +1580,7 @@ function render() {
   bindPaymentOptions();
   if (typeof renderSiteFooter === 'function') renderSiteFooter();
   if (state.page === 'checkout' && typeof bindCheckoutAddress === 'function') bindCheckoutAddress();
+  updateNotificationPanel();
 }
 
 function bindPaymentOptions() {
@@ -1608,6 +1770,7 @@ async function handlePaymentReturn() {
       state.cart = [];
       saveCart();
       if (typeof state.reviewEligibility === 'object') state.reviewEligibility = {};
+      if (typeof loadNotifications === 'function') await loadNotifications();
       navigate('complete');
       showToast('결제가 완료되었습니다.');
     } catch (err) {
@@ -1635,7 +1798,7 @@ function goMypage() {
 async function initApp() {
   loadCart();
   if (typeof API !== 'undefined') {
-    await Promise.all([API.loadShopSettings(), API.loadProducts(), API.loadPaymentSettings()]);
+    await Promise.all([API.loadShopSettings(), API.loadProducts(), API.loadPaymentSettings(), loadNotifications()]);
   }
   await handlePaymentReturn();
   render();

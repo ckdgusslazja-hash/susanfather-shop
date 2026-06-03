@@ -203,6 +203,80 @@ function defaultSettingsBundle() {
       autoConfirmDays: 7,
       returnDays: 7,
     },
+    announcements: getDefaultAnnouncements(),
+  };
+}
+
+function getDefaultAnnouncements() {
+  return [
+    {
+      id: 'ann-1',
+      title: '산지직송 신선 배송 안내',
+      body: '주문하신 농수산물은 산지에서 직접 포장·발송됩니다. 제주·도서 지역은 1~2일 추가 소요될 수 있습니다.',
+      createdAt: '2026-06-01T09:00:00.000Z',
+    },
+    {
+      id: 'ann-2',
+      title: '5만원 이상 무료배송',
+      body: '5만원 이상 결제 시 배송비가 무료입니다. 햅쌀·곡물 등 일부 상품은 상품별 무료배송이 적용됩니다.',
+      createdAt: '2026-06-02T09:00:00.000Z',
+    },
+  ];
+}
+
+function mapAnnouncement(row: { id: string; title: string; body?: string; createdAt: string }) {
+  return {
+    id: `ann-${row.id}`,
+    type: 'notice',
+    title: row.title,
+    body: row.body || '',
+    link: 'home',
+    createdAt: row.createdAt,
+  };
+}
+
+const ORDER_STATUS_NOTICES: Record<string, { title: string; body: (id: string) => string }> = {
+  awaiting_deposit: {
+    title: '입금 대기',
+    body: (id) => `주문번호 ${id} — 입금 확인 후 발송됩니다.`,
+  },
+  pending: {
+    title: '결제 진행 중',
+    body: (id) => `주문번호 ${id} — 결제를 완료해 주세요.`,
+  },
+  paid: {
+    title: '결제 완료',
+    body: (id) => `주문번호 ${id} — 결제가 완료되었습니다.`,
+  },
+  preparing: {
+    title: '상품 준비 중',
+    body: (id) => `주문번호 ${id} — 상품을 준비하고 있습니다.`,
+  },
+  shipping: {
+    title: '배송 시작',
+    body: (id) => `주문번호 ${id} — 배송이 시작되었습니다.`,
+  },
+  done: {
+    title: '배송 완료',
+    body: (id) => `주문번호 ${id} — 배송이 완료되었습니다.`,
+  },
+  cancelled: {
+    title: '주문 취소',
+    body: (id) => `주문번호 ${id} — 주문이 취소되었습니다.`,
+  },
+};
+
+function mapOrderNotification(order: Order) {
+  const status = order.status || 'paid';
+  const meta = ORDER_STATUS_NOTICES[status] || ORDER_STATUS_NOTICES.paid;
+  return {
+    id: `order-${order.id}-${status}`,
+    type: 'order',
+    title: meta.title,
+    body: meta.body(order.id),
+    link: 'mypage',
+    orderId: order.id,
+    createdAt: order.createdAt instanceof Date ? order.createdAt.toISOString() : String(order.createdAt),
   };
 }
 
@@ -487,6 +561,49 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
       if (!user) return json({ error: '로그인이 필요합니다.' }, 401);
       return json({ user });
     }
+  }
+
+  /* ── Notifications ── */
+  if (a === 'notifications' && method === 'GET' && !b) {
+    const auth = verifyToken(request);
+    const rawAnnouncements =
+      (await getSetting('announcements')) ?? defaultSettingsBundle().announcements;
+    const announcements = (Array.isArray(rawAnnouncements) ? rawAnnouncements : []).map(
+      (row: { id: string; title: string; body?: string; createdAt: string }) =>
+        mapAnnouncement(row)
+    );
+
+    const items = [...announcements];
+
+    if (auth) {
+      const [orders, inquiries] = await Promise.all([
+        prisma.order.findMany({
+          where: { userId: auth.id },
+          orderBy: { createdAt: 'desc' },
+          take: 30,
+        }),
+        prisma.inquiry.findMany({
+          where: { userId: auth.id, status: 'done' },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        }),
+      ]);
+
+      orders.forEach((order) => items.push(mapOrderNotification(order)));
+      inquiries.forEach((inq) => {
+        items.push({
+          id: `inquiry-${inq.id}`,
+          type: 'inquiry',
+          title: '문의 답변 완료',
+          body: inq.title,
+          link: 'mypage',
+          createdAt: inq.createdAt instanceof Date ? inq.createdAt.toISOString() : String(inq.createdAt),
+        });
+      });
+    }
+
+    items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return json(items.slice(0, 50));
   }
 
   /* ── Settings ── */

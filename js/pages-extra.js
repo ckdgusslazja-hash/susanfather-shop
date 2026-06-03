@@ -829,6 +829,7 @@ async function handleLogin(e) {
     API.setAuth(data.token, data.user);
     state.authMessage = '';
     state.reviewEligibility = {};
+    if (typeof loadNotifications === 'function') await loadNotifications();
     showToast('로그인되었습니다');
     navigate('mypage');
   } catch (err) {
@@ -929,6 +930,7 @@ async function handleWriteReview(e) {
 function doLogout() {
   API.logout();
   state.reviewEligibility = {};
+  if (typeof loadNotifications === 'function') loadNotifications().then(() => render());
   showToast('로그아웃되었습니다');
   navigate('home');
 }
