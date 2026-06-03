@@ -37,6 +37,21 @@ const Admin = {
 
   PAYMENT: { card: '카드', transfer: '무통장', kakao: '간편결제' },
 
+  PAYMENT_STATUS: {
+    ready: '결제 대기',
+    pending: '결제 진행 중',
+    paid: '결제 완료',
+    awaiting_deposit: '입금 대기',
+    test_paid: '테스트 결제',
+    failed: '결제 실패',
+    cancelled: '결제 취소',
+    refund_pending: '환불 대기',
+  },
+
+  paymentStatusLabel(status) {
+    return this.PAYMENT_STATUS[status] || status || '-';
+  },
+
   esc(s) {
     return String(s ?? '')
       .replace(/&/g, '&amp;')
@@ -530,7 +545,7 @@ const Admin = {
         <td><a href="#" onclick="Admin.openOrder('${o.id}');return false"><strong>${o.id}</strong></a></td>
         <td>${this.esc(o.guest_name)}<br><small>${this.esc(o.guest_phone)}</small></td>
         <td>${this.fmt(o.total)}</td>
-        <td>${this.PAYMENT[o.payment_method] || o.payment_method || '-'}</td>
+        <td>${this.PAYMENT[o.payment_method] || o.payment_method || '-'}<br><small>${this.paymentStatusLabel(o.payment_status)}</small></td>
         <td>${this.badge(o.status)}</td>
         <td>${this.fmtDate(o.created_at)}</td>
         <td><button class="btn btn--sm btn--ghost" onclick="Admin.openOrder('${o.id}')">상세</button></td>
@@ -548,7 +563,7 @@ const Admin = {
           </div>
         </div>
         <table class="data-table">
-          <thead><tr><th>주문번호</th><th>주문자</th><th>금액</th><th>결제</th><th>상태</th><th>주문일</th><th></th></tr></thead>
+          <thead><tr><th>주문번호</th><th>주문자</th><th>금액</th><th>결제</th><th>주문상태</th><th>주문일</th><th></th></tr></thead>
           <tbody>${rows || '<tr><td colspan="7" class="empty-msg">주문 없음</td></tr>'}</tbody>
         </table>
       </div>`;
@@ -580,7 +595,7 @@ const Admin = {
           <div class="detail-box">
             <strong>결제</strong><br>
             ${this.fmt(order.subtotal)} + 배송 ${order.shipping ? this.fmt(order.shipping) : '무료'} = <strong>${this.fmt(order.total)}</strong><br>
-            ${this.PAYMENT[order.payment_method] || order.payment_method} · ${order.payment_status}<br><br>
+            ${this.PAYMENT[order.payment_method] || order.payment_method} · ${this.paymentStatusLabel(order.payment_status)}<br><br>
             <strong>상품</strong><ul>${itemRows || '<li>없음</li>'}</ul>
           </div>
         </div>
@@ -592,7 +607,7 @@ const Admin = {
             </div>
             <div class="form-row"><label>결제 상태</label>
               <select name="paymentStatus">
-                ${['ready', 'paid', 'awaiting_deposit', 'test_paid', 'failed', 'cancelled'].map((s) => `<option value="${s}" ${order.payment_status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                ${Object.entries(this.PAYMENT_STATUS).map(([k, v]) => `<option value="${k}" ${order.payment_status === k ? 'selected' : ''}>${v}</option>`).join('')}
               </select>
             </div>
             <div class="form-row"><label>택배사</label><input name="trackingCompany" value="${this.esc(order.tracking_company || '')}" placeholder="CJ대한통운, 우체국 등" /></div>
