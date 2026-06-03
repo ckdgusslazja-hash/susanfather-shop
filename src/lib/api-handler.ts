@@ -1290,9 +1290,10 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
       }
       if (method === 'POST' && !c) {
         const body = await parseBody<Record<string, unknown>>(request);
-        const id = String(body.id || '').trim();
         const name = String(body.name || '').trim();
-        if (!id || !name) return json({ error: '상품 ID와 이름은 필수입니다.' }, 400);
+        if (!name) return json({ error: '상품명은 필수입니다.' }, 400);
+
+        const id = String(body.id || '').trim() || uuidv4();
 
         const category = String(body.category || 'fruit');
         const catName = PRODUCT_CAT_NAMES[category] || category;

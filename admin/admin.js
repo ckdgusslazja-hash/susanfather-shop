@@ -171,7 +171,6 @@ const Admin = {
     e.preventDefault();
     const fd = new FormData(e.target);
     const body = {
-      id: fd.get('id'),
       name: fd.get('name'),
       category: fd.get('category'),
       price: Number(fd.get('price')),
@@ -190,9 +189,9 @@ const Admin = {
     };
     try {
       if (this.editingProduct?.id && this.products.some((p) => p.id === this.editingProduct.id)) {
-        await this.request('/api/admin/products/' + encodeURIComponent(body.id), {
+        await this.request('/api/admin/products/' + encodeURIComponent(this.editingProduct.id), {
           method: 'PUT',
-          body: JSON.stringify(body),
+          body: JSON.stringify({ ...body, id: this.editingProduct.id }),
         });
       } else {
         await this.request('/api/admin/products', { method: 'POST', body: JSON.stringify(body) });
@@ -216,7 +215,7 @@ const Admin = {
 
   productName(productId) {
     const p = (this.products || []).find((x) => x.id === productId);
-    return p?.name || productId || '-';
+    return p?.name || '-';
   },
 
   async ensureProducts() {
@@ -294,6 +293,7 @@ const Admin = {
 
   async loadReviews() {
     this.reviews = await this.request('/api/admin/reviews');
+    await this.ensureProducts();
     this.view = 'reviews';
     this.render();
   },
@@ -489,15 +489,12 @@ const Admin = {
 
   renderProducts() {
     const q = this.productFilter.toLowerCase();
-    const list = (this.products || []).filter(
-      (p) => !q || String(p.name).toLowerCase().includes(q) || String(p.id).toLowerCase().includes(q)
-    );
+    const list = (this.products || []).filter((p) => !q || String(p.name).toLowerCase().includes(q));
     const rows = list
       .map((p) => {
         const img = p.adminImages?.[0]?.url || '';
         return `<tr>
           <td>${img ? `<img class="thumb" src="${img}" alt="" onerror="this.style.display='none'" />` : '📦'}</td>
-          <td><code>${this.esc(p.id)}</code></td>
           <td><strong>${this.esc(p.name)}</strong><br><small>${this.esc(p.unit)} · ${this.CATEGORIES[p.category] || p.category}</small></td>
           <td>${this.fmt(p.price)}</td>
           <td>${p.stock ?? '-'}개</td>
@@ -515,13 +512,13 @@ const Admin = {
         <div class="panel__head">
           <h2>상품 관리 (${list.length}개)</h2>
           <div class="toolbar">
-            <input type="search" placeholder="상품명·ID 검색" value="${this.esc(this.productFilter)}" oninput="Admin.productFilter=this.value;Admin.render()" />
+            <input type="search" placeholder="상품명 검색" value="${this.esc(this.productFilter)}" oninput="Admin.productFilter=this.value;Admin.render()" />
             <button class="btn" onclick="Admin.openProductForm(null)">+ 상품 등록</button>
           </div>
         </div>
         <table class="data-table">
-          <thead><tr><th></th><th>ID</th><th>상품명</th><th>가격</th><th>재고</th><th>상태</th><th>관리</th></tr></thead>
-          <tbody>${rows || '<tr><td colspan="7" class="empty-msg">등록된 상품이 없습니다.</td></tr>'}</tbody>
+          <thead><tr><th></th><th>상품명</th><th>가격</th><th>재고</th><th>상태</th><th>관리</th></tr></thead>
+          <tbody>${rows || '<tr><td colspan="6" class="empty-msg">등록된 상품이 없습니다.</td></tr>'}</tbody>
         </table>
       </div>`;
   },
@@ -537,7 +534,6 @@ const Admin = {
         </div>
         <form onsubmit="Admin.saveProduct(event)">
           <div class="form-grid">
-            <div class="form-row"><label>상품 ID *</label><input name="id" required value="${this.esc(p.id)}" ${isEdit ? 'readonly' : ''} placeholder="예: fr6" /></div>
             <div class="form-row"><label>카테고리 *</label><select name="category">${Object.entries(this.CATEGORIES).map(([k, v]) => `<option value="${k}" ${p.category === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
             <div class="form-row full"><label>상품명 *</label><input name="name" required value="${this.esc(p.name)}" /></div>
             <div class="form-row"><label>판매가 *</label><input name="price" type="number" required value="${p.price ?? ''}" /></div>
@@ -547,7 +543,7 @@ const Admin = {
             <div class="form-row"><label>산지</label><input name="origin" value="${this.esc(p.origin)}" /></div>
             <div class="form-row"><label>뱃지</label><input name="badge" value="${this.esc(p.badge || '신선')}" /></div>
             <div class="form-row"><label>이모지</label><input name="emoji" value="${this.esc(p.emoji || '🛒')}" /></div>
-            <div class="form-row full"><label>이미지 URL</label><input name="imageUrl" value="${this.esc(img)}" placeholder="/images/products/상품ID.png" /></div>
+            <div class="form-row full"><label>이미지 URL</label><input name="imageUrl" value="${this.esc(img)}" placeholder="https://... 또는 /images/products/파일명.png" /></div>
             <div class="form-row full"><label>상품 설명</label><textarea name="description" rows="3">${this.esc(p.description)}</textarea></div>
             <div class="form-row full"><label>상세 항목 (줄바꿈 구분)</label><textarea name="details" rows="3">${this.esc((p.details || []).join('\n'))}</textarea></div>
             <div class="form-row"><label><input type="checkbox" name="organic" ${p.organic ? 'checked' : ''} /> 유기농</label></div>
@@ -695,7 +691,7 @@ const Admin = {
   renderReviews() {
     const rows = (this.reviews || [])
       .map(
-        (r) => `<tr><td>${r.productId}</td><td>${this.esc(r.author)}</td><td>${r.rating}★</td><td>${this.esc((r.content || '').slice(0, 50))}</td><td>${this.fmtDate(r.date)}</td>
+        (r) => `<tr><td>${this.esc(this.productName(r.productId))}</td><td>${this.esc(r.author)}</td><td>${r.rating}★</td><td>${this.esc((r.content || '').slice(0, 50))}</td><td>${this.fmtDate(r.date)}</td>
         <td><button class="btn btn--sm btn--danger" onclick="Admin.deleteReview('${r.id}')">삭제</button></td></tr>`
       )
       .join('');
