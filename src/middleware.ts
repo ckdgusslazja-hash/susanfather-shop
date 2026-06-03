@@ -17,6 +17,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.rewrite(new URL(target, request.url));
   }
 
+  if (pathname.startsWith('/admin/') && !pathname.includes('.')) {
+    return NextResponse.rewrite(new URL('/admin/index.html', request.url));
+  }
+
   return NextResponse.next();
 }
 
