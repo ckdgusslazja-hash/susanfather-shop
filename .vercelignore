@@ -1,0 +1,5 @@
+.env
+.env.local
+.env.*
+server/shop.db
+server/data/

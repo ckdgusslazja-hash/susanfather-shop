@@ -1,12 +1,19 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "regions": ["icn1"],
+  "regions": [
+    "icn1"
+  ],
   "buildCommand": "prisma generate && next build",
   "redirects": [
     {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "www.susanfather.com" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "www.susanfather.com"
+        }
+      ],
       "destination": "https://susanfather.com/:path*",
       "permanent": true
     }

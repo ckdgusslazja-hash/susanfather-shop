@@ -1,22 +1,18 @@
-Susan Father — susanfather.com (Vercel 방식)
-============================================
+Susan Father — 인터넷 쇼핑몰 (웹사이트)
+====================================
 
-【 셀러비온처럼 배포 】
-  1. docs/SUSANFATHER.md 읽기
-  2. Neon.tech 에서 DATABASE_URL 발급 → .env 저장
-  3. npm install
-  4. npm run deploy   (Vercel 자동 배포)
+【 이게 뭔지 】
+  앱이 아닙니다.
+  susanfather.com 주소로 크롬/사파리에서 여는 쇼핑몰 웹사이트입니다.
+  (셀러비온 sellervion.shop 과 같은 방식)
 
-【 카페24 DNS 】
-  A @  → 76.76.21.21
-  CNAME www → cname.vercel-dns.com
+【 배포 방법 — 여기만 보세요 】
+  docs/배포-초간단.md
 
-【 로컬 】
-  npm run db:setup
-  npm run dev
+  요약:
+  1. GitHub 에 코드 올림 (npm run github:push)
+  2. vercel.com 에서 Import + Postgres DB (Neon 필요 없음)
+  3. 카페24 DNS: A @ → 76.76.21.21
 
-【 관리자 】
-  /admin/  admin@greenharvest.kr / admin1234
-
-【 예전 Express 서버 】
-  npm run legacy:server
+【 PC에서만 테스트 】
+  쇼핑몰 실행.bat (본인 컴퓨터용, 배포 아님)

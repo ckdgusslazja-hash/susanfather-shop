@@ -144,8 +144,40 @@ function mapAdminUser(u: Pick<User, 'id' | 'email' | 'name' | 'phone' | 'role' |
 }
 
 async function getSetting(key: string): Promise<unknown> {
-  const row = await prisma.setting.findUnique({ where: { key } });
-  return row?.value ?? null;
+  try {
+    const row = await prisma.setting.findUnique({ where: { key } });
+    return row?.value ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function defaultSettingsBundle() {
+  return {
+    shop: {
+      name: siteName,
+      company: siteName,
+      ceo: '홍길동',
+      businessNo: '123-45-67890',
+      mailOrderNo: '2026-서울강남-0001',
+      address: '서울특별시 강남구 테헤란로 123',
+      phone: '1588-0000',
+      email: 'help@greenharvest.kr',
+      hours: '평일 09:00~18:00 (주말·공휴일 휴무)',
+    },
+    customerCenter: {
+      faq: [
+        { q: '배송은 며칠 걸리나요?', a: '산지 직송 상품은 1~2일, 일부 지역은 2~3일 소요됩니다.' },
+        { q: '반품은 어떻게 하나요?', a: '수령 후 7일 이내 고객센터로 문의해 주세요.' },
+      ],
+    },
+    order: {
+      shippingFee: 3000,
+      freeShippingThreshold: 50000,
+      autoConfirmDays: 7,
+      returnDays: 7,
+    },
+  };
 }
 
 async function setSetting(key: string, value: unknown): Promise<void> {
@@ -252,7 +284,14 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
 
   /* ── Health & site ── */
   if (method === 'GET' && a === 'health') {
-    return json({ ok: true, site: siteUrl, env: nodeEnv });
+    let db = false;
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      db = true;
+    } catch {
+      db = false;
+    }
+    return json({ ok: true, site: siteUrl, env: nodeEnv, db });
   }
 
   if (method === 'GET' && a === 'site') {
@@ -397,11 +436,11 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
   /* ── Settings ── */
   if (a === 'settings') {
     if (method === 'GET' && b === 'shop') {
-      return json({
-        shop: await getSetting('shop'),
-        customerCenter: await getSetting('customerCenter'),
-        order: await getSetting('order'),
-      });
+      const defaults = defaultSettingsBundle();
+      const shop = (await getSetting('shop')) ?? defaults.shop;
+      const customerCenter = (await getSetting('customerCenter')) ?? defaults.customerCenter;
+      const order = (await getSetting('order')) ?? defaults.order;
+      return json({ shop, customerCenter, order });
     }
     if (method === 'GET' && b === 'payment-public') {
       const p = (await getSetting('payment')) as {
@@ -409,15 +448,23 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
         testMode?: boolean;
         notice?: string;
       } | null;
-      return json({ provider: p?.provider, testMode: p?.testMode, notice: p?.notice });
+      return json({
+        provider: p?.provider ?? 'toss',
+        testMode: p?.testMode ?? true,
+        notice: p?.notice ?? 'PG사 연동 후 실결제가 활성화됩니다.',
+      });
     }
   }
 
   /* ── Products ── */
   if (method === 'GET' && a === 'products') {
-    const rows = await prisma.product.findMany();
-    if (rows.length) {
-      return json(rows.map((r) => r.data));
+    try {
+      const rows = await prisma.product.findMany();
+      if (rows.length) {
+        return json(rows.map((r) => r.data));
+      }
+    } catch {
+      /* DB 미연결 시 JSON 폴백 */
     }
     const fallback = await loadProductsFallback();
     return json(fallback);
