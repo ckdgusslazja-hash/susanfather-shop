@@ -1,5 +1,9 @@
 # Susan Father — Vercel 자동 배포 (셀러비온과 동일 방식)
 $ErrorActionPreference = "Stop"
+chcp 65001 | Out-Null
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root
 
@@ -19,8 +23,7 @@ function Get-EnvValue($key) {
 
 $dbUrl = Get-EnvValue "DATABASE_URL"
 if (-not $dbUrl) {
-  Write-Host "DATABASE_URL 이 .env 에 필요합니다. (Neon.tech 무료 Postgres 권장)"
-  exit 1
+  Write-Host "DATABASE_URL 없음 — Vercel 배포만 진행 (상품 JSON 폴백)"
 }
 
 $jwt = Get-EnvValue "JWT_SECRET"
@@ -35,7 +38,10 @@ if (-not $jwt -or $jwt.Length -lt 32) {
 $prodUrl = "https://susanfather.com"
 
 function Set-VercelEnv($name, $value) {
+  $prev = $ErrorActionPreference
+  $ErrorActionPreference = "Continue"
   $value | npx vercel@latest env add $name production --force 2>&1 | Out-Null
+  $ErrorActionPreference = $prev
   Write-Host "  env: $name"
 }
 
@@ -46,7 +52,7 @@ npx vercel@latest link --yes --project susanfather-shop 2>&1 | Out-Null
 $ErrorActionPreference = $prevEAP
 
 Write-Host "환경 변수 설정..."
-Set-VercelEnv "DATABASE_URL" $dbUrl
+if ($dbUrl) { Set-VercelEnv "DATABASE_URL" $dbUrl }
 Set-VercelEnv "JWT_SECRET" $jwt
 Set-VercelEnv "NEXT_PUBLIC_SITE_URL" $prodUrl
 Set-VercelEnv "SITE_URL" $prodUrl
@@ -58,14 +64,19 @@ if ($kakao) {
   Set-VercelEnv "KAKAO_REDIRECT_URI" "$prodUrl/api/auth/kakao/callback"
 }
 
-Write-Host "DB 스키마 + 시드 (로컬에서 1회)..."
-npx prisma db push
-npm run db:seed
+if ($dbUrl) {
+  Write-Host "DB 스키마 + 시드 (로컬, 실패해도 배포는 계속)..."
+  $prevEAP = $ErrorActionPreference
+  $ErrorActionPreference = "Continue"
+  npx prisma db push 2>&1
+  if ($LASTEXITCODE -eq 0) { npm run db:seed 2>&1 }
+  else { Write-Host "  로컬 DB 연결 실패 — Vercel Storage 연결 후 npm run db:setup 실행" }
+  $ErrorActionPreference = $prevEAP
+}
 
 Write-Host "Vercel 배포 중 (2~5분)..."
 npx vercel@latest deploy --prod --yes
 
 Write-Host ""
-Write-Host "완료. 아래 DNS 를 카페24에 설정하세요 (docs/SUSANFATHER.md 참고):"
-Write-Host "  A @ -> 76.76.21.21"
-Write-Host "  CNAME www -> cname.vercel-dns.com"
+Write-Host "완료: https://susanfather.com"
+Write-Host "DNS (이미 설정했다면 생략): A @ -> 76.76.21.21"
