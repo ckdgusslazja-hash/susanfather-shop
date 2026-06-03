@@ -191,46 +191,199 @@ function renderMypage() {
     navigate('login');
     return '';
   }
+  const tab = state.mypageTab || 'orders';
   return `
-    <h2 class="section-title">마이페이지</h2>
-    <div class="mypage-card">
-      <p><strong>${u.name}</strong>님</p>
-      <p class="text-muted">${u.email}</p>
-      ${u.phone ? `<p>연락처 ${u.phone}</p>` : ''}
-      <div class="mypage-actions">
-        <button class="btn btn--outline" type="button" onclick="navigate('addresses')">배송지 관리</button>
-        <button class="btn btn--outline" type="button" onclick="loadMyOrders()">주문 내역 불러오기</button>
-        <button class="btn btn--outline" type="button" onclick="navigate('inquiry')">1:1 문의</button>
-        <button class="btn btn--outline" type="button" onclick="doLogout()">로그아웃</button>
+    <div class="mypage-wrap">
+      <div class="mypage-profile">
+        <p class="mypage-profile__name"><strong>${escapeHtml(u.name)}</strong>님</p>
+        <p class="mypage-profile__email">${escapeHtml(u.email)}</p>
+      </div>
+      ${renderMypageQuickNav(tab)}
+      <div class="mypage-panel">
+        ${tab === 'orders' ? renderMypageOrdersSection() : ''}
+        ${tab === 'wishlist' ? renderMypageProductPanel('찜리스트', getWishlistProducts()) : ''}
+        ${tab === 'recent' ? renderMypageProductPanel('최근 본 상품', getRecentProducts()) : ''}
+        ${tab === 'frequent' ? renderMypageProductPanel('자주 산 상품', getFrequentProducts(state.myOrders)) : ''}
+        ${tab === 'menu' ? renderMypageAllMenu() : ''}
       </div>
     </div>
-    <div id="my-orders-list"></div>
   `;
 }
 
-async function loadMyOrders() {
-  const el = document.getElementById('my-orders-list');
-  if (!el) return;
-  el.innerHTML = '<p class="text-muted">불러오는 중…</p>';
-  try {
-    const orders = await API.myOrders();
-    if (!orders.length) {
-      el.innerHTML = '<p class="text-muted">주문 내역이 없습니다.</p>';
-      return;
-    }
-    el.innerHTML = orders
-      .map(
-        (o) => `
-      <div class="order-row">
-        <div><strong>${o.id}</strong> · ${(o.created_at || '').slice(0, 10)}</div>
-        <div>${formatPrice(o.total)} · ${o.status}</div>
-        <div class="text-muted">${o.address} ${o.address_detail || ''}</div>
-      </div>`
-      )
-      .join('');
-  } catch (e) {
-    el.innerHTML = `<p class="auth-msg">${e.message}</p>`;
+function setMypageTab(tab) {
+  state.mypageTab = tab;
+  render();
+  if (tab === 'orders') initMypageOrders();
+}
+
+function getWishlistProducts() {
+  return state.wishlist.map((id) => getProduct(id)).filter(Boolean);
+}
+
+function getFrequentProducts(orders) {
+  const counts = {};
+  (orders || []).forEach((o) => {
+    const items = Array.isArray(o.items) ? o.items : [];
+    items.forEach((item) => {
+      if (!item?.productId) return;
+      counts[item.productId] = (counts[item.productId] || 0) + (item.quantity || 1);
+    });
+  });
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12)
+    .map(([id]) => getProduct(id))
+    .filter(Boolean);
+}
+
+function getOrderStatusLabel(status) {
+  const map = {
+    paid: '배송준비',
+    shipping: '배송중',
+    delivered: '배송완료',
+    completed: '배송완료',
+    test_paid: '주문완료',
+  };
+  return map[status] || '주문완료';
+}
+
+function renderMypageQuickNav(active) {
+  const items = [
+    { id: 'orders', icon: '📋', label: '주문내역' },
+    { id: 'wishlist', icon: '♥', label: '찜리스트' },
+    { id: 'recent', icon: '👁', label: '최근본상품' },
+    { id: 'frequent', icon: '🔁', label: '자주산상품' },
+    { id: 'menu', icon: '▦', label: '전체메뉴' },
+  ];
+  return `
+    <nav class="mypage-quick-nav" aria-label="마이페이지 메뉴">
+      ${items
+        .map(
+          (item) => `
+        <button type="button" class="mypage-quick-nav__item ${active === item.id ? 'is-active' : ''}"
+          onclick="setMypageTab('${item.id}')">
+          <span class="mypage-quick-nav__icon">${item.icon}</span>
+          <span class="mypage-quick-nav__label">${item.label}</span>
+        </button>`
+        )
+        .join('')}
+    </nav>
+  `;
+}
+
+function renderMypageOrdersSection() {
+  return `
+    <section class="mypage-section" id="mypage-orders-section">
+      <div class="mypage-section__head">
+        <h2 class="mypage-section__title">주문 내역</h2>
+        <button type="button" class="mypage-section__more" onclick="initMypageOrders(true)">전체 보기 ›</button>
+      </div>
+      <div class="mypage-orders-scroll" id="mypage-orders-scroll">
+        <p class="mypage-empty">주문 내역 불러오는 중…</p>
+      </div>
+    </section>
+  `;
+}
+
+function renderMypageOrderCard(order) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  const product = items[0]?.productId ? getProduct(items[0].productId) : null;
+  const statusLabel = getOrderStatusLabel(order.status);
+  const isDone = ['delivered', 'completed', 'paid'].includes(order.status);
+  const dateStr = (order.created_at || '').slice(0, 10).replace(/-/g, '.');
+  const thumb = product
+    ? `<div class="mypage-order-card__thumb" style="background:${product.gradient}">${product.emoji}</div>`
+    : `<div class="mypage-order-card__thumb mypage-order-card__thumb--empty">📦</div>`;
+  const reorderBtn = product
+    ? `<button type="button" class="mypage-order-card__reorder" title="다시 담기" onclick="event.stopPropagation();addToCart('${product.id}')">🛒<span>+</span></button>`
+    : '';
+
+  return `
+    <article class="mypage-order-card" onclick="showToast('주문번호 ${escapeHtml(order.id)}')">
+      <div class="mypage-order-card__top">
+        <span class="mypage-order-card__ship">🚚 산지직송</span>
+        ${dateStr ? `<span class="mypage-order-card__eta">${dateStr}</span>` : ''}
+      </div>
+      <p class="mypage-order-card__status ${isDone ? 'is-done' : ''}">${statusLabel}</p>
+      <div class="mypage-order-card__body">
+        ${thumb}
+        ${reorderBtn}
+      </div>
+      ${items.length > 1 ? `<p class="mypage-order-card__more">외 ${items.length - 1}건</p>` : ''}
+      <p class="mypage-order-card__price">${formatPrice(order.total)}</p>
+    </article>
+  `;
+}
+
+function renderMypageOrdersHtml(orders) {
+  if (!orders.length) {
+    return `<p class="mypage-empty">주문 내역이 없습니다.<br><button type="button" class="btn btn--primary btn--sm" style="margin-top:12px" onclick="navigate('home')">쇼핑하러 가기</button></p>`;
   }
+  return orders.map(renderMypageOrderCard).join('');
+}
+
+function renderMypageProductPanel(title, products) {
+  if (!products.length) {
+    return `
+      <section class="mypage-section">
+        <div class="mypage-section__head"><h2 class="mypage-section__title">${title}</h2></div>
+        <p class="mypage-empty">${title === '찜리스트' ? '찜한 상품이 없습니다.' : title === '최근 본 상품' ? '최근 본 상품이 없습니다.' : '자주 구매한 상품이 없습니다.'}</p>
+      </section>`;
+  }
+  return `
+    <section class="mypage-section">
+      <div class="mypage-section__head"><h2 class="mypage-section__title">${title}</h2></div>
+      <div class="mypage-product-scroll">
+        ${products
+          .map(
+            (p) => `
+          <button type="button" class="mypage-product-card" onclick="navigate('detail',{productId:'${p.id}'})">
+            <div class="mypage-product-card__thumb" style="background:${p.gradient}">${p.emoji}</div>
+            <p class="mypage-product-card__name">${escapeHtml(p.name)}</p>
+            <p class="mypage-product-card__price">${formatPrice(p.price)}</p>
+          </button>`
+          )
+          .join('')}
+      </div>
+    </section>
+  `;
+}
+
+function renderMypageAllMenu() {
+  return `
+    <section class="mypage-section">
+      <div class="mypage-section__head"><h2 class="mypage-section__title">전체 메뉴</h2></div>
+      <div class="mypage-menu-list">
+        <button type="button" class="mypage-menu-item" onclick="navigate('addresses')">배송지 관리</button>
+        <button type="button" class="mypage-menu-item" onclick="navigate('inquiry')">1:1 문의</button>
+        <button type="button" class="mypage-menu-item" onclick="navigate('shop-info')">쇼핑몰 정보</button>
+        <button type="button" class="mypage-menu-item mypage-menu-item--muted" onclick="doLogout()">로그아웃</button>
+      </div>
+    </section>
+  `;
+}
+
+async function initMypageOrders(forceReload) {
+  const el = document.getElementById('mypage-orders-scroll');
+  if (!el) return;
+  if (!forceReload && state.myOrders.length) {
+    el.innerHTML = renderMypageOrdersHtml(state.myOrders);
+    return;
+  }
+  el.innerHTML = '<p class="mypage-empty">주문 내역 불러오는 중…</p>';
+  try {
+    state.myOrders = await API.myOrders();
+    el.innerHTML = renderMypageOrdersHtml(state.myOrders);
+    if (state.mypageTab === 'frequent') render();
+  } catch (e) {
+    el.innerHTML = `<p class="mypage-empty">${escapeHtml(e.message)}</p>`;
+  }
+}
+
+async function loadMyOrders() {
+  state.mypageTab = 'orders';
+  await initMypageOrders(true);
+  render();
 }
 
 function renderShopInfo() {
@@ -759,6 +912,7 @@ const _navigateOrig = navigate;
 window.navigate = function (page, params = {}) {
   if (page === 'addresses') addressBookLoaded = false;
   if (page === 'checkout') state.selectedAddressId = '';
+  if (page === 'mypage') state.mypageTab = state.mypageTab || 'orders';
   return _navigateOrig(page, params);
 };
 
@@ -766,6 +920,9 @@ const _renderOrig = render;
 window.render = function () {
   _renderOrig();
   updateNavAuth();
+  if (state.page === 'mypage' && (state.mypageTab || 'orders') === 'orders') {
+    initMypageOrders();
+  }
 };
 
 initApp();

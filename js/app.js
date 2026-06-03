@@ -21,6 +21,8 @@ let state = {
   searchDraft: '',
   savedAddresses: [],
   selectedAddressId: '',
+  mypageTab: 'orders',
+  myOrders: [],
 };
 
 function loadCart() {
@@ -1338,6 +1340,7 @@ function render() {
   document.body.classList.toggle('is-pdp', state.page === 'detail');
   document.body.classList.toggle('is-reviews', state.page === 'reviews');
   document.body.classList.toggle('is-home', state.page === 'home');
+  document.body.classList.toggle('is-mypage', state.page === 'mypage');
   renderHeader();
   renderBottomNav();
   bindPaymentOptions();
