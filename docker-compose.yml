@@ -1,0 +1,17 @@
+services:
+  shop:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      SITE_URL: https://susanfather.com
+      DB_PATH: /app/data/shop.db
+    volumes:
+      - shop-data:/app/data
+
+volumes:
+  shop-data:

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>카카오 로그인 처리 중</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        background: #f5f5f5;
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <p>로그인 처리 중입니다…</p>
+    <script>
+      (function () {
+        var p = new URLSearchParams(location.search);
+        var token = p.get('token');
+        var userJson = p.get('user');
+        var error = p.get('error');
+        if (error) {
+          localStorage.setItem('gh_auth_error', decodeURIComponent(error));
+          location.replace('/?authError=1');
+          return;
+        }
+        if (token && userJson) {
+          localStorage.setItem('gh_token', token);
+          localStorage.setItem('gh_user', userJson);
+          location.replace('/?authSuccess=1');
+          return;
+        }
+        location.replace('/');
+      })();
+    </script>
+  </body>
+</html>

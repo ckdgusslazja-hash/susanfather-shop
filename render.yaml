@@ -1,0 +1,19 @@
+# Render.com 원클릭 배포 (셀러비온/Vercel과 비슷한 방식)
+services:
+  - type: web
+    name: susanfather-shop
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run seed
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SITE_URL
+        value: https://susanfather.com
+      - key: PORT
+        value: 3000
+      - key: DB_PATH
+        value: /opt/render/project/src/server/data/shop.db
+      - key: JWT_SECRET
+        generateValue: true

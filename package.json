@@ -1,0 +1,42 @@
+{
+  "name": "susanfather-shop",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:setup": "prisma db push && tsx prisma/seed.ts",
+    "legacy:server": "node server/index.js",
+    "deploy": "powershell -ExecutionPolicy Bypass -File scripts/vercel-deploy-auto.ps1",
+    "deploy:all": "powershell -ExecutionPolicy Bypass -File scripts/deploy-all.ps1",
+    "github:push": "powershell -ExecutionPolicy Bypass -File scripts/push-github.ps1",
+    "setup:env": "powershell -ExecutionPolicy Bypass -File scripts/setup-env.ps1"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "uuid": "^11.0.3"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "prisma": "^5.22.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  phone        String?
+  role         String   @default("user")
+  provider     String   @default("email")
+  providerId   String?  @map("provider_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  orders    Order[]
+  reviews   Review[]
+  inquiries Inquiry[]
+
+  @@unique([provider, providerId])
+  @@map("users")
+}
+
+model Product {
+  id   String @id
+  data Json
+
+  @@map("products")
+}
+
+model Order {
+  id              String   @id
+  userId          String?  @map("user_id")
+  guestName       String?  @map("guest_name")
+  guestPhone      String?  @map("guest_phone")
+  guestEmail      String?  @map("guest_email")
+  zipcode         String?
+  address         String?
+  addressDetail   String?  @map("address_detail")
+  memo            String?
+  paymentMethod   String?  @map("payment_method")
+  paymentStatus   String   @default("paid") @map("payment_status")
+  status          String   @default("paid")
+  subtotal        Int?
+  shipping        Int?
+  total           Int?
+  items           Json     @default("[]")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("orders")
+}
+
+model Review {
+  id        String   @id
+  productId String   @map("product_id")
+  userId    String?  @map("user_id")
+  author    String
+  rating    Int
+  title     String?
+  content   String?
+  images    Json     @default("[]")
+  helpful   Int      @default(0)
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("reviews")
+}
+
+model Inquiry {
+  id        String   @id
+  userId    String?  @map("user_id")
+  name      String
+  email     String
+  phone     String?
+  category  String?
+  title     String
+  content   String
+  status    String   @default("pending")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("inquiries")
+}
+
+model Setting {
+  key   String @id
+  value Json
+
+  @@map("settings")
+}
