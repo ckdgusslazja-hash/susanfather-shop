@@ -2377,6 +2377,16 @@ body.is-reviews {
   line-height: 1.7;
 }
 
+.order-complete__bank {
+  background: #f8faf8;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 20px;
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
 .order-complete__summary {
   text-align: left;
   background: var(--color-bg);

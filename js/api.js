@@ -4,6 +4,7 @@ const API = {
   user: JSON.parse(localStorage.getItem('gh_user') || 'null'),
   shopSettings: null,
   orderSettings: null,
+  paymentSettings: null,
 
   setAuth(token, user) {
     this.token = token || '';
@@ -81,6 +82,25 @@ const API = {
   },
   postReview(body) {
     return this.request('/api/reviews', { method: 'POST', body: JSON.stringify(body) });
+  },
+  async loadPaymentSettings() {
+    try {
+      this.paymentSettings = await this.request('/api/settings/payment-public');
+      return this.paymentSettings;
+    } catch {
+      this.paymentSettings = { enabled: false, testMode: false };
+      return this.paymentSettings;
+    }
+  },
+
+  preparePayment(body) {
+    return this.request('/api/payments/prepare', { method: 'POST', body: JSON.stringify(body) });
+  },
+  confirmPayment(body) {
+    return this.request('/api/payments/confirm', { method: 'POST', body: JSON.stringify(body) });
+  },
+  failPayment(body) {
+    return this.request('/api/payments/fail', { method: 'POST', body: JSON.stringify(body) });
   },
   createOrder(body) {
     return this.request('/api/orders', { method: 'POST', body: JSON.stringify(body) });

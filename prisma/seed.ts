@@ -20,9 +20,14 @@ export function getDefaultSettings(): Record<string, unknown> {
     },
     payment: {
       provider: 'toss',
-      testMode: true,
+      testMode: false,
       enabledMethods: ['card', 'transfer', 'kakao'],
-      notice: 'PG사 연동 후 실결제가 활성화됩니다. 현재는 테스트 결제입니다.',
+      notice: '토스페이먼츠로 안전하게 결제됩니다.',
+      bankAccount: {
+        bank: '국민은행',
+        number: '문의: 010-4730-9269',
+        holder: '리벤더(변창현)',
+      },
     },
     order: {
       shippingFee: 3000,

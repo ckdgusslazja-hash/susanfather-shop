@@ -126,6 +126,11 @@ const Admin = {
             testMode: fd.get('testMode') === 'on',
             notice: fd.get('notice'),
             merchantId: fd.get('merchantId') || '',
+            bankAccount: {
+              bank: fd.get('bankName') || '',
+              number: fd.get('bankNumber') || '',
+              holder: fd.get('bankHolder') || '',
+            },
           }),
         });
       } else if (key === 'order') {
@@ -236,19 +241,23 @@ const Admin = {
 
   renderSettingsPayment() {
     const p = this.settings?.payment || {};
+    const bank = p.bankAccount || {};
     return `
       <form id="form-payment" class="panel" onsubmit="event.preventDefault();Admin.saveSetting('payment')">
         <h2>결제 설정</h2>
+        <p class="admin-hint">토스페이먼츠 Client/Secret Key는 Vercel 환경변수(TOSS_CLIENT_KEY, TOSS_SECRET_KEY)에 등록하세요.</p>
         <div class="form-row"><label>PG 제공사</label>
           <select name="provider">
             <option value="demo" ${p.provider === 'demo' ? 'selected' : ''}>demo</option>
             <option value="toss" ${p.provider === 'toss' ? 'selected' : ''}>toss</option>
-            <option value="inicis" ${p.provider === 'inicis' ? 'selected' : ''}>inicis</option>
           </select>
         </div>
-        <div class="form-row"><label><input type="checkbox" name="testMode" ${p.testMode ? 'checked' : ''} /> 테스트 모드 (실결제 없음)</label></div>
-        <div class="form-row"><label>가맹점 ID</label><input name="merchantId" value="${p.merchantId || ''}" placeholder="PG 연동 시 입력" /></div>
+        <div class="form-row"><label><input type="checkbox" name="testMode" ${p.testMode ? 'checked' : ''} /> 테스트 모드 (실제 청구 없음)</label></div>
         <div class="form-row"><label>안내 문구</label><textarea name="notice" rows="2">${p.notice || ''}</textarea></div>
+        <h3 style="margin:16px 0 8px">무통장 입금 계좌</h3>
+        <div class="form-row"><label>은행</label><input name="bankName" value="${bank.bank || ''}" placeholder="국민은행" /></div>
+        <div class="form-row"><label>계좌번호</label><input name="bankNumber" value="${bank.number || ''}" placeholder="000-00-0000-000" /></div>
+        <div class="form-row"><label>예금주</label><input name="bankHolder" value="${bank.holder || ''}" placeholder="리벤더(변창현)" /></div>
         <button class="btn" type="submit">저장</button>
       </form>`;
   },
@@ -284,6 +293,7 @@ const Admin = {
         <td>${o.id}</td><td>${o.guest_name}</td><td>${o.total?.toLocaleString()}원</td>
         <td>${o.status}</td>
         <td><select onchange="Admin.patchOrder('${o.id}', this.value)">
+          <option value="awaiting_deposit" ${o.status === 'awaiting_deposit' ? 'selected' : ''}>입금대기</option>
           <option value="paid" ${o.status === 'paid' ? 'selected' : ''}>결제완료</option>
           <option value="preparing" ${o.status === 'preparing' ? 'selected' : ''}>준비중</option>
           <option value="shipping" ${o.status === 'shipping' ? 'selected' : ''}>배송중</option>

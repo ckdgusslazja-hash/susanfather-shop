@@ -12,6 +12,12 @@ import {
   exchangeCodeForToken,
   fetchKakaoProfile,
 } from './kakao';
+import {
+  confirmTossPayment,
+  getTossKeys,
+  isPaymentEnabled,
+  type PaymentSetting,
+} from './toss-payments';
 
 interface JwtPayload {
   id: string;
@@ -493,16 +499,186 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
       return json({ shop, customerCenter, order });
     }
     if (method === 'GET' && b === 'payment-public') {
-      const p = (await getSetting('payment')) as {
-        provider?: string;
-        testMode?: boolean;
-        notice?: string;
-      } | null;
+      const p = (await getSetting('payment')) as PaymentSetting | null;
+      const testMode = p?.testMode ?? false;
+      const keys = getTossKeys(testMode);
+      const enabled = isPaymentEnabled(p);
       return json({
         provider: p?.provider ?? 'toss',
-        testMode: p?.testMode ?? true,
-        notice: p?.notice ?? 'PG사 연동 후 실결제가 활성화됩니다.',
+        testMode,
+        enabled,
+        clientKey: keys?.clientKey ?? null,
+        notice: p?.notice ?? (enabled ? '토스페이먼츠로 안전하게 결제됩니다.' : '결제 설정을 확인 중입니다.'),
+        enabledMethods: p?.enabledMethods ?? ['card', 'transfer', 'kakao'],
+        bankAccount: p?.bankAccount ?? {
+          bank: '국민은행',
+          number: '문의: 010-4730-9269',
+          holder: '리벤더(변창현)',
+        },
       });
+    }
+  }
+
+  /* ── Payments (Toss) ── */
+  if (a === 'payments') {
+    type OrderBody = {
+      name?: string;
+      phone?: string;
+      email?: string;
+      zipcode?: string;
+      address?: string;
+      addressDetail?: string;
+      memo?: string;
+      payment?: string;
+      subtotal?: number;
+      shipping?: number;
+      total?: number;
+      items?: unknown[];
+      orderName?: string;
+    };
+
+    async function resolveUserId(request: Request): Promise<string | null> {
+      const token = tokenFrom(request);
+      if (!token) return null;
+      try {
+        return (jwt.verify(token, jwtSecret) as JwtPayload).id;
+      } catch {
+        return null;
+      }
+    }
+
+    function makeOrderId() {
+      return 'GH' + Date.now().toString().slice(-8) + Math.random().toString(36).slice(2, 6);
+    }
+
+    if (method === 'POST' && b === 'prepare') {
+      const body = await parseBody<OrderBody>(request);
+      if (!body.name || !body.phone || !body.address || !body.total) {
+        return json({ error: '주문 정보를 확인해 주세요.' }, 400);
+      }
+
+      const paymentSetting = (await getSetting('payment')) as PaymentSetting | null;
+      const testMode = paymentSetting?.testMode ?? false;
+      const paymentMethod = body.payment || 'card';
+      const userId = await resolveUserId(request);
+      const id = makeOrderId();
+
+      if (paymentMethod === 'transfer') {
+        await prisma.order.create({
+          data: {
+            id,
+            userId,
+            guestName: body.name,
+            guestPhone: body.phone,
+            guestEmail: body.email || '',
+            zipcode: body.zipcode || '',
+            address: body.address || '',
+            addressDetail: body.addressDetail || '',
+            memo: body.memo || '',
+            paymentMethod,
+            subtotal: body.subtotal,
+            shipping: body.shipping,
+            total: body.total,
+            items: (body.items || []) as Prisma.InputJsonValue,
+            status: 'awaiting_deposit',
+            paymentStatus: 'awaiting_deposit',
+          },
+        });
+        return json({
+          ok: true,
+          orderId: id,
+          transfer: true,
+          bankAccount: paymentSetting?.bankAccount ?? {
+            bank: '국민은행',
+            number: '문의: 010-4730-9269',
+            holder: '리벤더(변창현)',
+          },
+        });
+      }
+
+      const keys = getTossKeys(testMode);
+      if (!keys) {
+        return json({ error: '결제 시스템 키가 설정되지 않았습니다. Vercel 환경변수 TOSS_CLIENT_KEY, TOSS_SECRET_KEY를 확인해 주세요.' }, 503);
+      }
+
+      await prisma.order.create({
+        data: {
+          id,
+          userId,
+          guestName: body.name,
+          guestPhone: body.phone,
+          guestEmail: body.email || '',
+          zipcode: body.zipcode || '',
+          address: body.address || '',
+          addressDetail: body.addressDetail || '',
+          memo: body.memo || '',
+          paymentMethod,
+          subtotal: body.subtotal,
+          shipping: body.shipping,
+          total: body.total,
+          items: (body.items || []) as Prisma.InputJsonValue,
+          status: 'pending',
+          paymentStatus: 'ready',
+        },
+      });
+
+      return json({
+        ok: true,
+        orderId: id,
+        clientKey: keys.clientKey,
+        amount: body.total,
+        orderName: body.orderName || '수산아빠 주문',
+        testMode,
+      });
+    }
+
+    if (method === 'POST' && b === 'confirm') {
+      const body = await parseBody<{ paymentKey?: string; orderId?: string; amount?: number }>(request);
+      const { paymentKey, orderId, amount } = body;
+      if (!paymentKey || !orderId || !amount) {
+        return json({ error: '결제 정보가 올바르지 않습니다.' }, 400);
+      }
+
+      const order = await prisma.order.findUnique({ where: { id: orderId } });
+      if (!order) return json({ error: '주문을 찾을 수 없습니다.' }, 404);
+      if (order.paymentStatus === 'paid') {
+        return json({ ok: true, order: mapOrder(order), alreadyPaid: true });
+      }
+      if (order.total !== amount) {
+        return json({ error: '결제 금액이 일치하지 않습니다.' }, 400);
+      }
+
+      const paymentSetting = (await getSetting('payment')) as PaymentSetting | null;
+      const testMode = paymentSetting?.testMode ?? false;
+      const keys = getTossKeys(testMode);
+      if (!keys) return json({ error: '결제 시스템 설정 오류' }, 503);
+
+      try {
+        await confirmTossPayment(paymentKey, orderId, amount, keys.secretKey);
+      } catch (err) {
+        await prisma.order.update({
+          where: { id: orderId },
+          data: { status: 'cancelled', paymentStatus: 'failed' },
+        });
+        return json({ error: err instanceof Error ? err.message : '결제 승인 실패' }, 402);
+      }
+
+      const updated = await prisma.order.update({
+        where: { id: orderId },
+        data: { status: 'paid', paymentStatus: 'paid' },
+      });
+      return json({ ok: true, order: mapOrder(updated), testMode });
+    }
+
+    if (method === 'POST' && b === 'fail') {
+      const body = await parseBody<{ orderId?: string; message?: string }>(request);
+      if (body.orderId) {
+        await prisma.order.updateMany({
+          where: { id: body.orderId, paymentStatus: { in: ['ready', 'pending'] } },
+          data: { status: 'cancelled', paymentStatus: 'cancelled' },
+        });
+      }
+      return json({ ok: true });
     }
   }
 

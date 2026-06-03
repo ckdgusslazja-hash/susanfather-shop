@@ -1254,27 +1254,13 @@ function renderCheckout() {
           </div>
         </section>
         <section class="form-section">
-          <h3 class="form-section__title">결제 수단 (데모)</h3>
-          <div class="payment-methods">
-            <label class="payment-option selected">
-              <input type="radio" name="payment" value="card" checked />
-              <span class="payment-option__icon">💳</span>
-              <span class="payment-option__info"><strong>신용/체크카드</strong><span>실제 결제는 연동 예정</span></span>
-            </label>
-            <label class="payment-option">
-              <input type="radio" name="payment" value="transfer" />
-              <span class="payment-option__icon">🏦</span>
-              <span class="payment-option__info"><strong>무통장 입금</strong><span>입금 확인 후 발송</span></span>
-            </label>
-            <label class="payment-option">
-              <input type="radio" name="payment" value="kakao" />
-              <span class="payment-option__icon">💬</span>
-              <span class="payment-option__info"><strong>간편결제</strong><span>카카오/네이버페이 등</span></span>
-            </label>
+          <h3 class="form-section__title">결제 수단</h3>
+          <div class="payment-methods" id="payment-methods">
+            ${renderPaymentMethodOptions()}
           </div>
-          <p class="mock-notice">⚠️ 현재는 데모 결제 화면입니다. 「결제하기」를 누르면 주문 완료 화면으로 이동하며, 실제 결제는 진행되지 않습니다.</p>
+          <p class="mock-notice" id="payment-notice">${escapeHtml(getPaymentNotice())}</p>
         </section>
-        <button type="submit" class="btn btn--primary btn--lg">결제하기 ${formatPrice(total)}</button>
+        <button type="submit" class="btn btn--primary btn--lg" id="checkout-submit-btn">결제하기 ${formatPrice(total)}</button>
       </form>
       <aside class="cart-summary">
         <h3 style="font-weight:700;margin-bottom:16px">주문 상품</h3>
@@ -1286,6 +1272,77 @@ function renderCheckout() {
   `;
 }
 
+function getPaymentNotice() {
+  const p = API.paymentSettings || {};
+  if (p.notice) return p.notice;
+  if (p.enabled) return p.testMode ? '테스트 결제 모드입니다. 실제로 청구되지 않습니다.' : '토스페이먼츠로 안전하게 결제됩니다.';
+  return '카드·간편결제는 토스페이먼츠로 진행됩니다. 무통장 입금은 입금 확인 후 발송됩니다.';
+}
+
+function renderPaymentMethodOptions() {
+  const p = API.paymentSettings || {};
+  const methods = p.enabledMethods || ['card', 'transfer', 'kakao'];
+  const defs = {
+    card: { icon: '💳', title: '신용/체크카드', desc: p.enabled ? '토스페이먼츠 카드 결제' : '카드 결제' },
+    transfer: { icon: '🏦', title: '무통장 입금', desc: '입금 확인 후 발송' },
+    kakao: { icon: '💬', title: '간편결제', desc: p.enabled ? '카카오페이·토스페이 등' : '간편결제' },
+  };
+  return methods
+    .filter((m) => defs[m])
+    .map(
+      (m, i) => `
+    <label class="payment-option ${i === 0 ? 'selected' : ''}">
+      <input type="radio" name="payment" value="${m}" ${i === 0 ? 'checked' : ''} />
+      <span class="payment-option__icon">${defs[m].icon}</span>
+      <span class="payment-option__info"><strong>${defs[m].title}</strong><span>${defs[m].desc}</span></span>
+    </label>`
+    )
+    .join('');
+}
+
+function buildOrderName() {
+  if (!state.cart.length) return '수산아빠 주문';
+  const first = getProduct(state.cart[0].productId);
+  const name = first?.name || '수산아빠 상품';
+  return state.cart.length > 1 ? `${name} 외 ${state.cart.length - 1}건` : name;
+}
+
+function buildLastOrderFromApi(order, extra = {}) {
+  const zip = order.zipcode || '';
+  const base = order.address || '';
+  const detail = order.address_detail || order.addressDetail || '';
+  const labels = { card: '신용/체크카드', transfer: '무통장 입금', kakao: '간편결제' };
+  return {
+    id: order.id,
+    name: order.guest_name || order.guestName,
+    phone: order.guest_phone || order.guestPhone,
+    address: (zip ? `[${zip}] ` : '') + base + (detail ? ' ' + detail : ''),
+    memo: order.memo,
+    payment: order.payment_method || order.paymentMethod,
+    paymentLabel: labels[order.payment_method || order.paymentMethod] || order.payment_method,
+    subtotal: order.subtotal,
+    shipping: order.shipping,
+    total: order.total,
+    items: parseImagesSafe(order.items),
+    date: order.created_at || new Date().toISOString(),
+    testMode: !!extra.testMode,
+    transfer: !!extra.transfer,
+    bankAccount: extra.bankAccount || null,
+  };
+}
+
+function parseImagesSafe(items) {
+  if (Array.isArray(items)) return items;
+  if (typeof items === 'string') {
+    try {
+      return JSON.parse(items);
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
 function renderComplete() {
   const order = state.lastOrder;
   if (!order) {
@@ -1293,16 +1350,24 @@ function renderComplete() {
     return '';
   }
 
+  const isTransfer = order.transfer || order.payment === 'transfer';
+  const statusNote = isTransfer
+    ? `<p class="order-complete__bank">입금 계좌: ${escapeHtml(order.bankAccount?.bank || '')} ${escapeHtml(order.bankAccount?.number || '')}<br>예금주: ${escapeHtml(order.bankAccount?.holder || '')}<br><strong>입금 확인 후 배송이 시작됩니다.</strong></p>`
+    : order.testMode
+      ? '<p class="order-complete__desc-note">(테스트 결제 — 실제 청구 없음)</p>'
+      : '';
+
   return `
     <div class="order-complete">
       <div class="order-complete__icon">✓</div>
-      <h1 class="order-complete__title">주문이 완료되었습니다</h1>
+      <h1 class="order-complete__title">${isTransfer ? '주문 접수 완료' : '결제가 완료되었습니다'}</h1>
       <p class="order-complete__order-id">주문번호 ${order.id}</p>
       <p class="order-complete__desc">
         ${order.name}님, 주문해 주셔서 감사합니다.<br>
-        배송지: ${order.address}<br>
-        결제수단: ${order.paymentLabel} (데모)
+        배송지: ${escapeHtml(order.address)}<br>
+        결제수단: ${escapeHtml(order.paymentLabel || '')}
       </p>
+      ${statusNote}
       <div class="order-complete__summary">
         <div><span>상품금액</span><span>${formatPrice(order.subtotal)}</span></div>
         <div><span>배송비</span><span>${order.shipping ? formatPrice(order.shipping) : '무료'}</span></div>
@@ -1427,15 +1492,23 @@ async function submitOrder(e) {
     subtotal,
     shipping,
     total,
+    orderName: buildOrderName(),
     items: state.cart.map((i) => ({ productId: i.productId, quantity: i.quantity })),
   };
 
-  let orderId = 'GH' + Date.now().toString().slice(-8);
-  let testMode = true;
+  const btn = document.getElementById('checkout-submit-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '처리 중…';
+  }
+
   try {
-    const res = await API.createOrder(orderPayload);
-    orderId = res.orderId || orderId;
-    testMode = !!res.testMode;
+    if (typeof API.loadPaymentSettings === 'function' && !API.paymentSettings) {
+      await API.loadPaymentSettings();
+    }
+
+    const prepare = await API.preparePayment(orderPayload);
+
     if (API.user && fd.get('saveAddress') === 'on') {
       try {
         await API.createAddress({
@@ -1448,34 +1521,111 @@ async function submitOrder(e) {
           isDefault: state.savedAddresses.length === 0,
         });
       } catch {
-        /* 저장 실패해도 주문은 완료 */
+        /* ignore */
       }
     }
-  } catch {
-    /* 오프라인·서버 미실행 시 로컬 완료 */
+
+    if (prepare.transfer) {
+      state.lastOrder = {
+        id: prepare.orderId,
+        name: fd.get('name'),
+        phone: fd.get('phone'),
+        address: fullAddress,
+        memo: fd.get('memo'),
+        payment,
+        paymentLabel: labels[payment] || payment,
+        subtotal,
+        shipping,
+        total,
+        items: [...state.cart],
+        date: new Date().toISOString(),
+        testMode: false,
+        transfer: true,
+        bankAccount: prepare.bankAccount,
+      };
+      state.cart = [];
+      saveCart();
+      if (typeof state.reviewEligibility === 'object') state.reviewEligibility = {};
+      navigate('complete');
+      showToast('주문이 접수되었습니다. 입금 확인 후 배송됩니다.');
+      return;
+    }
+
+    if (typeof TossPayments === 'undefined') {
+      throw new Error('결제 모듈을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
+    }
+
+    const tossPayments = TossPayments(prepare.clientKey);
+    const paymentWidget = tossPayments.payment({ customerKey: TossPayments.ANONYMOUS });
+    const siteOrigin = window.location.origin;
+    const req = {
+      method: payment === 'kakao' ? 'EASY_PAY' : 'CARD',
+      amount: { currency: 'KRW', value: prepare.amount },
+      orderId: prepare.orderId,
+      orderName: prepare.orderName,
+      successUrl: siteOrigin + '/?payment=success',
+      failUrl: siteOrigin + '/?payment=fail',
+      customerEmail: orderPayload.email || 'guest@susanfather.com',
+      customerName: String(orderPayload.name),
+      customerMobilePhone: String(orderPayload.phone).replace(/\D/g, ''),
+    };
+    if (payment === 'kakao') {
+      req.easyPay = { easyPayProvider: 'KAKAOPAY' };
+    }
+
+    await paymentWidget.requestPayment(req);
+  } catch (err) {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = `결제하기 ${formatPrice(total)}`;
+    }
+    if (err?.code === 'USER_CANCEL') {
+      showToast('결제가 취소되었습니다.');
+      return;
+    }
+    showToast(err?.message || '결제 처리에 실패했습니다.');
+  }
+}
+
+async function handlePaymentReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const payment = params.get('payment');
+  if (!payment) return;
+
+  window.history.replaceState({}, '', window.location.pathname || '/');
+
+  if (payment === 'success') {
+    const paymentKey = params.get('paymentKey');
+    const orderId = params.get('orderId');
+    const amount = Number(params.get('amount'));
+    if (!paymentKey || !orderId || !amount) {
+      showToast('결제 정보가 올바르지 않습니다.');
+      return;
+    }
+    try {
+      const res = await API.confirmPayment({ paymentKey, orderId, amount });
+      state.lastOrder = buildLastOrderFromApi(res.order, { testMode: res.testMode });
+      state.cart = [];
+      saveCart();
+      if (typeof state.reviewEligibility === 'object') state.reviewEligibility = {};
+      navigate('complete');
+      showToast('결제가 완료되었습니다.');
+    } catch (err) {
+      showToast(err.message || '결제 승인에 실패했습니다.');
+      navigate('checkout');
+    }
+    return;
   }
 
-  state.lastOrder = {
-    id: orderId,
-    name: fd.get('name'),
-    phone: fd.get('phone'),
-    address: fullAddress,
-    memo: fd.get('memo'),
-    payment,
-    paymentLabel: labels[payment] || payment,
-    subtotal,
-    shipping,
-    total,
-    items: [...state.cart],
-    date: new Date().toISOString(),
-    testMode,
-  };
-
-  state.cart = [];
-  saveCart();
-  if (typeof state.reviewEligibility === 'object') state.reviewEligibility = {};
-  navigate('complete');
-  showToast(testMode ? '주문이 완료되었습니다 (테스트 결제)' : '주문이 완료되었습니다');
+  if (payment === 'fail') {
+    const orderId = params.get('orderId');
+    const message = params.get('message') || '결제가 취소되었습니다.';
+    if (orderId) {
+      API.failPayment({ orderId, message }).catch(() => {});
+    }
+    showToast(decodeURIComponent(message));
+    navigate('checkout');
+  }
 }
 
 function goMypage() {
@@ -1485,8 +1635,9 @@ function goMypage() {
 async function initApp() {
   loadCart();
   if (typeof API !== 'undefined') {
-    await Promise.all([API.loadShopSettings(), API.loadProducts()]);
+    await Promise.all([API.loadShopSettings(), API.loadProducts(), API.loadPaymentSettings()]);
   }
+  await handlePaymentReturn();
   render();
 }
 
