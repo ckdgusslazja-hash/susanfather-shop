@@ -115,6 +115,8 @@ function mapOrder(o: Order) {
     payment_method: o.paymentMethod,
     payment_status: o.paymentStatus,
     status: o.status,
+    tracking_company: o.trackingCompany,
+    tracking_number: o.trackingNumber,
     subtotal: o.subtotal,
     shipping: o.shipping,
     total: o.total,
@@ -374,6 +376,36 @@ async function loadProductsFallback(): Promise<unknown[]> {
     return [];
   }
 }
+
+async function loadAllProducts(): Promise<Record<string, unknown>[]> {
+  try {
+    const rows = await prisma.product.findMany();
+    if (rows.length) return rows.map((r) => r.data as Record<string, unknown>);
+  } catch {
+    /* fallback */
+  }
+  return (await loadProductsFallback()) as Record<string, unknown>[];
+}
+
+async function syncProductsJson(list: Record<string, unknown>[]) {
+  const jsonPath = path.join(process.cwd(), 'data', 'products.json');
+  const publicPath = path.join(process.cwd(), 'public', 'data-products.json');
+  const content = JSON.stringify(list, null, 2) + '\n';
+  fs.writeFileSync(jsonPath, content, 'utf8');
+  if (fs.existsSync(path.dirname(publicPath))) {
+    fs.writeFileSync(publicPath, content, 'utf8');
+  }
+}
+
+const PRODUCT_CAT_NAMES: Record<string, string> = {
+  fruit: '제철과일',
+  veg: '신선채소',
+  seafood: '수산물',
+  dried: '건어물',
+  meat: '정육·계란',
+  grain: '곡물·쌀',
+  processed: '가공식품',
+};
 
 const kakaoConfig = getKakaoConfig(siteUrl);
 
@@ -1109,13 +1141,209 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
     if (auth.role !== 'admin') return json({ error: '관리자 권한이 필요합니다.' }, 403);
 
     if (method === 'GET' && b === 'stats') {
-      const [users, orders, reviews, inquiries] = await Promise.all([
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      const [users, orders, reviews, inquiries, allOrders] = await Promise.all([
         prisma.user.count({ where: { role: 'user' } }),
         prisma.order.count(),
         prisma.review.count(),
         prisma.inquiry.count({ where: { status: 'pending' } }),
+        prisma.order.findMany({ orderBy: { createdAt: 'desc' } }),
       ]);
-      return json({ users, orders, reviews, inquiries });
+
+      const paidStatuses = new Set(['paid', 'preparing', 'shipping', 'done']);
+      const paidOrders = allOrders.filter((o) => paidStatuses.has(o.status) && o.paymentStatus !== 'cancelled');
+      const totalRevenue = paidOrders.reduce((s, o) => s + (o.total || 0), 0);
+      const todayOrders = allOrders.filter((o) => o.createdAt >= todayStart);
+      const monthOrders = allOrders.filter((o) => o.createdAt >= monthStart);
+      const todayRevenue = todayOrders
+        .filter((o) => paidStatuses.has(o.status))
+        .reduce((s, o) => s + (o.total || 0), 0);
+      const monthRevenue = monthOrders
+        .filter((o) => paidStatuses.has(o.status))
+        .reduce((s, o) => s + (o.total || 0), 0);
+      const pendingShip = allOrders.filter((o) => ['paid', 'preparing'].includes(o.status)).length;
+      const products = await loadAllProducts();
+
+      const byStatus: Record<string, number> = {};
+      allOrders.forEach((o) => {
+        byStatus[o.status] = (byStatus[o.status] || 0) + 1;
+      });
+
+      return json({
+        users,
+        orders,
+        reviews,
+        inquiries,
+        products: products.length,
+        totalRevenue,
+        todayRevenue,
+        monthRevenue,
+        todayOrders: todayOrders.length,
+        monthOrders: monthOrders.length,
+        pendingShip,
+        byStatus,
+        recentOrders: allOrders.slice(0, 8).map(mapOrder),
+      });
+    }
+
+    if (method === 'GET' && b === 'sales') {
+      const days = Number(url.searchParams.get('days') || 30);
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+
+      const orders = await prisma.order.findMany({
+        where: { createdAt: { gte: since } },
+        orderBy: { createdAt: 'asc' },
+      });
+
+      const paidStatuses = new Set(['paid', 'preparing', 'shipping', 'done']);
+      const daily: Record<string, { revenue: number; count: number }> = {};
+
+      orders.forEach((o) => {
+        const key = o.createdAt.toISOString().slice(0, 10);
+        if (!daily[key]) daily[key] = { revenue: 0, count: 0 };
+        daily[key].count += 1;
+        if (paidStatuses.has(o.status) && o.paymentStatus !== 'cancelled') {
+          daily[key].revenue += o.total || 0;
+        }
+      });
+
+      const chart = Object.entries(daily)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, v]) => ({ date, revenue: v.revenue, count: v.count }));
+
+      const totalRevenue = orders
+        .filter((o) => paidStatuses.has(o.status))
+        .reduce((s, o) => s + (o.total || 0), 0);
+
+      const byPayment: Record<string, number> = {};
+      orders.forEach((o) => {
+        const m = o.paymentMethod || 'unknown';
+        byPayment[m] = (byPayment[m] || 0) + (o.total || 0);
+      });
+
+      return json({ chart, totalRevenue, orderCount: orders.length, byPayment });
+    }
+
+    if (b === 'products') {
+      if (method === 'GET' && !c) {
+        const list = await loadAllProducts();
+        return json(list);
+      }
+      if (method === 'GET' && c) {
+        const row = await prisma.product.findUnique({ where: { id: c } });
+        if (row) return json(row.data);
+        const list = await loadAllProducts();
+        const found = list.find((p) => p.id === c);
+        if (!found) return json({ error: '상품을 찾을 수 없습니다.' }, 404);
+        return json(found);
+      }
+      if (method === 'POST' && !c) {
+        const body = await parseBody<Record<string, unknown>>(request);
+        const id = String(body.id || '').trim();
+        const name = String(body.name || '').trim();
+        if (!id || !name) return json({ error: '상품 ID와 이름은 필수입니다.' }, 400);
+
+        const category = String(body.category || 'fruit');
+        const catName = PRODUCT_CAT_NAMES[category] || category;
+        const price = Number(body.price) || 0;
+        const originalPrice = Number(body.originalPrice) || price;
+        const unit = String(body.unit || '1개');
+        const imageUrl = String(body.imageUrl || `/images/products/${id}.png`);
+
+        const product: Record<string, unknown> = {
+          id,
+          name,
+          category,
+          categoryPath: ['식품', catName, name],
+          price,
+          originalPrice,
+          unit,
+          origin: String(body.origin || '국내산'),
+          badge: String(body.badge || '신선'),
+          rating: Number(body.rating) || 4.8,
+          reviews: 0,
+          stock: Number(body.stock) ?? 50,
+          recentBuyers: 0,
+          couponNote: String(body.couponNote || ''),
+          emoji: String(body.emoji || '🛒'),
+          gradient: String(body.gradient || 'linear-gradient(135deg, #69db7c, #2f9e44)'),
+          organic: !!body.organic,
+          localDirect: body.localDirect !== false,
+          freeShipping: !!body.freeShipping,
+          adminImages: [{ id: `${id}-a1`, url: imageUrl, label: '대표 상품컷' }],
+          options: [{ id: `${id}-o1`, label: unit, price, originalPrice }],
+          optionLabel: '용량',
+          description: String(body.description || ''),
+          details: String(body.details || '')
+            .split('\n')
+            .map((s) => s.trim())
+            .filter(Boolean),
+        };
+
+        await prisma.product.upsert({
+          where: { id },
+          create: { id, data: product as Prisma.InputJsonValue },
+          update: { data: product as Prisma.InputJsonValue },
+        });
+
+        const list = await loadAllProducts();
+        const idx = list.findIndex((p) => p.id === id);
+        if (idx >= 0) list[idx] = product;
+        else list.push(product);
+        try {
+          await syncProductsJson(list);
+        } catch {
+          /* read-only fs on serverless */
+        }
+
+        return json({ ok: true, product });
+      }
+      if (method === 'PUT' && c) {
+        const body = await parseBody<Record<string, unknown>>(request);
+        const existing = await prisma.product.findUnique({ where: { id: c } });
+        const base = (existing?.data as Record<string, unknown>) || {};
+        const merged = { ...base, ...body, id: c };
+
+        if (body.imageUrl) {
+          merged.adminImages = [{ id: `${c}-a1`, url: body.imageUrl, label: '대표 상품컷' }];
+        }
+        if (body.price !== undefined) {
+          const price = Number(body.price);
+          const originalPrice = Number(body.originalPrice ?? body.price);
+          const unit = String(merged.unit || '1개');
+          merged.options = [{ id: `${c}-o1`, label: unit, price, originalPrice }];
+        }
+
+        await prisma.product.upsert({
+          where: { id: c },
+          create: { id: c, data: merged as Prisma.InputJsonValue },
+          update: { data: merged as Prisma.InputJsonValue },
+        });
+
+        const list = await loadAllProducts();
+        const idx = list.findIndex((p) => p.id === c);
+        if (idx >= 0) list[idx] = merged;
+        try {
+          await syncProductsJson(list);
+        } catch {
+          /* */
+        }
+        return json({ ok: true, product: merged });
+      }
+      if (method === 'DELETE' && c) {
+        await prisma.product.delete({ where: { id: c } }).catch(() => null);
+        const list = (await loadAllProducts()).filter((p) => p.id !== c);
+        try {
+          await syncProductsJson(list);
+        } catch {
+          /* */
+        }
+        return json({ ok: true });
+      }
     }
 
     if (method === 'GET' && b === 'settings') {
@@ -1137,18 +1365,34 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
       return json({ ok: true });
     }
 
+    if (method === 'GET' && b === 'orders' && c) {
+      const row = await prisma.order.findUnique({ where: { id: c } });
+      if (!row) return json({ error: '주문 없음' }, 404);
+      return json(mapOrder(row));
+    }
+
     if (method === 'GET' && b === 'orders') {
-      const rows = await prisma.order.findMany({ orderBy: { createdAt: 'desc' } });
+      const status = url.searchParams.get('status');
+      const where = status ? { status } : {};
+      const rows = await prisma.order.findMany({ where, orderBy: { createdAt: 'desc' } });
       return json(rows.map(mapOrder));
     }
 
     if (method === 'PATCH' && b === 'orders' && c) {
-      const body = await parseBody<{ status?: string }>(request);
-      await prisma.order.update({
-        where: { id: c },
-        data: { status: body.status },
-      });
-      return json({ ok: true });
+      const body = await parseBody<{
+        status?: string;
+        paymentStatus?: string;
+        trackingNumber?: string;
+        trackingCompany?: string;
+      }>(request);
+      const data: Prisma.OrderUpdateInput = {};
+      if (body.status) data.status = body.status;
+      if (body.paymentStatus) data.paymentStatus = body.paymentStatus;
+      if (body.trackingNumber !== undefined) data.trackingNumber = body.trackingNumber;
+      if (body.trackingCompany !== undefined) data.trackingCompany = body.trackingCompany;
+      await prisma.order.update({ where: { id: c }, data });
+      const updated = await prisma.order.findUnique({ where: { id: c } });
+      return json({ ok: true, order: updated ? mapOrder(updated) : null });
     }
 
     if (method === 'GET' && b === 'reviews') {

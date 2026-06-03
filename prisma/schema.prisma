@@ -69,6 +69,8 @@ model Order {
   shipping        Int?
   total           Int?
   items           Json     @default("[]")
+  trackingCompany String?  @map("tracking_company")
+  trackingNumber  String?  @map("tracking_number")
   createdAt       DateTime @default(now()) @map("created_at")
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)

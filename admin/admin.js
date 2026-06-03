@@ -1,8 +1,65 @@
 const Admin = {
   token: localStorage.getItem('gh_admin_token') || '',
-  tab: 'dashboard',
-  settings: null,
+  view: 'dashboard',
   msg: '',
+  stats: null,
+  sales: null,
+  settings: null,
+  products: [],
+  orders: [],
+  reviews: [],
+  inquiries: [],
+  members: [],
+  productFilter: '',
+  orderFilter: '',
+  editingProduct: null,
+  selectedOrderId: null,
+
+  CATEGORIES: {
+    fruit: '제철과일',
+    veg: '신선채소',
+    seafood: '수산물',
+    dried: '건어물',
+    meat: '정육·계란',
+    grain: '곡물·쌀',
+    processed: '가공식품',
+  },
+
+  STATUS: {
+    awaiting_deposit: '입금대기',
+    pending: '결제대기',
+    paid: '결제완료',
+    preparing: '상품준비',
+    shipping: '배송중',
+    done: '배송완료',
+    cancelled: '취소',
+  },
+
+  PAYMENT: { card: '카드', transfer: '무통장', kakao: '간편결제' },
+
+  esc(s) {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/"/g, '&quot;');
+  },
+
+  fmt(n) {
+    return Number(n || 0).toLocaleString('ko-KR') + '원';
+  },
+
+  fmtDate(iso) {
+    if (!iso) return '-';
+    return iso.slice(0, 16).replace('T', ' ');
+  },
+
+  badge(status) {
+    const cls =
+      { paid: 'paid', preparing: 'preparing', shipping: 'shipping', done: 'done', awaiting_deposit: 'awaiting', cancelled: 'cancel', pending: 'pending' }[
+        status
+      ] || 'pending';
+    return `<span class="badge badge--${cls}">${this.STATUS[status] || status}</span>`;
+  },
 
   async request(path, options = {}) {
     const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
@@ -17,6 +74,11 @@ const Admin = {
     this.token = t || '';
     if (t) localStorage.setItem('gh_admin_token', t);
     else localStorage.removeItem('gh_admin_token');
+  },
+
+  go(view) {
+    this.view = view;
+    this.render();
   },
 
   async login(e) {
@@ -34,9 +96,9 @@ const Admin = {
       }
       this.setToken(data.token);
       this.msg = '';
-      this.tab = 'dashboard';
+      this.view = 'dashboard';
       this.render();
-      await this.loadAll();
+      await this.loadDashboard();
     } catch (err) {
       this.msg = err.message;
       this.render();
@@ -48,74 +110,201 @@ const Admin = {
     this.render();
   },
 
-  async loadAll() {
-    if (!this.token) return;
-    try {
-      const [stats, settings] = await Promise.all([
-        this.request('/api/admin/stats'),
-        this.request('/api/admin/settings'),
-      ]);
-      this.stats = stats;
-      this.settings = settings;
-      this.render();
-    } catch (e) {
-      this.msg = e.message;
-      this.render();
+  async loadDashboard() {
+    [this.stats, this.sales] = await Promise.all([
+      this.request('/api/admin/stats'),
+      this.request('/api/admin/sales?days=14'),
+    ]);
+    this.view = 'dashboard';
+    this.render();
+  },
+
+  async loadProducts() {
+    this.products = await this.request('/api/admin/products');
+    this.view = 'products';
+    this.render();
+  },
+
+  openProductForm(id) {
+    if (id) {
+      const p = this.products.find((x) => x.id === id);
+      this.editingProduct = p ? { ...p } : null;
+    } else {
+      this.editingProduct = {
+        id: '',
+        name: '',
+        category: 'fruit',
+        price: '',
+        originalPrice: '',
+        unit: '',
+        origin: '',
+        stock: 50,
+        badge: '신선',
+        emoji: '🛒',
+        description: '',
+        imageUrl: '',
+        organic: false,
+        localDirect: true,
+        freeShipping: false,
+      };
     }
+    this.view = 'product-form';
+    this.render();
+  },
+
+  async saveProduct(e) {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const body = {
+      id: fd.get('id'),
+      name: fd.get('name'),
+      category: fd.get('category'),
+      price: Number(fd.get('price')),
+      originalPrice: Number(fd.get('originalPrice') || fd.get('price')),
+      unit: fd.get('unit'),
+      origin: fd.get('origin'),
+      stock: Number(fd.get('stock')),
+      badge: fd.get('badge'),
+      emoji: fd.get('emoji'),
+      description: fd.get('description'),
+      imageUrl: fd.get('imageUrl'),
+      organic: fd.get('organic') === 'on',
+      localDirect: fd.get('localDirect') === 'on',
+      freeShipping: fd.get('freeShipping') === 'on',
+      details: fd.get('details'),
+    };
+    try {
+      if (this.editingProduct?.id && this.products.some((p) => p.id === this.editingProduct.id)) {
+        await this.request('/api/admin/products/' + encodeURIComponent(body.id), {
+          method: 'PUT',
+          body: JSON.stringify(body),
+        });
+      } else {
+        await this.request('/api/admin/products', { method: 'POST', body: JSON.stringify(body) });
+      }
+      alert('상품이 저장되었습니다.');
+      await this.loadProducts();
+    } catch (err) {
+      alert(err.message);
+    }
+  },
+
+  async deleteProduct(id) {
+    if (!confirm('이 상품을 삭제할까요?')) return;
+    try {
+      await this.request('/api/admin/products/' + encodeURIComponent(id), { method: 'DELETE' });
+      await this.loadProducts();
+    } catch (err) {
+      alert(err.message);
+    }
+  },
+
+  async loadOrders(status) {
+    if (status !== undefined) this.orderFilter = status;
+    const q = this.orderFilter ? '?status=' + encodeURIComponent(this.orderFilter) : '';
+    this.orders = await this.request('/api/admin/orders' + q);
+    this.view = 'orders';
+    this.selectedOrderId = null;
+    this.render();
+  },
+
+  async openOrder(id) {
+    try {
+      const order = await this.request('/api/admin/orders/' + encodeURIComponent(id));
+      const idx = this.orders.findIndex((o) => o.id === id);
+      if (idx >= 0) this.orders[idx] = order;
+      else this.orders.unshift(order);
+    } catch {
+      /* keep existing */
+    }
+    this.selectedOrderId = id;
+    this.view = 'order-detail';
+    this.render();
+  },
+
+  async patchOrder(id, data) {
+    await this.request('/api/admin/orders/' + encodeURIComponent(id), {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+    alert('저장되었습니다.');
+    await this.loadOrders(this.orderFilter);
+    this.openOrder(id);
+  },
+
+  async saveOrderDetail(e) {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    await this.patchOrder(fd.get('id'), {
+      status: fd.get('status'),
+      paymentStatus: fd.get('paymentStatus'),
+      trackingCompany: fd.get('trackingCompany'),
+      trackingNumber: fd.get('trackingNumber'),
+    });
+  },
+
+  async loadSales() {
+    this.sales = await this.request('/api/admin/sales?days=30');
+    this.stats = await this.request('/api/admin/stats');
+    this.view = 'sales';
+    this.render();
+  },
+
+  async loadMembers() {
+    this.members = await this.request('/api/admin/users');
+    this.view = 'members';
+    this.render();
+  },
+
+  async loadReviews() {
+    this.reviews = await this.request('/api/admin/reviews');
+    this.view = 'reviews';
+    this.render();
+  },
+
+  async loadInquiries() {
+    this.inquiries = await this.request('/api/admin/inquiries');
+    this.view = 'inquiries';
+    this.render();
+  },
+
+  async loadSettings() {
+    this.settings = await this.request('/api/admin/settings');
+    this.view = 'settings';
+    this.render();
+  },
+
+  async deleteReview(id) {
+    if (!confirm('삭제할까요?')) return;
+    await this.request('/api/admin/reviews/' + id, { method: 'DELETE' });
+    await this.loadReviews();
+  },
+
+  async patchInquiry(id) {
+    await this.request('/api/admin/inquiries/' + id, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'done' }),
+    });
+    await this.loadInquiries();
   },
 
   async saveSetting(key) {
     const form = document.getElementById('form-' + key);
     if (!form) return;
     const fd = new FormData(form);
-    const body = {};
-    fd.forEach((v, k) => {
-      if (k.includes('.')) {
-        const [a, b] = k.split('.');
-        body[a] = body[a] || {};
-        body[a][b] = v;
-      } else if (k === 'testMode' || k === 'enabled') {
-        body[k] = v === 'on' || v === 'true';
-      } else if (k === 'shippingFee' || k === 'freeShippingThreshold') {
-        body[k] = Number(v);
-      } else {
-        body[k] = v;
-      }
-    });
-    const nested = {};
-    fd.forEach((v, k) => {
-      if (!k.includes('.')) return;
-      const [a, b] = k.split('.');
-      nested[a] = nested[a] || {};
-      nested[a][b] = v;
-    });
-    Object.assign(body, nested.shop ? { shop: nested.shop } : {});
-    if (key === 'shop' && nested.shop) body.shop = nested.shop;
-    if (key === 'customerCenter' && nested.customerCenter) body.customerCenter = nested.customerCenter;
-    if (key === 'payment') {
-      body.provider = fd.get('provider');
-      body.testMode = fd.get('testMode') === 'on';
-      body.notice = fd.get('notice');
-    }
-    if (key === 'order') {
-      body.shippingFee = Number(fd.get('shippingFee'));
-      body.freeShippingThreshold = Number(fd.get('freeShippingThreshold'));
-      body.autoConfirm = fd.get('autoConfirm') === 'on';
-    }
     try {
-      const flat = this.settings[key] || {};
       if (key === 'shop') {
         await this.request('/api/admin/settings/shop', {
           method: 'PUT',
           body: JSON.stringify({
-            name: fd.get('name') || flat.name,
-            company: fd.get('company') || flat.company,
-            ceo: fd.get('ceo') || flat.ceo,
-            businessNo: fd.get('businessNo') || flat.businessNo,
-            address: fd.get('address') || flat.address,
-            email: fd.get('email') || flat.email,
-            phone: fd.get('phone') || flat.phone,
-            mailOrderNo: fd.get('mailOrderNo') || flat.mailOrderNo,
+            name: fd.get('name'),
+            company: fd.get('company'),
+            ceo: fd.get('ceo'),
+            businessNo: fd.get('businessNo'),
+            address: fd.get('address'),
+            email: fd.get('email'),
+            phone: fd.get('phone'),
+            mailOrderNo: fd.get('mailOrderNo'),
           }),
         });
       } else if (key === 'payment') {
@@ -125,11 +314,10 @@ const Admin = {
             provider: fd.get('provider'),
             testMode: fd.get('testMode') === 'on',
             notice: fd.get('notice'),
-            merchantId: fd.get('merchantId') || '',
             bankAccount: {
-              bank: fd.get('bankName') || '',
-              number: fd.get('bankNumber') || '',
-              holder: fd.get('bankHolder') || '',
+              bank: fd.get('bankName'),
+              number: fd.get('bankNumber'),
+              holder: fd.get('bankHolder'),
             },
           }),
         });
@@ -153,176 +341,411 @@ const Admin = {
         });
       }
       alert('저장되었습니다');
-      await this.loadAll();
+      await this.loadSettings();
     } catch (e) {
       alert(e.message);
     }
   },
 
-  async loadOrders() {
-    this.orders = await this.request('/api/admin/orders');
-    this.tab = 'orders';
-    this.render();
-  },
-
-  async loadReviews() {
-    this.reviews = await this.request('/api/admin/reviews');
-    this.tab = 'reviews';
-    this.render();
-  },
-
-  async loadInquiries() {
-    this.inquiries = await this.request('/api/admin/inquiries');
-    this.tab = 'inquiries';
-    this.render();
-  },
-
-  async patchOrder(id, status) {
-    await this.request('/api/admin/orders/' + id, { method: 'PATCH', body: JSON.stringify({ status }) });
-    await this.loadOrders();
-  },
-
-  async deleteReview(id) {
-    if (!confirm('삭제할까요?')) return;
-    await this.request('/api/admin/reviews/' + id, { method: 'DELETE' });
-    await this.loadReviews();
-  },
-
-  async patchInquiry(id) {
-    await this.request('/api/admin/inquiries/' + id, {
-      method: 'PATCH',
-      body: JSON.stringify({ status: 'done' }),
-    });
-    await this.loadInquiries();
-  },
-
   renderLogin() {
     return `
       <div class="login-box">
-        <h1>🌿 관리자 로그인</h1>
+        <h1>수산아빠 관리자</h1>
         <p class="msg">${this.msg}</p>
         <form onsubmit="Admin.login(event)">
           <div class="form-row"><label>이메일</label><input name="email" type="email" required value="admin@greenharvest.kr" /></div>
           <div class="form-row"><label>비밀번호</label><input name="password" type="password" required /></div>
-          <button class="btn" type="submit">로그인</button>
+          <button class="btn" type="submit" style="width:100%;margin-top:8px">로그인</button>
         </form>
-        <p style="margin-top:16px;font-size:0.85rem;color:#666">기본: admin@greenharvest.kr / admin1234</p>
+        <p style="margin-top:16px;font-size:0.85rem;color:#666">admin@greenharvest.kr / admin1234</p>
         <p><a href="/">← 쇼핑몰</a></p>
       </div>`;
   },
 
+  renderSidebar() {
+    const items = [
+      ['dashboard', '📊', '대시보드', () => 'Admin.loadDashboard()'],
+      ['products', '📦', '상품관리', () => 'Admin.loadProducts()'],
+      ['product-form', '➕', '상품등록', () => "Admin.openProductForm(null)"],
+      ['orders', '🚚', '주문·배송', () => 'Admin.loadOrders("")'],
+      ['sales', '💰', '매출관리', () => 'Admin.loadSales()'],
+      ['members', '👥', '회원관리', () => 'Admin.loadMembers()'],
+      ['reviews', '⭐', '리뷰관리', () => 'Admin.loadReviews()'],
+      ['inquiries', '💬', '문의함', () => 'Admin.loadInquiries()'],
+      ['settings', '⚙️', '설정', () => 'Admin.loadSettings()'],
+    ];
+    const activeView =
+      this.view === 'product-form' ? 'product-form' : this.view === 'order-detail' ? 'orders' : this.view;
+    return `
+      <aside class="admin-sidebar">
+        <div class="admin-sidebar__brand">
+          <img src="/images/logo.png" alt="" />
+          <strong>수산아빠 Admin</strong>
+        </div>
+        <nav class="admin-nav">
+          ${items
+            .map(
+              ([id, icon, label, fn]) =>
+                `<button type="button" class="${activeView === id ? 'active' : ''}" onclick="${fn()}">${icon} ${label}</button>`
+            )
+            .join('')}
+        </nav>
+        <div class="admin-sidebar__foot">
+          <a href="/" target="_blank">쇼핑몰 바로가기 →</a><br><br>
+          <button class="btn btn--ghost btn--sm" style="width:100%;color:#fff;border-color:rgba(255,255,255,0.3)" onclick="Admin.logout()">로그아웃</button>
+        </div>
+      </aside>`;
+  },
+
   renderDashboard() {
     const s = this.stats || {};
+    const chart = this.sales?.chart || [];
+    const maxRev = Math.max(...chart.map((c) => c.revenue), 1);
+    const bars = chart
+      .slice(-14)
+      .map(
+        (c) => `
+      <div class="chart-bar">
+        <div class="chart-bar__col" style="height:${Math.round((c.revenue / maxRev) * 140)}px" title="${this.fmt(c.revenue)}"></div>
+        <span class="chart-bar__label">${c.date.slice(5)}</span>
+      </div>`
+      )
+      .join('');
+
+    const recent = (s.recentOrders || [])
+      .map(
+        (o) => `<tr>
+        <td><a href="#" onclick="Admin.openOrder('${o.id}');return false">${o.id}</a></td>
+        <td>${this.esc(o.guest_name)}</td>
+        <td>${this.fmt(o.total)}</td>
+        <td>${this.badge(o.status)}</td>
+        <td>${this.fmtDate(o.created_at)}</td>
+      </tr>`
+      )
+      .join('');
+
     return `
-      <div class="stats">
-        <div class="stat-card"><span>회원</span><strong>${s.users ?? '-'}</strong></div>
-        <div class="stat-card"><span>주문</span><strong>${s.orders ?? '-'}</strong></div>
-        <div class="stat-card"><span>리뷰</span><strong>${s.reviews ?? '-'}</strong></div>
-        <div class="stat-card"><span>미답변 문의</span><strong>${s.inquiries ?? '-'}</strong></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-card__label">오늘 매출</div><div class="stat-card__value">${this.fmt(s.todayRevenue)}</div><div class="stat-card__sub">주문 ${s.todayOrders ?? 0}건</div></div>
+        <div class="stat-card stat-card--blue"><div class="stat-card__label">이번 달 매출</div><div class="stat-card__value">${this.fmt(s.monthRevenue)}</div><div class="stat-card__sub">주문 ${s.monthOrders ?? 0}건</div></div>
+        <div class="stat-card"><div class="stat-card__label">누적 매출</div><div class="stat-card__value">${this.fmt(s.totalRevenue)}</div><div class="stat-card__sub">전체 ${s.orders ?? 0}건</div></div>
+        <div class="stat-card stat-card--warn"><div class="stat-card__label">배송 대기</div><div class="stat-card__value">${s.pendingShip ?? 0}건</div><div class="stat-card__sub">결제완료·준비중</div></div>
+        <div class="stat-card"><div class="stat-card__label">등록 상품</div><div class="stat-card__value">${s.products ?? 0}개</div></div>
+        <div class="stat-card"><div class="stat-card__label">회원</div><div class="stat-card__value">${s.users ?? 0}명</div><div class="stat-card__sub">미답변 문의 ${s.inquiries ?? 0}건</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel__head"><h2>최근 14일 매출</h2></div>
+          <div class="chart-bars">${bars || '<p class="empty-msg">데이터 없음</p>'}</div>
+        </div>
+        <div class="panel">
+          <div class="panel__head"><h2>주문 상태</h2></div>
+          ${Object.entries(s.byStatus || {})
+            .map(([k, v]) => `<p>${this.badge(k)} <strong>${v}</strong>건</p>`)
+            .join('') || '<p class="empty-msg">주문 없음</p>'}
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel__head"><h2>최근 주문</h2><button class="btn btn--sm btn--ghost" onclick="Admin.loadOrders('')">전체 보기</button></div>
+        <table class="data-table"><thead><tr><th>주문번호</th><th>주문자</th><th>금액</th><th>상태</th><th>일시</th></tr></thead><tbody>${recent || '<tr><td colspan="5" class="empty-msg">주문 없음</td></tr>'}</tbody></table>
       </div>`;
   },
 
-  renderSettingsShop() {
-    const s = this.settings?.shop || {};
-    return `
-      <form id="form-shop" class="panel" onsubmit="event.preventDefault();Admin.saveSetting('shop')">
-        <h2>쇼핑몰 정보</h2>
-        <div class="form-row"><label>상호</label><input name="name" value="${s.name || ''}" /></div>
-        <div class="form-row"><label>회사명</label><input name="company" value="${s.company || ''}" /></div>
-        <div class="form-row"><label>대표</label><input name="ceo" value="${s.ceo || ''}" /></div>
-        <div class="form-row"><label>사업자번호</label><input name="businessNo" value="${s.businessNo || ''}" /></div>
-        <div class="form-row"><label>주소</label><input name="address" value="${s.address || ''}" /></div>
-        <div class="form-row"><label>이메일</label><input name="email" value="${s.email || ''}" /></div>
-        <div class="form-row"><label>전화</label><input name="phone" value="${s.phone || ''}" /></div>
-        <div class="form-row"><label>통신판매업</label><input name="mailOrderNo" value="${s.mailOrderNo || ''}" /></div>
-        <button class="btn" type="submit">저장</button>
-      </form>`;
-  },
+  renderProducts() {
+    const q = this.productFilter.toLowerCase();
+    const list = (this.products || []).filter(
+      (p) => !q || String(p.name).toLowerCase().includes(q) || String(p.id).toLowerCase().includes(q)
+    );
+    const rows = list
+      .map((p) => {
+        const img = p.adminImages?.[0]?.url || '';
+        return `<tr>
+          <td>${img ? `<img class="thumb" src="${img}" alt="" onerror="this.style.display='none'" />` : '📦'}</td>
+          <td><code>${this.esc(p.id)}</code></td>
+          <td><strong>${this.esc(p.name)}</strong><br><small>${this.esc(p.unit)} · ${this.CATEGORIES[p.category] || p.category}</small></td>
+          <td>${this.fmt(p.price)}</td>
+          <td>${p.stock ?? '-'}개</td>
+          <td>${this.badge(p.stock > 0 ? 'paid' : 'cancel').replace('결제완료', '판매중').replace('취소', '품절')}</td>
+          <td>
+            <button class="btn btn--sm btn--ghost" onclick="Admin.openProductForm('${p.id}')">수정</button>
+            <button class="btn btn--sm btn--danger" onclick="Admin.deleteProduct('${p.id}')">삭제</button>
+          </td>
+        </tr>`;
+      })
+      .join('');
 
-  renderSettingsPayment() {
-    const p = this.settings?.payment || {};
-    const bank = p.bankAccount || {};
     return `
-      <form id="form-payment" class="panel" onsubmit="event.preventDefault();Admin.saveSetting('payment')">
-        <h2>결제 설정</h2>
-        <p class="admin-hint">토스페이먼츠 Client/Secret Key는 Vercel 환경변수(TOSS_CLIENT_KEY, TOSS_SECRET_KEY)에 등록하세요.</p>
-        <div class="form-row"><label>PG 제공사</label>
-          <select name="provider">
-            <option value="demo" ${p.provider === 'demo' ? 'selected' : ''}>demo</option>
-            <option value="toss" ${p.provider === 'toss' ? 'selected' : ''}>toss</option>
-          </select>
+      <div class="panel">
+        <div class="panel__head">
+          <h2>상품 관리 (${list.length}개)</h2>
+          <div class="toolbar">
+            <input type="search" placeholder="상품명·ID 검색" value="${this.esc(this.productFilter)}" oninput="Admin.productFilter=this.value;Admin.render()" />
+            <button class="btn" onclick="Admin.openProductForm(null)">+ 상품 등록</button>
+          </div>
         </div>
-        <div class="form-row"><label><input type="checkbox" name="testMode" ${p.testMode ? 'checked' : ''} /> 테스트 모드 (실제 청구 없음)</label></div>
-        <div class="form-row"><label>안내 문구</label><textarea name="notice" rows="2">${p.notice || ''}</textarea></div>
-        <h3 style="margin:16px 0 8px">무통장 입금 계좌</h3>
-        <div class="form-row"><label>은행</label><input name="bankName" value="${bank.bank || ''}" placeholder="국민은행" /></div>
-        <div class="form-row"><label>계좌번호</label><input name="bankNumber" value="${bank.number || ''}" placeholder="000-00-0000-000" /></div>
-        <div class="form-row"><label>예금주</label><input name="bankHolder" value="${bank.holder || ''}" placeholder="리벤더(변창현)" /></div>
-        <button class="btn" type="submit">저장</button>
-      </form>`;
+        <table class="data-table">
+          <thead><tr><th></th><th>ID</th><th>상품명</th><th>가격</th><th>재고</th><th>상태</th><th>관리</th></tr></thead>
+          <tbody>${rows || '<tr><td colspan="7" class="empty-msg">등록된 상품이 없습니다.</td></tr>'}</tbody>
+        </table>
+      </div>`;
   },
 
-  renderSettingsOrder() {
-    const o = this.settings?.order || {};
+  renderProductForm() {
+    const p = this.editingProduct || {};
+    const isEdit = !!(p.id && this.products.some((x) => x.id === p.id));
+    const img = p.adminImages?.[0]?.url || p.imageUrl || '';
     return `
-      <form id="form-order" class="panel" onsubmit="event.preventDefault();Admin.saveSetting('order')">
-        <h2>주문·배송 설정</h2>
-        <div class="form-row"><label>기본 배송비 (원)</label><input name="shippingFee" type="number" value="${o.shippingFee ?? 3000}" /></div>
-        <div class="form-row"><label>무료배송 기준 (원)</label><input name="freeShippingThreshold" type="number" value="${o.freeShippingThreshold ?? 50000}" /></div>
-        <div class="form-row"><label><input type="checkbox" name="autoConfirm" ${o.autoConfirm ? 'checked' : ''} /> 주문 자동 확인</label></div>
-        <button class="btn" type="submit">저장</button>
-      </form>`;
-  },
-
-  renderSettingsCS() {
-    const c = this.settings?.customerCenter || {};
-    return `
-      <form id="form-customerCenter" class="panel" onsubmit="event.preventDefault();Admin.saveSetting('customerCenter')">
-        <h2>고객센터 설정</h2>
-        <div class="form-row"><label>전화</label><input name="phone" value="${c.phone || ''}" /></div>
-        <div class="form-row"><label>운영시간</label><input name="hours" value="${c.hours || ''}" /></div>
-        <div class="form-row"><label>이메일</label><input name="email" value="${c.email || ''}" /></div>
-        <button class="btn" type="submit">저장</button>
-      </form>`;
+      <div class="panel">
+        <div class="panel__head"><h2>${isEdit ? '상품 수정' : '상품 등록'}</h2>
+          <button class="btn btn--ghost btn--sm" onclick="Admin.loadProducts()">← 목록</button>
+        </div>
+        <form onsubmit="Admin.saveProduct(event)">
+          <div class="form-grid">
+            <div class="form-row"><label>상품 ID *</label><input name="id" required value="${this.esc(p.id)}" ${isEdit ? 'readonly' : ''} placeholder="예: fr6" /></div>
+            <div class="form-row"><label>카테고리 *</label><select name="category">${Object.entries(this.CATEGORIES).map(([k, v]) => `<option value="${k}" ${p.category === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+            <div class="form-row full"><label>상품명 *</label><input name="name" required value="${this.esc(p.name)}" /></div>
+            <div class="form-row"><label>판매가 *</label><input name="price" type="number" required value="${p.price ?? ''}" /></div>
+            <div class="form-row"><label>정가</label><input name="originalPrice" type="number" value="${p.originalPrice ?? p.price ?? ''}" /></div>
+            <div class="form-row"><label>단위 *</label><input name="unit" required value="${this.esc(p.unit)}" placeholder="5kg, 1kg, 2입" /></div>
+            <div class="form-row"><label>재고</label><input name="stock" type="number" value="${p.stock ?? 50}" /></div>
+            <div class="form-row"><label>산지</label><input name="origin" value="${this.esc(p.origin)}" /></div>
+            <div class="form-row"><label>뱃지</label><input name="badge" value="${this.esc(p.badge || '신선')}" /></div>
+            <div class="form-row"><label>이모지</label><input name="emoji" value="${this.esc(p.emoji || '🛒')}" /></div>
+            <div class="form-row full"><label>이미지 URL</label><input name="imageUrl" value="${this.esc(img)}" placeholder="/images/products/상품ID.png" /></div>
+            <div class="form-row full"><label>상품 설명</label><textarea name="description" rows="3">${this.esc(p.description)}</textarea></div>
+            <div class="form-row full"><label>상세 항목 (줄바꿈 구분)</label><textarea name="details" rows="3">${this.esc((p.details || []).join('\n'))}</textarea></div>
+            <div class="form-row"><label><input type="checkbox" name="organic" ${p.organic ? 'checked' : ''} /> 유기농</label></div>
+            <div class="form-row"><label><input type="checkbox" name="localDirect" ${p.localDirect !== false ? 'checked' : ''} /> 산지직송</label></div>
+            <div class="form-row"><label><input type="checkbox" name="freeShipping" ${p.freeShipping ? 'checked' : ''} /> 무료배송</label></div>
+          </div>
+          <button class="btn" type="submit" style="margin-top:16px">${isEdit ? '수정 저장' : '상품 등록'}</button>
+        </form>
+      </div>`;
   },
 
   renderOrders() {
     const rows = (this.orders || [])
       .map(
         (o) => `<tr>
-        <td>${o.id}</td><td>${o.guest_name}</td><td>${o.total?.toLocaleString()}원</td>
-        <td>${o.status}</td>
-        <td><select onchange="Admin.patchOrder('${o.id}', this.value)">
-          <option value="awaiting_deposit" ${o.status === 'awaiting_deposit' ? 'selected' : ''}>입금대기</option>
-          <option value="paid" ${o.status === 'paid' ? 'selected' : ''}>결제완료</option>
-          <option value="preparing" ${o.status === 'preparing' ? 'selected' : ''}>준비중</option>
-          <option value="shipping" ${o.status === 'shipping' ? 'selected' : ''}>배송중</option>
-          <option value="done" ${o.status === 'done' ? 'selected' : ''}>완료</option>
-        </select></td>
+        <td><a href="#" onclick="Admin.openOrder('${o.id}');return false"><strong>${o.id}</strong></a></td>
+        <td>${this.esc(o.guest_name)}<br><small>${this.esc(o.guest_phone)}</small></td>
+        <td>${this.fmt(o.total)}</td>
+        <td>${this.PAYMENT[o.payment_method] || o.payment_method || '-'}</td>
+        <td>${this.badge(o.status)}</td>
+        <td>${this.fmtDate(o.created_at)}</td>
+        <td><button class="btn btn--sm btn--ghost" onclick="Admin.openOrder('${o.id}')">상세</button></td>
       </tr>`
       )
       .join('');
-    return `<div class="panel"><h2>주문 관리</h2><table><thead><tr><th>번호</th><th>이름</th><th>금액</th><th>상태</th><th>변경</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+
+    const filters = ['', 'awaiting_deposit', 'paid', 'preparing', 'shipping', 'done'];
+    return `
+      <div class="panel">
+        <div class="panel__head">
+          <h2>주문·배송 관리 (${(this.orders || []).length}건)</h2>
+          <div class="toolbar">
+            ${filters.map((f) => `<button class="btn btn--sm ${this.orderFilter === f ? '' : 'btn--ghost'}" onclick="Admin.loadOrders('${f}')">${f ? this.STATUS[f] : '전체'}</button>`).join('')}
+          </div>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>주문번호</th><th>주문자</th><th>금액</th><th>결제</th><th>상태</th><th>주문일</th><th></th></tr></thead>
+          <tbody>${rows || '<tr><td colspan="7" class="empty-msg">주문 없음</td></tr>'}</tbody>
+        </table>
+      </div>`;
+  },
+
+  renderOrderDetail() {
+    const order = (this.orders || []).find((x) => x.id === this.selectedOrderId);
+    if (!order) {
+      return `<div class="panel"><p class="empty-msg">주문 정보를 불러올 수 없습니다.</p></div>`;
+    }
+    const items = Array.isArray(order.items) ? order.items : [];
+    const itemRows = items.map((i) => `<li>${i.productId} × ${i.quantity}</li>`).join('');
+
+    return `
+      <div class="panel">
+        <div class="panel__head">
+          <h2>주문 상세 — ${order.id}</h2>
+          <button class="btn btn--ghost btn--sm" onclick="Admin.loadOrders(Admin.orderFilter)">← 목록</button>
+        </div>
+        <div class="order-detail-grid">
+          <div class="detail-box">
+            <strong>주문자</strong><br>
+            ${this.esc(order.guest_name)} / ${this.esc(order.guest_phone)}<br>
+            ${this.esc(order.guest_email || '')}<br><br>
+            <strong>배송지</strong><br>
+            [${this.esc(order.zipcode)}] ${this.esc(order.address)} ${this.esc(order.address_detail || '')}<br>
+            ${order.memo ? `<br><strong>메모</strong> ${this.esc(order.memo)}` : ''}
+          </div>
+          <div class="detail-box">
+            <strong>결제</strong><br>
+            ${this.fmt(order.subtotal)} + 배송 ${order.shipping ? this.fmt(order.shipping) : '무료'} = <strong>${this.fmt(order.total)}</strong><br>
+            ${this.PAYMENT[order.payment_method] || order.payment_method} · ${order.payment_status}<br><br>
+            <strong>상품</strong><ul>${itemRows || '<li>없음</li>'}</ul>
+          </div>
+        </div>
+        <form onsubmit="Admin.saveOrderDetail(event)" style="margin-top:20px">
+          <input type="hidden" name="id" value="${order.id}" />
+          <div class="form-grid">
+            <div class="form-row"><label>주문 상태</label>
+              <select name="status">${Object.entries(this.STATUS).map(([k, v]) => `<option value="${k}" ${order.status === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
+            </div>
+            <div class="form-row"><label>결제 상태</label>
+              <select name="paymentStatus">
+                ${['ready', 'paid', 'awaiting_deposit', 'test_paid', 'failed', 'cancelled'].map((s) => `<option value="${s}" ${order.payment_status === s ? 'selected' : ''}>${s}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-row"><label>택배사</label><input name="trackingCompany" value="${this.esc(order.tracking_company || '')}" placeholder="CJ대한통운, 우체국 등" /></div>
+            <div class="form-row"><label>송장번호</label><input name="trackingNumber" value="${this.esc(order.tracking_number || '')}" /></div>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <button class="btn" type="submit">저장</button>
+            ${order.status === 'paid' ? `<button type="button" class="btn btn--warn" onclick="Admin.patchOrder('${order.id}',{status:'preparing'})">준비중 처리</button>` : ''}
+            ${order.status === 'preparing' ? `<button type="button" class="btn btn--warn" onclick="Admin.patchOrder('${order.id}',{status:'shipping'})">배송 시작</button>` : ''}
+          </div>
+        </form>
+      </div>`;
+  },
+
+  renderSales() {
+    const s = this.stats || {};
+    const chart = this.sales?.chart || [];
+    const maxRev = Math.max(...chart.map((c) => c.revenue), 1);
+    const bars = chart
+      .map(
+        (c) => `
+      <div class="chart-bar">
+        <div class="chart-bar__col" style="height:${Math.round((c.revenue / maxRev) * 140)}px"></div>
+        <span class="chart-bar__label">${c.date.slice(5)}</span>
+      </div>`
+      )
+      .join('');
+
+    const byPay = Object.entries(this.sales?.byPayment || {})
+      .map(([k, v]) => `<tr><td>${this.PAYMENT[k] || k}</td><td>${this.fmt(v)}</td></tr>`)
+      .join('');
+
+    return `
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-card__label">30일 매출</div><div class="stat-card__value">${this.fmt(this.sales?.totalRevenue)}</div></div>
+        <div class="stat-card stat-card--blue"><div class="stat-card__label">30일 주문</div><div class="stat-card__value">${this.sales?.orderCount ?? 0}건</div></div>
+        <div class="stat-card"><div class="stat-card__label">누적 매출</div><div class="stat-card__value">${this.fmt(s.totalRevenue)}</div></div>
+        <div class="stat-card stat-card--warn"><div class="stat-card__label">평균 객단가</div><div class="stat-card__value">${this.fmt(s.orders ? Math.round((s.totalRevenue || 0) / s.orders) : 0)}</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="panel"><div class="panel__head"><h2>일별 매출 (30일)</h2></div><div class="chart-bars">${bars || '<p class="empty-msg">없음</p>'}</div></div>
+        <div class="panel"><div class="panel__head"><h2>결제수단별 매출</h2></div>
+          <table class="data-table"><thead><tr><th>수단</th><th>매출</th></tr></thead><tbody>${byPay || '<tr><td colspan="2">없음</td></tr>'}</tbody></table>
+        </div>
+      </div>`;
+  },
+
+  renderMembers() {
+    const rows = (this.members || [])
+      .filter((u) => u.role === 'user')
+      .map(
+        (u) => `<tr>
+        <td>${this.esc(u.name)}</td><td>${this.esc(u.email)}</td><td>${this.esc(u.phone || '-')}</td>
+        <td>${this.fmtDate(u.created_at)}</td>
+      </tr>`
+      )
+      .join('');
+    return `<div class="panel"><div class="panel__head"><h2>회원 관리 (${(this.members || []).filter((u) => u.role === 'user').length}명)</h2></div>
+      <table class="data-table"><thead><tr><th>이름</th><th>이메일</th><th>연락처</th><th>가입일</th></tr></thead><tbody>${rows || '<tr><td colspan="4" class="empty-msg">회원 없음</td></tr>'}</tbody></table></div>`;
   },
 
   renderReviews() {
     const rows = (this.reviews || [])
       .map(
-        (r) => `<tr><td>${r.productId}</td><td>${r.author}</td><td>${r.rating}★</td><td>${(r.content || '').slice(0, 40)}…</td>
-        <td><button class="btn btn--ghost" onclick="Admin.deleteReview('${r.id}')">삭제</button></td></tr>`
+        (r) => `<tr><td>${r.productId}</td><td>${this.esc(r.author)}</td><td>${r.rating}★</td><td>${this.esc((r.content || '').slice(0, 50))}</td><td>${this.fmtDate(r.date)}</td>
+        <td><button class="btn btn--sm btn--danger" onclick="Admin.deleteReview('${r.id}')">삭제</button></td></tr>`
       )
       .join('');
-    return `<div class="panel"><h2>리뷰 관리</h2><table><thead><tr><th>상품</th><th>작성자</th><th>별점</th><th>내용</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    return `<div class="panel"><div class="panel__head"><h2>리뷰 관리</h2></div>
+      <table class="data-table"><thead><tr><th>상품</th><th>작성자</th><th>별점</th><th>내용</th><th>일시</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
   },
 
   renderInquiries() {
     const rows = (this.inquiries || [])
       .map(
-        (q) => `<tr><td>${q.title}</td><td>${q.name}</td><td>${q.status}</td>
-        <td>${q.status === 'pending' ? `<button class="btn btn--ghost" onclick="Admin.patchInquiry('${q.id}')">처리완료</button>` : '-'}</td></tr>`
+        (q) => `<tr><td>${this.esc(q.title)}</td><td>${this.esc(q.name)}</td><td>${this.esc(q.category || '')}</td>
+        <td>${q.status === 'pending' ? '<span class="badge badge--pending">대기</span>' : '<span class="badge badge--done">완료</span>'}</td>
+        <td>${q.status === 'pending' ? `<button class="btn btn--sm" onclick="Admin.patchInquiry('${q.id}')">답변완료</button>` : '-'}</td></tr>`
       )
       .join('');
-    return `<div class="panel"><h2>문의함</h2><table><thead><tr><th>제목</th><th>이름</th><th>상태</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    return `<div class="panel"><div class="panel__head"><h2>1:1 문의</h2></div>
+      <table class="data-table"><thead><tr><th>제목</th><th>이름</th><th>분류</th><th>상태</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  },
+
+  renderSettings() {
+    const s = this.settings?.shop || {};
+    const p = this.settings?.payment || {};
+    const bank = p.bankAccount || {};
+    const o = this.settings?.order || {};
+    const c = this.settings?.customerCenter || {};
+    return `
+      <form id="form-shop" class="panel" onsubmit="event.preventDefault();Admin.saveSetting('shop')">
+        <h2>쇼핑몰 정보</h2>
+        <div class="form-grid">
+          <div class="form-row"><label>상호</label><input name="name" value="${this.esc(s.name)}" /></div>
+          <div class="form-row"><label>회사명</label><input name="company" value="${this.esc(s.company)}" /></div>
+          <div class="form-row"><label>대표</label><input name="ceo" value="${this.esc(s.ceo)}" /></div>
+          <div class="form-row"><label>사업자번호</label><input name="businessNo" value="${this.esc(s.businessNo)}" /></div>
+          <div class="form-row full"><label>주소</label><input name="address" value="${this.esc(s.address)}" /></div>
+          <div class="form-row"><label>이메일</label><input name="email" value="${this.esc(s.email)}" /></div>
+          <div class="form-row"><label>전화</label><input name="phone" value="${this.esc(s.phone)}" /></div>
+        </div>
+        <button class="btn" type="submit" style="margin-top:12px">저장</button>
+      </form>
+      <form id="form-payment" class="panel" onsubmit="event.preventDefault();Admin.saveSetting('payment')">
+        <h2>결제 설정</h2>
+        <p class="admin-hint">토스페이먼츠 키는 Vercel 환경변수 TOSS_CLIENT_KEY, TOSS_SECRET_KEY</p>
+        <div class="form-row"><label>PG</label><select name="provider"><option value="toss" ${p.provider === 'toss' ? 'selected' : ''}>toss</option></select></div>
+        <div class="form-row"><label><input type="checkbox" name="testMode" ${p.testMode ? 'checked' : ''} /> 테스트 모드</label></div>
+        <div class="form-row"><label>은행</label><input name="bankName" value="${this.esc(bank.bank)}" /></div>
+        <div class="form-row"><label>계좌</label><input name="bankNumber" value="${this.esc(bank.number)}" /></div>
+        <div class="form-row"><label>예금주</label><input name="bankHolder" value="${this.esc(bank.holder)}" /></div>
+        <button class="btn" type="submit" style="margin-top:12px">저장</button>
+      </form>
+      <form id="form-order" class="panel" onsubmit="event.preventDefault();Admin.saveSetting('order')">
+        <h2>배송 설정</h2>
+        <div class="form-row"><label>기본 배송비</label><input name="shippingFee" type="number" value="${o.shippingFee ?? 3000}" /></div>
+        <div class="form-row"><label>무료배송 기준</label><input name="freeShippingThreshold" type="number" value="${o.freeShippingThreshold ?? 50000}" /></div>
+        <button class="btn" type="submit" style="margin-top:12px">저장</button>
+      </form>
+      <form id="form-customerCenter" class="panel" onsubmit="event.preventDefault();Admin.saveSetting('customerCenter')">
+        <h2>고객센터</h2>
+        <div class="form-row"><label>전화</label><input name="phone" value="${this.esc(c.phone)}" /></div>
+        <div class="form-row"><label>운영시간</label><input name="hours" value="${this.esc(c.hours)}" /></div>
+        <button class="btn" type="submit" style="margin-top:12px">저장</button>
+      </form>`;
+  },
+
+  renderBody() {
+    switch (this.view) {
+      case 'dashboard':
+        return this.renderDashboard();
+      case 'products':
+        return this.renderProducts();
+      case 'product-form':
+        return this.renderProductForm();
+      case 'orders':
+        return this.renderOrders();
+      case 'order-detail':
+        return this.renderOrderDetail();
+      case 'sales':
+        return this.renderSales();
+      case 'members':
+        return this.renderMembers();
+      case 'reviews':
+        return this.renderReviews();
+      case 'inquiries':
+        return this.renderInquiries();
+      case 'settings':
+        return this.renderSettings();
+      default:
+        return this.renderDashboard();
+    }
   },
 
   render() {
@@ -331,37 +754,32 @@ const Admin = {
       root.innerHTML = this.renderLogin();
       return;
     }
-    let body = '';
-    if (this.tab === 'dashboard') body = this.renderDashboard();
-    if (this.tab === 'settings') {
-      body =
-        this.renderSettingsShop() +
-        this.renderSettingsPayment() +
-        this.renderSettingsOrder() +
-        this.renderSettingsCS();
-    }
-    if (this.tab === 'orders') body = this.renderOrders();
-    if (this.tab === 'reviews') body = this.renderReviews();
-    if (this.tab === 'inquiries') body = this.renderInquiries();
+
+    const titles = {
+      dashboard: '대시보드',
+      products: '상품 관리',
+      'product-form': '상품 등록/수정',
+      orders: '주문·배송 관리',
+      'order-detail': '주문 상세',
+      sales: '매출 관리',
+      members: '회원 관리',
+      reviews: '리뷰 관리',
+      inquiries: '문의함',
+      settings: '설정',
+    };
 
     root.innerHTML = `
-      <div class="admin-wrap">
-        <header class="admin-header">
-          <h1><img src="../images/logo.png" alt="수산아빠" style="height:40px;vertical-align:middle;margin-right:8px" /> 관리자</h1>
-          <button class="btn btn--ghost" onclick="Admin.logout()">로그아웃</button>
-        </header>
-        <nav class="admin-tabs">
-          <button class="${this.tab === 'dashboard' ? 'active' : ''}" onclick="Admin.tab='dashboard';Admin.render()">대시보드</button>
-          <button class="${this.tab === 'settings' ? 'active' : ''}" onclick="Admin.tab='settings';Admin.render()">설정</button>
-          <button class="${this.tab === 'orders' ? 'active' : ''}" onclick="Admin.loadOrders()">주문</button>
-          <button class="${this.tab === 'reviews' ? 'active' : ''}" onclick="Admin.loadReviews()">리뷰</button>
-          <button class="${this.tab === 'inquiries' ? 'active' : ''}" onclick="Admin.loadInquiries()">문의</button>
-          <a href="/" style="margin-left:auto;line-height:40px">쇼핑몰 →</a>
-        </nav>
-        ${body}
+      <div class="admin-layout">
+        ${this.renderSidebar()}
+        <main class="admin-main">
+          <div class="admin-topbar">
+            <div><h1>${titles[this.view] || '관리자'}</h1><div class="admin-topbar__meta">${new Date().toLocaleDateString('ko-KR')} · 수산아빠 관리자</div></div>
+          </div>
+          ${this.renderBody()}
+        </main>
       </div>`;
   },
 };
 
 Admin.render();
-if (Admin.token) Admin.loadAll();
+if (Admin.token) Admin.loadDashboard();
