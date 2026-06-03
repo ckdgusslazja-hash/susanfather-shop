@@ -156,14 +156,13 @@ function defaultSettingsBundle() {
   return {
     shop: {
       name: siteName,
-      company: siteName,
-      ceo: '홍길동',
-      businessNo: '123-45-67890',
-      mailOrderNo: '2026-서울강남-0001',
-      address: '서울특별시 강남구 테헤란로 123',
-      phone: '1588-0000',
-      email: 'help@greenharvest.kr',
-      hours: '평일 09:00~18:00 (주말·공휴일 휴무)',
+      company: '수산아빠',
+      ceo: '변창현',
+      businessNo: '423-39-00727',
+      mailOrderNo: '2020-부산북구-0891',
+      address: '부산광역시 북구 금곡대로470번길 29',
+      email: 'reven9269@naver.com',
+      hours: '09:00~18:00',
     },
     customerCenter: {
       faq: [

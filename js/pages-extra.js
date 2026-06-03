@@ -67,11 +67,12 @@ function getShopInfo() {
     API.shopSettings || {
       name: '수산아빠',
       company: '수산아빠',
-      ceo: '홍길동',
-      businessNo: '123-45-67890',
-      address: '서울특별시 강남구 테헤란로 123',
-      email: 'help@greenharvest.kr',
-      phone: '1588-0000',
+      ceo: '변창현',
+      businessNo: '423-39-00727',
+      mailOrderNo: '2020-부산북구-0891',
+      address: '부산광역시 북구 금곡대로470번길 29',
+      email: 'reven9269@naver.com',
+      hours: '09:00~18:00',
     }
   );
 }
@@ -98,17 +99,20 @@ function renderSiteFooter() {
     <div class="footer__grid">
       <div>
         <p class="footer__brand">${shop.name || '수산아빠'}</p>
-        <p class="footer__meta">${shop.company || ''} · 대표 ${shop.ceo || ''}</p>
+        <p class="footer__meta">대표 ${shop.ceo || ''}</p>
         <p class="footer__meta">사업자등록번호 ${shop.businessNo || ''}</p>
+        <p class="footer__meta">통신판매업 ${shop.mailOrderNo || ''}</p>
+        <p class="footer__meta">${shop.address || ''}</p>
+        <p class="footer__meta">이메일 ${shop.email || ''}</p>
+        <p class="footer__meta">영업시간 ${shop.hours || ''}</p>
       </div>
       <nav class="footer__links" aria-label="쇼핑몰 정보">
         <a href="#" onclick="navigate('shop-info');return false">쇼핑몰 정보</a>
-        <a href="#" onclick="navigate('customer-center');return false">고객센터</a>
         <a href="#" onclick="navigate('inquiry');return false">문의함</a>
         <a href="/admin/" target="_blank" rel="noopener">관리자</a>
       </nav>
     </div>
-    <p class="footer__copy">© 2026 ${shop.name || '수산아빠'} · 실서비스 데모</p>
+    <p class="footer__copy">© ${new Date().getFullYear()} ${shop.name || '수산아빠'}. All rights reserved.</p>
   `;
 }
 
@@ -239,10 +243,10 @@ function renderShopInfo() {
       <dt>회사명</dt><dd>${s.company || ''}</dd>
       <dt>대표자</dt><dd>${s.ceo || ''}</dd>
       <dt>사업자등록번호</dt><dd>${s.businessNo || ''}</dd>
-      <dt>통신판매업</dt><dd>${s.mailOrderNo || '제2026-서울강남-0000호'}</dd>
+      <dt>통신판매업</dt><dd>${s.mailOrderNo || ''}</dd>
       <dt>주소</dt><dd>${s.address || ''}</dd>
       <dt>이메일</dt><dd>${s.email || ''}</dd>
-      <dt>고객센터</dt><dd>${s.phone || ''}</dd>
+      <dt>영업시간</dt><dd>${s.hours || ''}</dd>
     </dl>
   `;
 }
