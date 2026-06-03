@@ -376,7 +376,7 @@ function renderOrderItemsList(items) {
         <li class="order-items__row">
           ${thumb}
           <div class="order-items__info">
-            <p class="order-items__name">${escapeHtml(product?.name || item.productId || '상품')}</p>
+            <p class="order-items__name">${escapeHtml(product?.name || '상품')}</p>
             <p class="order-items__meta">수량 ${qty}${product ? ` · ${formatPrice(price)}` : ''}</p>
           </div>
           ${product ? `<button type="button" class="btn btn--ghost btn--sm" onclick="navigate('detail',{productId:'${product.id}'})">상품보기</button>` : ''}
