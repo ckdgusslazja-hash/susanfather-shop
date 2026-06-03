@@ -1306,7 +1306,7 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
         const body = await parseBody<Record<string, unknown>>(request);
         const existing = await prisma.product.findUnique({ where: { id: c } });
         const base = (existing?.data as Record<string, unknown>) || {};
-        const merged = { ...base, ...body, id: c };
+        const merged: Record<string, unknown> = { ...base, ...body, id: c };
 
         if (body.imageUrl) {
           merged.adminImages = [{ id: `${c}-a1`, url: body.imageUrl, label: '대표 상품컷' }];
