@@ -109,7 +109,6 @@ function renderSiteFooter() {
       <nav class="footer__links" aria-label="쇼핑몰 정보">
         <a href="#" onclick="navigate('shop-info');return false">쇼핑몰 정보</a>
         <a href="#" onclick="navigate('inquiry');return false">문의함</a>
-        <a href="/admin/" target="_blank" rel="noopener">관리자</a>
       </nav>
     </div>
     <p class="footer__copy">© ${new Date().getFullYear()} ${shop.name || '수산아빠'}. All rights reserved.</p>
