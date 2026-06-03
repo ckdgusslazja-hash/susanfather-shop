@@ -353,28 +353,32 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
       if (password.length < 8) {
         return json({ error: '비밀번호는 8자 이상이어야 합니다.' }, 400);
       }
-      const normalized = email.toLowerCase();
-      const exists = await prisma.user.findUnique({ where: { email: normalized } });
-      if (exists) return json({ error: '이미 가입된 이메일입니다.' }, 409);
+      try {
+        const normalized = email.toLowerCase();
+        const exists = await prisma.user.findUnique({ where: { email: normalized } });
+        if (exists) return json({ error: '이미 가입된 이메일입니다.' }, 409);
 
-      const id = uuidv4();
-      const hash = bcrypt.hashSync(password, 10);
-      await prisma.user.create({
-        data: {
-          id,
-          email: normalized,
-          passwordHash: hash,
-          name,
-          phone: phone || '',
-          provider: 'email',
-        },
-      });
-      const token = jwt.sign(
-        { id, email: normalized, name, role: 'user' },
-        jwtSecret,
-        { expiresIn: '7d' }
-      );
-      return json({ token, user: { id, email: normalized, name, phone, role: 'user' } });
+        const id = uuidv4();
+        const hash = bcrypt.hashSync(password, 10);
+        await prisma.user.create({
+          data: {
+            id,
+            email: normalized,
+            passwordHash: hash,
+            name,
+            phone: phone || '',
+            provider: 'email',
+          },
+        });
+        const token = jwt.sign(
+          { id, email: normalized, name, role: 'user' },
+          jwtSecret,
+          { expiresIn: '7d' }
+        );
+        return json({ token, user: { id, email: normalized, name, phone, role: 'user' } });
+      } catch {
+        return json({ error: '회원가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.' }, 503);
+      }
     }
 
     if (method === 'POST' && b === 'login') {
@@ -386,7 +390,7 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
         return json({ error: '이메일 또는 비밀번호가 올바르지 않습니다.' }, 401);
       }
       if (user.provider === 'kakao') {
-        return json({ error: '카카오로 가입한 계정입니다. 카카오 로그인을 이용해 주세요.' }, 400);
+        return json({ error: '다른 방식으로 가입한 계정입니다. 고객센터로 문의해 주세요.' }, 400);
       }
       if (!user.passwordHash || !bcrypt.compareSync(body.password || '', user.passwordHash)) {
         return json({ error: '이메일 또는 비밀번호가 올바르지 않습니다.' }, 401);
