@@ -90,8 +90,14 @@ function handleNotificationClick(id) {
   closeNotificationPanel();
   if (n.link === 'mypage') {
     if (typeof API !== 'undefined' && API.user) {
-      state.mypageTab = n.type === 'inquiry' ? 'menu' : 'orders';
-      navigate('mypage');
+      if (n.orderId) {
+        navigate('order-detail', { orderId: n.orderId });
+      } else {
+        state.mypageTab = n.type === 'inquiry' ? 'menu' : 'orders';
+        navigate('mypage');
+      }
+    } else if (n.orderId) {
+      navigate('order-lookup');
     } else {
       navigate('login');
     }
@@ -271,6 +277,7 @@ function navigate(page, params = {}) {
     state.reviewProductId = params.reviewProductId;
   }
   if (params.reviewFilter) state.reviewFilter = params.reviewFilter;
+  if (params.orderId) state.orderId = params.orderId;
 
   const needReviews = ['reviews', 'detail', 'write-review'].includes(page);
   const pid =
@@ -1534,7 +1541,10 @@ function renderComplete() {
         <div><span>배송비</span><span>${order.shipping ? formatPrice(order.shipping) : '무료'}</span></div>
         <div><strong>총 결제</strong><strong>${formatPrice(order.total)}</strong></div>
       </div>
-      <button class="btn btn--primary btn--lg" onclick="navigate('home')">쇼핑 계속하기</button>
+      <div class="order-complete__actions">
+        <button class="btn btn--primary btn--lg" type="button" onclick="goOrderDetail('${order.id}')">주문 조회</button>
+        <button class="btn btn--outline btn--lg" type="button" onclick="navigate('home')">쇼핑 계속하기</button>
+      </div>
     </div>
   `;
 }
@@ -1705,6 +1715,24 @@ async function submitOrder(e) {
         transfer: true,
         bankAccount: prepare.bankAccount,
       };
+      if (!API.user) {
+        state.guestOrderView = {
+          id: prepare.orderId,
+          guest_name: String(fd.get('name') || ''),
+          guest_phone: String(fd.get('phone') || ''),
+          zipcode: zip,
+          address: base,
+          address_detail: detail,
+          memo: fd.get('memo'),
+          payment_method: payment,
+          status: 'awaiting_deposit',
+          subtotal,
+          shipping,
+          total,
+          items: state.cart.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+          created_at: new Date().toISOString(),
+        };
+      }
       state.cart = [];
       saveCart();
       if (typeof state.reviewEligibility === 'object') state.reviewEligibility = {};
@@ -1767,6 +1795,7 @@ async function handlePaymentReturn() {
     try {
       const res = await API.confirmPayment({ paymentKey, orderId, amount });
       state.lastOrder = buildLastOrderFromApi(res.order, { testMode: res.testMode });
+      if (!API.user) state.guestOrderView = res.order;
       state.cart = [];
       saveCart();
       if (typeof state.reviewEligibility === 'object') state.reviewEligibility = {};

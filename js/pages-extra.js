@@ -111,6 +111,7 @@ function renderSiteFooter() {
       </div>
       <nav class="footer__links" aria-label="쇼핑몰 정보">
         <a href="#" onclick="navigate('shop-info');return false">쇼핑몰 정보</a>
+        <a href="#" onclick="navigate('order-lookup');return false">주문·배송 조회</a>
         <a href="#" onclick="navigate('terms');return false">이용약관</a>
         <a href="#" onclick="navigate('privacy');return false">개인정보처리방침</a>
         <a href="#" onclick="navigate('inquiry');return false">문의함</a>
@@ -146,6 +147,7 @@ function renderLogin() {
     `<a href="#" onclick="navigate('signup');return false">회원가입</a>
      <a href="#" onclick="navigate('find-id');return false">아이디 찾기</a>
      <a href="#" onclick="navigate('find-pw');return false">비밀번호 찾기</a>
+     <a href="#" onclick="navigate('order-lookup');return false">비회원 주문조회</a>
      <a href="#" onclick="navigate('home');return false">홈으로</a>`
   );
 }
@@ -282,15 +284,284 @@ function getFrequentProducts(orders) {
     .filter(Boolean);
 }
 
+const ORDER_STATUS_LABELS = {
+  awaiting_deposit: '입금 대기',
+  pending: '결제 대기',
+  paid: '결제 완료',
+  preparing: '상품 준비 중',
+  shipping: '배송 중',
+  done: '배송 완료',
+  cancelled: '주문 취소',
+};
+
+const ORDER_STATUS_STEPS = ['awaiting_deposit', 'paid', 'preparing', 'shipping', 'done'];
+
 function getOrderStatusLabel(status) {
-  const map = {
-    paid: '배송준비',
+  return ORDER_STATUS_LABELS[status] || '처리 중';
+}
+
+function getPaymentLabel(method) {
+  return { card: '신용/체크카드', transfer: '무통장 입금', kakao: '간편결제' }[method] || method || '-';
+}
+
+function canCancelOrder(status) {
+  return ['awaiting_deposit', 'pending', 'paid', 'preparing'].includes(status);
+}
+
+function getTrackingUrl(company, number) {
+  if (!number) return '';
+  const c = (company || '').toLowerCase();
+  if (c.includes('cj') || c.includes('대한통운')) {
+    return `https://www.cjlogistics.com/ko/tool/parcel/tracking?gnbInvcNo=${encodeURIComponent(number)}`;
+  }
+  if (c.includes('우체') || c.includes('epost')) {
+    return `https://service.epost.go.kr/trace.RetrieveDomRi498.parcel?sid1=${encodeURIComponent(number)}`;
+  }
+  return `https://tracker.delivery/#/${encodeURIComponent(company || 'kr.cjlogistics')}/${encodeURIComponent(number)}`;
+}
+
+function formatOrderDate(iso) {
+  if (!iso) return '-';
+  return iso.slice(0, 16).replace('T', ' ').replace(/-/g, '.');
+}
+
+function parseOrderItems(items) {
+  if (Array.isArray(items)) return items;
+  if (typeof items === 'string') {
+    try {
+      return JSON.parse(items);
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function renderOrderStatusSteps(status) {
+  if (status === 'cancelled') {
+    return `<p class="order-detail__cancelled">주문이 취소되었습니다.</p>`;
+  }
+  const activeIdx = ORDER_STATUS_STEPS.indexOf(status);
+  const labels = {
+    awaiting_deposit: '입금확인',
+    paid: '결제완료',
+    preparing: '상품준비',
     shipping: '배송중',
-    delivered: '배송완료',
-    completed: '배송완료',
-    test_paid: '주문완료',
+    done: '배송완료',
   };
-  return map[status] || '주문완료';
+  return `
+    <ol class="order-steps ${status === 'pending' ? 'order-steps--pending' : ''}">
+      ${ORDER_STATUS_STEPS.map((step, i) => {
+        const done = activeIdx >= i || (status === 'pending' && step === 'paid');
+        const current = status === step || (status === 'pending' && step === 'paid');
+        return `<li class="order-steps__item ${done ? 'is-done' : ''} ${current ? 'is-current' : ''}"><span>${labels[step]}</span></li>`;
+      }).join('')}
+    </ol>`;
+}
+
+function renderOrderItemsList(items) {
+  const list = parseOrderItems(items);
+  if (!list.length) return '<p class="text-muted">상품 정보 없음</p>';
+  return `
+    <ul class="order-items">
+      ${list
+        .map((item) => {
+          const product = getProduct(item.productId);
+          const qty = item.quantity || 1;
+          const price = product ? product.price * qty : 0;
+          const thumb = product
+            ? renderProductThumbHtml(product, 'order-items__thumb')
+            : '<div class="order-items__thumb order-items__thumb--empty">📦</div>';
+          return `
+        <li class="order-items__row">
+          ${thumb}
+          <div class="order-items__info">
+            <p class="order-items__name">${escapeHtml(product?.name || item.productId || '상품')}</p>
+            <p class="order-items__meta">수량 ${qty}${product ? ` · ${formatPrice(price)}` : ''}</p>
+          </div>
+          ${product ? `<button type="button" class="btn btn--ghost btn--sm" onclick="navigate('detail',{productId:'${product.id}'})">상품보기</button>` : ''}
+        </li>`;
+        })
+        .join('')}
+    </ul>`;
+}
+
+function renderOrderDetailBody(order, { showBack = true, backLabel = '목록', backAction = "navigate('mypage')" } = {}) {
+  const status = order.status || 'paid';
+  const statusLabel = getOrderStatusLabel(status);
+  const trackingUrl = getTrackingUrl(order.tracking_company, order.tracking_number);
+  const zip = order.zipcode || '';
+  const addr = [zip ? `[${zip}]` : '', order.address, order.address_detail].filter(Boolean).join(' ');
+
+  return `
+    <div class="order-detail">
+      <div class="order-detail__head">
+        <div>
+          <p class="order-detail__id">주문번호 <strong>${escapeHtml(order.id)}</strong></p>
+          <p class="order-detail__date">${formatOrderDate(order.created_at)}</p>
+        </div>
+        <span class="order-detail__badge order-detail__badge--${status}">${statusLabel}</span>
+      </div>
+
+      ${renderOrderStatusSteps(status)}
+
+      ${
+        order.tracking_number
+          ? `<div class="order-detail__tracking">
+              <strong>배송 조회</strong>
+              <p>${escapeHtml(order.tracking_company || '택배')} · ${escapeHtml(order.tracking_number)}</p>
+              ${trackingUrl ? `<a class="btn btn--outline btn--sm" href="${trackingUrl}" target="_blank" rel="noopener">택배 조회</a>` : ''}
+            </div>`
+          : ''
+      }
+
+      <section class="order-detail__section">
+        <h3 class="order-detail__title">주문 상품</h3>
+        ${renderOrderItemsList(order.items)}
+      </section>
+
+      <section class="order-detail__section">
+        <h3 class="order-detail__title">배송 정보</h3>
+        <dl class="order-detail__dl">
+          <dt>받는 분</dt><dd>${escapeHtml(order.guest_name || '-')}</dd>
+          <dt>연락처</dt><dd>${escapeHtml(order.guest_phone || '-')}</dd>
+          <dt>주소</dt><dd>${escapeHtml(addr || '-')}</dd>
+          ${order.memo ? `<dt>요청사항</dt><dd>${escapeHtml(order.memo)}</dd>` : ''}
+        </dl>
+      </section>
+
+      <section class="order-detail__section">
+        <h3 class="order-detail__title">결제 정보</h3>
+        <dl class="order-detail__dl">
+          <dt>결제수단</dt><dd>${escapeHtml(getPaymentLabel(order.payment_method))}</dd>
+          <dt>상품금액</dt><dd>${formatPrice(order.subtotal)}</dd>
+          <dt>배송비</dt><dd>${order.shipping ? formatPrice(order.shipping) : '무료'}</dd>
+          <dt>총 결제</dt><dd><strong>${formatPrice(order.total)}</strong></dd>
+        </dl>
+      </section>
+
+      <div class="order-detail__actions">
+        ${showBack ? `<button type="button" class="btn btn--outline" onclick="${backAction}">${backLabel}</button>` : ''}
+        ${
+          API.user && canCancelOrder(status)
+            ? `<button type="button" class="btn btn--ghost order-detail__cancel" onclick="handleCancelOrder('${order.id}')">주문 취소</button>`
+            : ''
+        }
+        <button type="button" class="btn btn--primary" onclick="navigate('inquiry')">문의하기</button>
+      </div>
+    </div>`;
+}
+
+function goOrderDetail(orderId) {
+  if (!orderId) return;
+  const fromList = (state.myOrders || []).find((o) => o.id === orderId);
+  if (fromList) {
+    state.orderDetailCache = state.orderDetailCache || {};
+    state.orderDetailCache[orderId] = fromList;
+  }
+  navigate('order-detail', { orderId });
+}
+
+async function loadOrderDetailPage(orderId) {
+  try {
+    let order;
+    if (API.user) {
+      order = await API.getOrder(orderId);
+    } else if (state.guestOrderView?.id === orderId) {
+      order = state.guestOrderView;
+    } else {
+      state.orderLookupPrefill = orderId;
+      navigate('order-lookup');
+      return;
+    }
+    state.orderDetailCache = state.orderDetailCache || {};
+    state.orderDetailCache[orderId] = order;
+    render();
+  } catch (err) {
+    showToast(err.message || '주문 정보를 불러올 수 없습니다.');
+    navigate(API.user ? 'mypage' : 'order-lookup');
+  }
+}
+
+function renderOrderDetail() {
+  const orderId = state.orderId;
+  if (!orderId) {
+    navigate(API.user ? 'mypage' : 'order-lookup');
+    return '';
+  }
+  const cached = state.orderDetailCache?.[orderId];
+  if (!cached) {
+    loadOrderDetailPage(orderId);
+    return '<p class="mypage-empty" style="padding:24px">주문 정보 불러오는 중…</p>';
+  }
+  const back = API.user
+    ? `<nav class="breadcrumb"><a href="#" onclick="navigate('mypage');return false">마이페이지</a> / 주문 상세</nav>`
+    : `<nav class="breadcrumb"><a href="#" onclick="navigate('order-lookup');return false">주문 조회</a> / 상세</nav>`;
+  return (
+    back +
+    `<h2 class="section-title">주문 상세</h2>` +
+    renderOrderDetailBody(cached, {
+      showBack: true,
+      backLabel: API.user ? '주문 목록' : '다시 조회',
+      backAction: API.user ? "navigate('mypage')" : "navigate('order-lookup')",
+    })
+  );
+}
+
+function renderOrderLookup() {
+  const prefill = state.orderLookupPrefill || '';
+  state.orderLookupPrefill = '';
+  const result = state.orderLookupResult;
+  return `
+    <nav class="breadcrumb"><a href="#" onclick="navigate('home');return false">홈</a> / 주문·배송 조회</nav>
+    <h2 class="section-title">주문·배송 조회</h2>
+    <p class="text-muted" style="margin-bottom:20px">주문번호와 주문 시 입력한 연락처로 조회할 수 있습니다. 회원은 <a href="#" onclick="navigate('login');return false">로그인</a> 후 마이페이지에서도 확인할 수 있습니다.</p>
+    <form class="auth-form order-lookup-form" onsubmit="handleOrderLookup(event)">
+      <div class="form-group"><label>주문번호</label><input name="orderId" required placeholder="예: GH12345678" value="${escapeHtml(prefill)}" /></div>
+      <div class="form-group"><label>연락처</label><input name="phone" type="tel" required placeholder="주문 시 입력한 휴대폰 번호" /></div>
+      <button type="submit" class="btn btn--primary btn--lg btn--block">조회하기</button>
+    </form>
+    ${result ? `<div class="order-lookup-result">${renderOrderDetailBody(result, { showBack: false })}</div>` : ''}
+  `;
+}
+
+async function handleOrderLookup(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  try {
+    const order = await API.lookupOrder({
+      orderId: fd.get('orderId'),
+      phone: fd.get('phone'),
+    });
+    state.guestOrderView = order;
+    state.orderLookupResult = order;
+    state.orderDetailCache = state.orderDetailCache || {};
+    state.orderDetailCache[order.id] = order;
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    state.orderLookupResult = null;
+    showToast(err.message || '조회에 실패했습니다.');
+  }
+}
+
+async function handleCancelOrder(orderId) {
+  if (!API.user) {
+    navigate('login');
+    return;
+  }
+  if (!confirm('주문을 취소하시겠습니까? 입금 완료 건은 환불 처리 후 취소됩니다.')) return;
+  try {
+    const res = await API.cancelOrder(orderId);
+    const order = res.order;
+    state.orderDetailCache = state.orderDetailCache || {};
+    state.orderDetailCache[orderId] = order;
+    state.myOrders = (state.myOrders || []).map((o) => (o.id === orderId ? order : o));
+    showToast('주문이 취소되었습니다.');
+    render();
+  } catch (err) {
+    showToast(err.message || '취소에 실패했습니다.');
+  }
 }
 
 function renderMypageQuickNav(active) {
@@ -335,7 +606,7 @@ function renderMypageOrderCard(order) {
   const items = Array.isArray(order.items) ? order.items : [];
   const product = items[0]?.productId ? getProduct(items[0].productId) : null;
   const statusLabel = getOrderStatusLabel(order.status);
-  const isDone = ['delivered', 'completed', 'paid'].includes(order.status);
+  const isDone = ['done', 'delivered', 'completed'].includes(order.status);
   const dateStr = (order.created_at || '').slice(0, 10).replace(/-/g, '.');
   const thumb = product
     ? renderProductThumbHtml(product, 'mypage-order-card__thumb')
@@ -345,12 +616,13 @@ function renderMypageOrderCard(order) {
     : '';
 
   return `
-    <article class="mypage-order-card" onclick="showToast('주문번호 ${escapeHtml(order.id)}')">
+    <article class="mypage-order-card" onclick="goOrderDetail('${order.id}')">
       <div class="mypage-order-card__top">
         <span class="mypage-order-card__ship">🚚 산지직송</span>
         ${dateStr ? `<span class="mypage-order-card__eta">${dateStr}</span>` : ''}
       </div>
       <p class="mypage-order-card__status ${isDone ? 'is-done' : ''}">${statusLabel}</p>
+      <p class="mypage-order-card__id">${escapeHtml(order.id)}</p>
       <div class="mypage-order-card__body">
         ${thumb}
         ${reorderBtn}
@@ -400,6 +672,7 @@ function renderMypageAllMenu() {
     <section class="mypage-section">
       <div class="mypage-section__head"><h2 class="mypage-section__title">전체 메뉴</h2></div>
       <div class="mypage-menu-list">
+        <button type="button" class="mypage-menu-item" onclick="navigate('order-lookup')">주문·배송 조회</button>
         <button type="button" class="mypage-menu-item" onclick="navigate('addresses')">배송지 관리</button>
         <button type="button" class="mypage-menu-item" onclick="navigate('change-password')">비밀번호 변경</button>
         <button type="button" class="mypage-menu-item" onclick="navigate('inquiry')">1:1 문의</button>
@@ -682,7 +955,8 @@ function renderCustomerCenter() {
       <p class="cs-phone">📞 ${c.phone}</p>
       <p>${c.hours}</p>
       <p>이메일: ${c.email}</p>
-      <button class="btn btn--primary" type="button" onclick="navigate('inquiry')">문의하기</button>
+      <button class="btn btn--primary" type="button" onclick="navigate('order-lookup')">주문·배송 조회</button>
+      <button class="btn btn--outline" type="button" onclick="navigate('inquiry')">문의하기</button>
     </div>
     <h3 class="form-section__title">자주 묻는 질문</h3>
     ${faq}
@@ -1167,6 +1441,8 @@ const EXTRA_PAGES = {
   'shop-info': renderShopInfo,
   terms: renderTerms,
   privacy: renderPrivacy,
+  'order-detail': renderOrderDetail,
+  'order-lookup': renderOrderLookup,
   'customer-center': renderCustomerCenter,
   inquiry: renderInquiry,
   'write-review': renderWriteReview,
@@ -1191,6 +1467,13 @@ const _navigateOrig = navigate;
 window.navigate = function (page, params = {}) {
   if (page === 'addresses') addressBookLoaded = false;
   if (page === 'checkout') state.selectedAddressId = '';
+  if (page === 'order-lookup') state.orderLookupResult = null;
+  if (page === 'order-detail' && params.orderId) {
+    state.orderId = params.orderId;
+    if (state.orderDetailCache?.[params.orderId]) {
+      /* cached */
+    }
+  }
   if (page === 'mypage') state.mypageTab = state.mypageTab || 'orders';
   if (page !== 'change-password') state.passwordMessage = '';
   return _navigateOrig(page, params);

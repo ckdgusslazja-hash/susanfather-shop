@@ -125,6 +125,12 @@ function mapOrder(o: Order) {
   };
 }
 
+function normalizePhone(phone: string | null | undefined): string {
+  return (phone || '').replace(/\D/g, '');
+}
+
+const CANCELLABLE_ORDER_STATUSES = new Set(['awaiting_deposit', 'pending', 'paid', 'preparing']);
+
 function mapInquiry(i: Inquiry) {
   return {
     id: i.id,
@@ -1092,6 +1098,47 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
         orderBy: { createdAt: 'desc' },
       });
       return json(rows.map(mapOrder));
+    }
+
+    if (method === 'POST' && b === 'lookup') {
+      const body = await parseBody<{ orderId?: string; phone?: string }>(request);
+      const orderId = (body.orderId || '').trim();
+      const phone = normalizePhone(body.phone);
+      if (!orderId || !phone) {
+        return json({ error: '주문번호와 주문 시 입력한 연락처를 입력해 주세요.' }, 400);
+      }
+      const row = await prisma.order.findUnique({ where: { id: orderId } });
+      if (!row) return json({ error: '주문을 찾을 수 없습니다.' }, 404);
+      if (normalizePhone(row.guestPhone) !== phone) {
+        return json({ error: '주문번호 또는 연락처가 일치하지 않습니다.' }, 403);
+      }
+      return json(mapOrder(row));
+    }
+
+    if (method === 'GET' && b && b !== 'my' && b !== 'lookup') {
+      const auth = verifyToken(request);
+      if (!auth) return json({ error: '로그인이 필요합니다.' }, 401);
+      const row = await prisma.order.findUnique({ where: { id: b } });
+      if (!row) return json({ error: '주문을 찾을 수 없습니다.' }, 404);
+      if (row.userId !== auth.id) return json({ error: '접근 권한이 없습니다.' }, 403);
+      return json(mapOrder(row));
+    }
+
+    if (method === 'PATCH' && b && c === 'cancel') {
+      const auth = verifyToken(request);
+      if (!auth) return json({ error: '로그인이 필요합니다.' }, 401);
+      const row = await prisma.order.findUnique({ where: { id: b } });
+      if (!row) return json({ error: '주문을 찾을 수 없습니다.' }, 404);
+      if (row.userId !== auth.id) return json({ error: '접근 권한이 없습니다.' }, 403);
+      if (!CANCELLABLE_ORDER_STATUSES.has(row.status)) {
+        return json({ error: '배송 준비가 시작된 주문은 취소할 수 없습니다. 고객센터로 문의해 주세요.' }, 400);
+      }
+      await prisma.order.update({
+        where: { id: b },
+        data: { status: 'cancelled' },
+      });
+      const updated = await prisma.order.findUnique({ where: { id: b } });
+      return json({ ok: true, order: updated ? mapOrder(updated) : null });
     }
   }
 

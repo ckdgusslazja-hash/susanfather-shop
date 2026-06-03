@@ -108,6 +108,15 @@ const API = {
   myOrders() {
     return this.request('/api/orders/my');
   },
+  getOrder(orderId) {
+    return this.request('/api/orders/' + encodeURIComponent(orderId));
+  },
+  lookupOrder(body) {
+    return this.request('/api/orders/lookup', { method: 'POST', body: JSON.stringify(body) });
+  },
+  cancelOrder(orderId) {
+    return this.request('/api/orders/' + encodeURIComponent(orderId) + '/cancel', { method: 'PATCH' });
+  },
   postInquiry(body) {
     return this.request('/api/inquiries', { method: 'POST', body: JSON.stringify(body) });
   },
