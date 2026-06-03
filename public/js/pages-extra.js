@@ -356,7 +356,6 @@ function renderMypageAllMenu() {
       <div class="mypage-menu-list">
         <button type="button" class="mypage-menu-item" onclick="navigate('addresses')">배송지 관리</button>
         <button type="button" class="mypage-menu-item" onclick="navigate('inquiry')">1:1 문의</button>
-        <button type="button" class="mypage-menu-item" onclick="navigate('shop-info')">쇼핑몰 정보</button>
         <button type="button" class="mypage-menu-item mypage-menu-item--muted" onclick="doLogout()">로그아웃</button>
       </div>
     </section>
@@ -904,8 +903,16 @@ const EXTRA_PAGES = {
 function updateNavAuth() {
   const el = document.getElementById('nav-auth');
   if (!el) return;
-  el.textContent = API.user ? '마이' : '로그인';
+  el.textContent = API.user ? '마이메뉴' : '로그인';
   el.dataset.page = API.user ? 'mypage' : 'login';
+  const bottomMypage = document.querySelector('.bottom-nav__item[data-nav="mypage"]');
+  if (bottomMypage) {
+    const spans = bottomMypage.querySelectorAll('span');
+    const label = spans[spans.length - 1];
+    if (label && !label.classList.contains('bottom-nav__icon') && !label.classList.contains('bottom-nav__badge')) {
+      label.textContent = API.user ? '마이메뉴' : '마이';
+    }
+  }
 }
 
 const _navigateOrig = navigate;
