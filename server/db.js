@@ -94,7 +94,7 @@ function getDefaultSettings() {
   return {
     shop: {
       name: '수산아빠',
-      company: '수산아빠',
+      company: '리벤더',
       ceo: '변창현',
       businessNo: '423-39-00727',
       mailOrderNo: '2020-부산북구-0891',

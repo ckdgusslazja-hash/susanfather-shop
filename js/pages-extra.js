@@ -66,7 +66,7 @@ function getShopInfo() {
   return (
     API.shopSettings || {
       name: '수산아빠',
-      company: '수산아빠',
+      company: '리벤더',
       ceo: '변창현',
       businessNo: '423-39-00727',
       mailOrderNo: '2020-부산북구-0891',
@@ -100,6 +100,7 @@ function renderSiteFooter() {
       <div>
         <p class="footer__brand">${shop.name || '수산아빠'}</p>
         <p class="footer__meta">대표 ${shop.ceo || ''}</p>
+        <p class="footer__meta">회사명 : ${shop.company || '리벤더'}</p>
         <p class="footer__meta">사업자등록번호 ${shop.businessNo || ''}</p>
         <p class="footer__meta">통신판매업 ${shop.mailOrderNo || ''}</p>
         <p class="footer__meta">${shop.address || ''}</p>
