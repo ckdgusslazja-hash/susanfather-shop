@@ -23,6 +23,7 @@ let state = {
   selectedAddressId: '',
   mypageTab: 'orders',
   myOrders: [],
+  passwordMessage: '',
 };
 
 function loadCart() {

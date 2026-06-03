@@ -188,6 +188,47 @@ function renderFindPw() {
   );
 }
 
+function renderChangePassword() {
+  if (!API.user) {
+    navigate('login');
+    return '';
+  }
+  return renderAuthWrap(
+    '비밀번호 변경',
+    `${state.passwordMessage ? `<p class="auth-msg">${state.passwordMessage}</p>` : ''}
+    <form class="auth-form" onsubmit="handleChangePassword(event)">
+      <div class="form-group"><label>현재 비밀번호</label><input type="password" name="currentPassword" required minlength="8" autocomplete="current-password" /></div>
+      <div class="form-group"><label>새 비밀번호 (8자+)</label><input type="password" name="newPassword" required minlength="8" autocomplete="new-password" /></div>
+      <div class="form-group"><label>새 비밀번호 확인</label><input type="password" name="newPassword2" required minlength="8" autocomplete="new-password" /></div>
+      <button type="submit" class="btn btn--primary btn--block">비밀번호 변경</button>
+    </form>`,
+    `<a href="#" onclick="navigate('mypage');return false">마이메뉴</a>
+     <a href="#" onclick="navigate('home');return false">홈으로</a>`
+  );
+}
+
+async function handleChangePassword(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  if (fd.get('newPassword') !== fd.get('newPassword2')) {
+    state.passwordMessage = '새 비밀번호가 일치하지 않습니다.';
+    render();
+    return;
+  }
+  try {
+    const res = await API.changePassword({
+      currentPassword: fd.get('currentPassword'),
+      newPassword: fd.get('newPassword'),
+    });
+    state.passwordMessage = '';
+    showToast(res.message || '비밀번호가 변경되었습니다.');
+    navigate('mypage');
+  } catch (err) {
+    state.passwordMessage = err.message;
+    render();
+  }
+}
+
 function renderMypage() {
   const u = API.user;
   if (!u) {
@@ -358,6 +399,7 @@ function renderMypageAllMenu() {
       <div class="mypage-section__head"><h2 class="mypage-section__title">전체 메뉴</h2></div>
       <div class="mypage-menu-list">
         <button type="button" class="mypage-menu-item" onclick="navigate('addresses')">배송지 관리</button>
+        <button type="button" class="mypage-menu-item" onclick="navigate('change-password')">비밀번호 변경</button>
         <button type="button" class="mypage-menu-item" onclick="navigate('inquiry')">1:1 문의</button>
         <button type="button" class="mypage-menu-item mypage-menu-item--muted" onclick="doLogout()">로그아웃</button>
       </div>
@@ -896,6 +938,7 @@ const EXTRA_PAGES = {
   signup: renderSignup,
   'find-id': renderFindId,
   'find-pw': renderFindPw,
+  'change-password': renderChangePassword,
   mypage: renderMypage,
   addresses: renderAddressBook,
   'shop-info': renderShopInfo,
@@ -924,6 +967,7 @@ window.navigate = function (page, params = {}) {
   if (page === 'addresses') addressBookLoaded = false;
   if (page === 'checkout') state.selectedAddressId = '';
   if (page === 'mypage') state.mypageTab = state.mypageTab || 'orders';
+  if (page !== 'change-password') state.passwordMessage = '';
   return _navigateOrig(page, params);
 };
 

@@ -70,6 +70,9 @@ const API = {
   resetPassword(body) {
     return this.request('/api/auth/reset-password', { method: 'POST', body: JSON.stringify(body) });
   },
+  changePassword(body) {
+    return this.request('/api/auth/change-password', { method: 'POST', body: JSON.stringify(body) });
+  },
   getReviews(productId) {
     return this.request('/api/reviews?productId=' + encodeURIComponent(productId));
   },

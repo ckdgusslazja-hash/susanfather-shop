@@ -438,11 +438,37 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
       });
       if (!user) return json({ error: '가입된 이메일이 없습니다.' }, 404);
       if (user.provider === 'kakao') {
-        return json({ error: '카카오로 가입한 계정은 카카오 로그인을 이용해 주세요.' }, 400);
+        return json({ error: '다른 방식으로 가입한 계정입니다. 고객센터로 문의해 주세요.' }, 400);
       }
       const hash = bcrypt.hashSync(body.newPassword, 10);
       await prisma.user.update({ where: { id: user.id }, data: { passwordHash: hash } });
       return json({ ok: true, message: '비밀번호가 변경되었습니다. 새 비밀번호로 로그인해 주세요.' });
+    }
+
+    if (method === 'POST' && b === 'change-password') {
+      const auth = verifyToken(request);
+      if (!auth) return json({ error: '로그인이 필요합니다.' }, 401);
+      const body = await parseBody<{ currentPassword?: string; newPassword?: string }>(request);
+      if (!body.currentPassword || !body.newPassword) {
+        return json({ error: '현재 비밀번호와 새 비밀번호를 입력해 주세요.' }, 400);
+      }
+      if (body.newPassword.length < 8) {
+        return json({ error: '새 비밀번호는 8자 이상이어야 합니다.' }, 400);
+      }
+      if (body.currentPassword === body.newPassword) {
+        return json({ error: '새 비밀번호는 현재 비밀번호와 달라야 합니다.' }, 400);
+      }
+      const user = await prisma.user.findUnique({ where: { id: auth.id } });
+      if (!user) return json({ error: '로그인이 필요합니다.' }, 401);
+      if (user.provider === 'kakao') {
+        return json({ error: '다른 방식으로 가입한 계정입니다. 고객센터로 문의해 주세요.' }, 400);
+      }
+      if (!user.passwordHash || !bcrypt.compareSync(body.currentPassword, user.passwordHash)) {
+        return json({ error: '현재 비밀번호가 올바르지 않습니다.' }, 401);
+      }
+      const hash = bcrypt.hashSync(body.newPassword, 10);
+      await prisma.user.update({ where: { id: user.id }, data: { passwordHash: hash } });
+      return json({ ok: true, message: '비밀번호가 변경되었습니다.' });
     }
 
     if (method === 'GET' && b === 'me') {
