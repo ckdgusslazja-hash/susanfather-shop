@@ -214,27 +214,48 @@ const Admin = {
     }
   },
 
+  productName(productId) {
+    const p = (this.products || []).find((x) => x.id === productId);
+    return p?.name || productId || '-';
+  },
+
+  async ensureProducts() {
+    if (!this.products?.length) {
+      try {
+        this.products = await this.request('/api/admin/products');
+      } catch {
+        this.products = this.products || [];
+      }
+    }
+  },
+
   async loadOrders(status) {
     if (status !== undefined) this.orderFilter = status;
     const q = this.orderFilter ? '?status=' + encodeURIComponent(this.orderFilter) : '';
-    this.orders = await this.request('/api/admin/orders' + q);
-    this.view = 'orders';
-    this.selectedOrderId = null;
-    this.render();
+    try {
+      this.orders = await this.request('/api/admin/orders' + q);
+      await this.ensureProducts();
+      this.view = 'orders';
+      this.selectedOrderId = null;
+      this.render();
+    } catch (err) {
+      alert(err.message || '주문 목록을 불러오지 못했습니다.');
+    }
   },
 
   async openOrder(id) {
     try {
+      await this.ensureProducts();
       const order = await this.request('/api/admin/orders/' + encodeURIComponent(id));
       const idx = this.orders.findIndex((o) => o.id === id);
       if (idx >= 0) this.orders[idx] = order;
       else this.orders.unshift(order);
-    } catch {
-      /* keep existing */
+      this.selectedOrderId = id;
+      this.view = 'order-detail';
+      this.render();
+    } catch (err) {
+      alert(err.message || '주문 정보를 불러오지 못했습니다.');
     }
-    this.selectedOrderId = id;
-    this.view = 'order-detail';
-    this.render();
   },
 
   async patchOrder(id, data) {
@@ -382,7 +403,7 @@ const Admin = {
       ['dashboard', '📊', '대시보드', () => 'Admin.loadDashboard()'],
       ['products', '📦', '상품관리', () => 'Admin.loadProducts()'],
       ['product-form', '➕', '상품등록', () => "Admin.openProductForm(null)"],
-      ['orders', '🚚', '주문·배송', () => 'Admin.loadOrders("")'],
+      ['orders', '🚚', '주문·배송', () => "Admin.loadOrders('')"],
       ['sales', '💰', '매출관리', () => 'Admin.loadSales()'],
       ['members', '👥', '회원관리', () => 'Admin.loadMembers()'],
       ['reviews', '⭐', '리뷰관리', () => 'Admin.loadReviews()'],
@@ -575,7 +596,9 @@ const Admin = {
       return `<div class="panel"><p class="empty-msg">주문 정보를 불러올 수 없습니다.</p></div>`;
     }
     const items = Array.isArray(order.items) ? order.items : [];
-    const itemRows = items.map((i) => `<li>${i.productId} × ${i.quantity}</li>`).join('');
+    const itemRows = items
+      .map((i) => `<li>${this.esc(this.productName(i.productId))} × ${i.quantity || 1}</li>`)
+      .join('');
 
     return `
       <div class="panel">
