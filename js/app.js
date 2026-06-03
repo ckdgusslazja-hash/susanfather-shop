@@ -19,6 +19,8 @@ let state = {
   homeBannerIndex: 0,
   searchQuery: '',
   searchDraft: '',
+  savedAddresses: [],
+  selectedAddressId: '',
 };
 
 function loadCart() {
@@ -1204,7 +1206,8 @@ function renderCheckout() {
       <form class="checkout-form" id="checkout-form" onsubmit="submitOrder(event)">
         <section class="form-section">
           <h3 class="form-section__title">배송 정보</h3>
-          <div class="form-grid">
+          <div id="saved-address-picker" class="saved-address-picker" hidden></div>
+          <div class="form-grid" id="checkout-address-fields">
             <div class="form-group">
               <label>받는 분 <span class="required">*</span></label>
               <input type="text" name="name" required placeholder="홍길동" />
@@ -1227,6 +1230,12 @@ function renderCheckout() {
             <div class="form-group form-group--full">
               <label>상세주소 <span class="required">*</span></label>
               <input type="text" id="address-detail" name="addressDetail" required placeholder="동·호수·공동현관 비밀번호 등" />
+            </div>
+            <div class="form-group form-group--full" id="save-address-wrap" hidden>
+              <label class="checkbox-inline">
+                <input type="checkbox" name="saveAddress" id="save-address-check" />
+                이 배송지를 목록에 저장
+              </label>
             </div>
             <div class="form-group form-group--full">
               <label>배송 메모</label>
@@ -1416,6 +1425,21 @@ async function submitOrder(e) {
     const res = await API.createOrder(orderPayload);
     orderId = res.orderId || orderId;
     testMode = !!res.testMode;
+    if (API.user && fd.get('saveAddress') === 'on') {
+      try {
+        await API.createAddress({
+          label: '배송지',
+          recipientName: String(fd.get('name') || ''),
+          phone: String(fd.get('phone') || ''),
+          zipcode: zip,
+          address: base,
+          addressDetail: detail,
+          isDefault: state.savedAddresses.length === 0,
+        });
+      } catch {
+        /* 저장 실패해도 주문은 완료 */
+      }
+    }
   } catch {
     /* 오프라인·서버 미실행 시 로컬 완료 */
   }

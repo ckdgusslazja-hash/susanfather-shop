@@ -88,4 +88,22 @@ const API = {
   postInquiry(body) {
     return this.request('/api/inquiries', { method: 'POST', body: JSON.stringify(body) });
   },
+  getAddresses() {
+    return this.request('/api/addresses');
+  },
+  createAddress(body) {
+    return this.request('/api/addresses', { method: 'POST', body: JSON.stringify(body) });
+  },
+  updateAddress(id, body) {
+    return this.request('/api/addresses/' + encodeURIComponent(id), {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    });
+  },
+  deleteAddress(id) {
+    return this.request('/api/addresses/' + encodeURIComponent(id), { method: 'DELETE' });
+  },
+  setDefaultAddress(id) {
+    return this.request('/api/addresses/' + encodeURIComponent(id) + '/default', { method: 'PATCH' });
+  },
 };

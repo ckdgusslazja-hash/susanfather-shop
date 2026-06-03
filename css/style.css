@@ -2520,6 +2520,129 @@ body.is-reviews {
   flex: 1;
 }
 
+.saved-address-picker {
+  margin-bottom: 20px;
+}
+
+.saved-address-picker__title {
+  font-weight: 700;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+}
+
+.address-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.address-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.address-card:hover {
+  border-color: var(--color-primary-light);
+}
+
+.address-card--selected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.address-card--new {
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary-dark);
+  font-weight: 600;
+  min-height: 56px;
+}
+
+.address-card__label {
+  font-size: 0.8rem;
+  color: var(--color-primary-dark);
+  font-weight: 700;
+}
+
+.address-card__phone,
+.address-card__addr {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.checkbox-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.address-book-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.address-book-item {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  background: var(--color-surface);
+}
+
+.address-book-item__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.address-book-item__addr {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin-bottom: 10px;
+}
+
+.address-book-item__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.badge-default {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  background: rgba(46, 125, 50, 0.1);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.btn--sm {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+.address-form__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .mypage-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);

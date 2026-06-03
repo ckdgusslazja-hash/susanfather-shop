@@ -21,9 +21,28 @@ model User {
   orders    Order[]
   reviews   Review[]
   inquiries Inquiry[]
+  addresses UserAddress[]
 
   @@unique([provider, providerId])
   @@map("users")
+}
+
+model UserAddress {
+  id            String   @id
+  userId        String   @map("user_id")
+  label         String   @default("집")
+  recipientName String   @map("recipient_name")
+  phone         String
+  zipcode       String
+  address       String
+  addressDetail String   @default("") @map("address_detail")
+  isDefault     Boolean  @default(false) @map("is_default")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_addresses")
 }
 
 model Product {

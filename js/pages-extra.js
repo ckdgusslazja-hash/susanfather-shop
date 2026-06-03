@@ -199,6 +199,7 @@ function renderMypage() {
       <p class="text-muted">${u.email}</p>
       ${u.phone ? `<p>연락처 ${u.phone}</p>` : ''}
       <div class="mypage-actions">
+        <button class="btn btn--outline" type="button" onclick="navigate('addresses')">배송지 관리</button>
         <button class="btn btn--outline" type="button" onclick="loadMyOrders()">주문 내역 불러오기</button>
         <button class="btn btn--outline" type="button" onclick="navigate('inquiry')">1:1 문의</button>
         <button class="btn btn--outline" type="button" onclick="doLogout()">로그아웃</button>
@@ -339,28 +340,288 @@ function renderWriteReview() {
   `;
 }
 
-function openDaumPostcode() {
+function openDaumPostcode(targetIds) {
   if (!window.daum?.Postcode) {
     showToast('주소 API 로딩 중입니다. 잠시 후 다시 시도해 주세요.');
     return;
   }
+  const ids = {
+    zip: (targetIds && targetIds.zip) || 'zipcode',
+    addr: (targetIds && targetIds.addr) || 'address-base',
+    detail: (targetIds && targetIds.detail) || 'address-detail',
+  };
   new daum.Postcode({
     oncomplete(data) {
-      const zip = document.getElementById('zipcode');
-      const addr = document.getElementById('address-base');
-      const detail = document.getElementById('address-detail');
+      const zip = document.getElementById(ids.zip);
+      const addr = document.getElementById(ids.addr);
+      const detail = document.getElementById(ids.detail);
       if (zip) zip.value = data.zonecode;
-      if (addr) {
-        addr.value = data.roadAddress || data.jibunAddress;
-      }
+      if (addr) addr.value = data.roadAddress || data.jibunAddress;
       if (detail) detail.focus();
     },
   }).open();
 }
 
-function bindCheckoutAddress() {
+function fillCheckoutForm(addr) {
+  const form = document.getElementById('checkout-form');
+  if (!form) return;
+  const set = (name, val) => {
+    const el = form.querySelector(`[name="${name}"]`);
+    if (el) el.value = val || '';
+  };
+  set('name', addr.recipient_name);
+  set('phone', addr.phone);
+  set('zipcode', addr.zipcode);
+  set('addressBase', addr.address);
+  set('addressDetail', addr.address_detail);
+}
+
+function selectCheckoutAddress(id) {
+  state.selectedAddressId = id;
+  const addr = state.savedAddresses.find((a) => a.id === id);
+  if (addr) fillCheckoutForm(addr);
+  document.querySelectorAll('.address-card').forEach((el) => {
+    el.classList.toggle('address-card--selected', el.dataset.id === id);
+  });
+  const saveWrap = document.getElementById('save-address-wrap');
+  if (saveWrap) saveWrap.hidden = true;
+}
+
+function renderCheckoutAddressPicker() {
+  const picker = document.getElementById('saved-address-picker');
+  const saveWrap = document.getElementById('save-address-wrap');
+  if (!picker || !API.user) return;
+
+  if (!state.savedAddresses.length) {
+    picker.hidden = true;
+    if (saveWrap) saveWrap.hidden = false;
+    return;
+  }
+
+  picker.hidden = false;
+  if (saveWrap) saveWrap.hidden = true;
+
+  const defaultId =
+    state.selectedAddressId ||
+    state.savedAddresses.find((a) => a.is_default)?.id ||
+    state.savedAddresses[0]?.id;
+  if (defaultId) state.selectedAddressId = defaultId;
+
+  picker.innerHTML = `
+    <p class="saved-address-picker__title">저장된 배송지</p>
+    <div class="address-list">
+      ${state.savedAddresses
+        .map(
+          (a) => `
+        <button type="button" class="address-card ${a.id === state.selectedAddressId ? 'address-card--selected' : ''}"
+          data-id="${a.id}" onclick="selectCheckoutAddress('${a.id}')">
+          <span class="address-card__label">${escapeHtml(a.label)}${a.is_default ? ' · 기본' : ''}</span>
+          <strong>${escapeHtml(a.recipient_name)}</strong>
+          <span class="address-card__phone">${escapeHtml(a.phone)}</span>
+          <span class="address-card__addr">[${escapeHtml(a.zipcode)}] ${escapeHtml(a.address)} ${escapeHtml(a.address_detail || '')}</span>
+        </button>`
+        )
+        .join('')}
+      <button type="button" class="address-card address-card--new" onclick="showNewCheckoutAddress()">
+        + 새 배송지 입력
+      </button>
+    </div>
+  `;
+
+  const selected = state.savedAddresses.find((a) => a.id === state.selectedAddressId);
+  if (selected) fillCheckoutForm(selected);
+}
+
+function showNewCheckoutAddress() {
+  state.selectedAddressId = '';
+  const form = document.getElementById('checkout-form');
+  if (form) {
+    ['name', 'phone', 'zipcode', 'addressBase', 'addressDetail'].forEach((name) => {
+      const el = form.querySelector(`[name="${name}"]`);
+      if (el) el.value = '';
+    });
+  }
+  document.querySelectorAll('.address-card').forEach((el) => el.classList.remove('address-card--selected'));
+  const saveWrap = document.getElementById('save-address-wrap');
+  if (saveWrap) saveWrap.hidden = false;
+}
+
+async function bindCheckoutAddress() {
   const btn = document.getElementById('btn-search-address');
   if (btn) btn.onclick = () => openDaumPostcode();
+
+  if (!API.user) {
+    const saveWrap = document.getElementById('save-address-wrap');
+    if (saveWrap) saveWrap.hidden = true;
+    return;
+  }
+
+  try {
+    state.savedAddresses = await API.getAddresses();
+  } catch {
+    state.savedAddresses = [];
+  }
+  renderCheckoutAddressPicker();
+}
+
+const addressBookState = { editingId: null, list: [] };
+let addressBookLoaded = false;
+
+function renderAddressForm() {
+  const editing = addressBookState.list.find((a) => a.id === addressBookState.editingId);
+  const v = editing || {
+    label: '집',
+    recipient_name: API.user?.name || '',
+    phone: API.user?.phone || '',
+    zipcode: '',
+    address: '',
+    address_detail: '',
+    is_default: addressBookState.list.length === 0,
+  };
+  return `
+    <form class="auth-form address-form" id="address-form" onsubmit="handleSaveAddress(event)">
+      <div class="form-group"><label>배송지 이름</label>
+        <input name="label" value="${escapeHtml(v.label)}" placeholder="집, 회사 등" required /></div>
+      <div class="form-group"><label>받는 분</label>
+        <input name="recipientName" value="${escapeHtml(v.recipient_name)}" required /></div>
+      <div class="form-group"><label>연락처</label>
+        <input name="phone" type="tel" value="${escapeHtml(v.phone)}" required /></div>
+      <div class="form-group">
+        <label>우편번호</label>
+        <div class="address-row">
+          <input type="text" id="addr-zipcode" name="zipcode" value="${escapeHtml(v.zipcode)}" readonly required />
+          <button type="button" class="btn btn--outline" onclick="openDaumPostcode({zip:'addr-zipcode',addr:'addr-base',detail:'addr-detail'})">주소 검색</button>
+        </div>
+      </div>
+      <div class="form-group"><label>주소</label>
+        <input type="text" id="addr-base" name="address" value="${escapeHtml(v.address)}" readonly required /></div>
+      <div class="form-group"><label>상세주소</label>
+        <input type="text" id="addr-detail" name="addressDetail" value="${escapeHtml(v.address_detail)}" required /></div>
+      <div class="form-group">
+        <label class="checkbox-inline">
+          <input type="checkbox" name="isDefault" ${v.is_default ? 'checked' : ''} /> 기본 배송지로 설정
+        </label>
+      </div>
+      <div class="address-form__actions">
+        <button type="submit" class="btn btn--primary">${addressBookState.editingId ? '수정' : '추가'}</button>
+        ${addressBookState.editingId ? `<button type="button" class="btn btn--ghost" onclick="cancelEditAddress()">취소</button>` : ''}
+      </div>
+    </form>
+  `;
+}
+
+function renderAddressBook() {
+  if (!API.user) {
+    navigate('login');
+    return '';
+  }
+  if (!addressBookLoaded) {
+    loadAddressBook().then(() => {
+      addressBookLoaded = true;
+      render();
+    });
+    return '<p class="text-muted" style="padding:24px">배송지 불러오는 중…</p>';
+  }
+  const listHtml = addressBookState.list.length
+    ? addressBookState.list
+        .map(
+          (a) => `
+      <div class="address-book-item">
+        <div class="address-book-item__head">
+          <strong>${escapeHtml(a.label)}${a.is_default ? ' <span class="badge-default">기본</span>' : ''}</strong>
+          <span>${escapeHtml(a.recipient_name)} · ${escapeHtml(a.phone)}</span>
+        </div>
+        <p class="address-book-item__addr">[${escapeHtml(a.zipcode)}] ${escapeHtml(a.address)} ${escapeHtml(a.address_detail || '')}</p>
+        <div class="address-book-item__actions">
+          ${!a.is_default ? `<button type="button" class="btn btn--ghost btn--sm" onclick="setDefaultUserAddress('${a.id}')">기본 설정</button>` : ''}
+          <button type="button" class="btn btn--outline btn--sm" onclick="startEditAddress('${a.id}')">수정</button>
+          <button type="button" class="btn btn--ghost btn--sm" onclick="deleteUserAddress('${a.id}')">삭제</button>
+        </div>
+      </div>`
+        )
+        .join('')
+    : '<p class="text-muted">등록된 배송지가 없습니다. 아래에서 추가해 주세요.</p>';
+
+  return `
+    <nav class="breadcrumb"><a href="#" onclick="navigate('mypage');return false">마이페이지</a> / 배송지 관리</nav>
+    <h2 class="section-title">배송지 관리</h2>
+    <p class="text-muted" style="margin-bottom:16px">최대 10개까지 저장할 수 있습니다.</p>
+    <div class="address-book-list">${listHtml}</div>
+    <h3 class="form-section__title">${addressBookState.editingId ? '배송지 수정' : '새 배송지 추가'}</h3>
+    ${renderAddressForm()}
+  `;
+}
+
+async function loadAddressBook() {
+  if (!API.user) return;
+  try {
+    addressBookState.list = await API.getAddresses();
+  } catch (e) {
+    showToast(e.message);
+    addressBookState.list = [];
+  }
+}
+
+function startEditAddress(id) {
+  addressBookState.editingId = id;
+  render();
+}
+
+function cancelEditAddress() {
+  addressBookState.editingId = null;
+  render();
+}
+
+async function handleSaveAddress(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const body = {
+    label: fd.get('label'),
+    recipientName: fd.get('recipientName'),
+    phone: fd.get('phone'),
+    zipcode: fd.get('zipcode'),
+    address: fd.get('address'),
+    addressDetail: fd.get('addressDetail'),
+    isDefault: fd.get('isDefault') === 'on',
+  };
+  try {
+    if (addressBookState.editingId) {
+      await API.updateAddress(addressBookState.editingId, body);
+      showToast('배송지가 수정되었습니다');
+    } else {
+      await API.createAddress(body);
+      showToast('배송지가 추가되었습니다');
+    }
+    addressBookState.editingId = null;
+    await loadAddressBook();
+    render();
+  } catch (err) {
+    showToast(err.message);
+  }
+}
+
+async function deleteUserAddress(id) {
+  if (!confirm('이 배송지를 삭제할까요?')) return;
+  try {
+    await API.deleteAddress(id);
+    if (addressBookState.editingId === id) addressBookState.editingId = null;
+    await loadAddressBook();
+    render();
+    showToast('삭제되었습니다');
+  } catch (err) {
+    showToast(err.message);
+  }
+}
+
+async function setDefaultUserAddress(id) {
+  try {
+    await API.setDefaultAddress(id);
+    await loadAddressBook();
+    render();
+    showToast('기본 배송지로 설정되었습니다');
+  } catch (err) {
+    showToast(err.message);
+  }
 }
 
 async function handleLogin(e) {
@@ -481,6 +742,7 @@ const EXTRA_PAGES = {
   'find-id': renderFindId,
   'find-pw': renderFindPw,
   mypage: renderMypage,
+  addresses: renderAddressBook,
   'shop-info': renderShopInfo,
   'customer-center': renderCustomerCenter,
   inquiry: renderInquiry,
@@ -493,6 +755,13 @@ function updateNavAuth() {
   el.textContent = API.user ? '마이' : '로그인';
   el.dataset.page = API.user ? 'mypage' : 'login';
 }
+
+const _navigateOrig = navigate;
+window.navigate = function (page, params = {}) {
+  if (page === 'addresses') addressBookLoaded = false;
+  if (page === 'checkout') state.selectedAddressId = '';
+  return _navigateOrig(page, params);
+};
 
 const _renderOrig = render;
 window.render = function () {

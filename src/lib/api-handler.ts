@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
-import type { User, Review, Order, Inquiry, Prisma } from '@prisma/client';
+import type { User, Review, Order, Inquiry, UserAddress, Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { jwtSecret, siteUrl, siteName, nodeEnv } from './config';
 import {
@@ -130,6 +130,26 @@ function mapInquiry(i: Inquiry) {
     status: i.status,
     created_at: i.createdAt instanceof Date ? i.createdAt.toISOString() : String(i.createdAt),
   };
+}
+
+function mapUserAddress(a: UserAddress) {
+  return {
+    id: a.id,
+    label: a.label,
+    recipient_name: a.recipientName,
+    phone: a.phone,
+    zipcode: a.zipcode,
+    address: a.address,
+    address_detail: a.addressDetail,
+    is_default: a.isDefault,
+  };
+}
+
+async function clearUserDefaultAddresses(userId: string) {
+  await prisma.userAddress.updateMany({
+    where: { userId, isDefault: true },
+    data: { isDefault: false },
+  });
 }
 
 function mapAdminUser(u: Pick<User, 'id' | 'email' | 'name' | 'phone' | 'role' | 'createdAt'>) {
@@ -547,6 +567,117 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
       });
       const review = await prisma.review.findUnique({ where: { id } });
       return json({ ok: true, review: mapReview(review!) });
+    }
+  }
+
+  /* ── User addresses ── */
+  if (a === 'addresses') {
+    const auth = verifyToken(request);
+    if (!auth) return json({ error: '로그인이 필요합니다.' }, 401);
+
+    if (method === 'GET' && !b) {
+      const rows = await prisma.userAddress.findMany({
+        where: { userId: auth.id },
+        orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
+      });
+      return json(rows.map(mapUserAddress));
+    }
+
+    if (method === 'POST' && !b) {
+      const body = await parseBody<{
+        label?: string;
+        recipientName?: string;
+        phone?: string;
+        zipcode?: string;
+        address?: string;
+        addressDetail?: string;
+        isDefault?: boolean;
+      }>(request);
+      if (!body.recipientName || !body.phone || !body.zipcode || !body.address) {
+        return json({ error: '받는 분, 연락처, 주소를 모두 입력해 주세요.' }, 400);
+      }
+      const count = await prisma.userAddress.count({ where: { userId: auth.id } });
+      if (count >= 10) {
+        return json({ error: '배송지는 최대 10개까지 등록할 수 있습니다.' }, 400);
+      }
+      const isDefault = body.isDefault ?? count === 0;
+      if (isDefault) await clearUserDefaultAddresses(auth.id);
+      const row = await prisma.userAddress.create({
+        data: {
+          id: uuidv4(),
+          userId: auth.id,
+          label: (body.label || '집').trim(),
+          recipientName: body.recipientName.trim(),
+          phone: body.phone.trim(),
+          zipcode: body.zipcode.trim(),
+          address: body.address.trim(),
+          addressDetail: (body.addressDetail || '').trim(),
+          isDefault,
+        },
+      });
+      return json(mapUserAddress(row));
+    }
+
+    if (b) {
+      const existing = await prisma.userAddress.findFirst({
+        where: { id: b, userId: auth.id },
+      });
+      if (!existing) return json({ error: '배송지를 찾을 수 없습니다.' }, 404);
+
+      if (method === 'PUT') {
+        const body = await parseBody<{
+          label?: string;
+          recipientName?: string;
+          phone?: string;
+          zipcode?: string;
+          address?: string;
+          addressDetail?: string;
+          isDefault?: boolean;
+        }>(request);
+        if (!body.recipientName || !body.phone || !body.zipcode || !body.address) {
+          return json({ error: '받는 분, 연락처, 주소를 모두 입력해 주세요.' }, 400);
+        }
+        if (body.isDefault) await clearUserDefaultAddresses(auth.id);
+        const row = await prisma.userAddress.update({
+          where: { id: b },
+          data: {
+            label: (body.label || '집').trim(),
+            recipientName: body.recipientName.trim(),
+            phone: body.phone.trim(),
+            zipcode: body.zipcode.trim(),
+            address: body.address.trim(),
+            addressDetail: (body.addressDetail || '').trim(),
+            isDefault: !!body.isDefault,
+          },
+        });
+        return json(mapUserAddress(row));
+      }
+
+      if (method === 'DELETE') {
+        await prisma.userAddress.delete({ where: { id: b } });
+        if (existing.isDefault) {
+          const next = await prisma.userAddress.findFirst({
+            where: { userId: auth.id },
+            orderBy: { createdAt: 'desc' },
+          });
+          if (next) {
+            await prisma.userAddress.update({
+              where: { id: next.id },
+              data: { isDefault: true },
+            });
+          }
+        }
+        return json({ ok: true });
+      }
+
+      if (method === 'PATCH' && c === 'default') {
+        await clearUserDefaultAddresses(auth.id);
+        const row = await prisma.userAddress.update({
+          where: { id: b },
+          data: { isDefault: true },
+        });
+        return json(mapUserAddress(row));
+      }
     }
   }
 
