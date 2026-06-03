@@ -839,7 +839,8 @@ function renderHome() {
     <div class="home">
       <header class="home-header">
         <a class="home-header__logo" href="#" onclick="navigate('home');return false">
-          <img class="home-header__logo-img" src="images/logo.png" alt="수산아빠" width="130" height="52" />
+          <img class="home-header__logo-img" src="images/logo.png" alt="" width="44" height="44" />
+          <span class="home-header__logo-text">수산아빠</span>
         </a>
         <div class="home-header__actions">
           <button type="button" class="home-header__bell" onclick="showToast('알림 3건 (데모)')" title="알림">
