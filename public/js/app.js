@@ -1723,7 +1723,6 @@ function renderHome() {
       ${renderWeeklyTopSection()}
       ${renderTimeAttackSection()}
       ${renderDontMissSection()}
-      ${renderTimeAttackSection()}
       ${renderHomeScrollSection(
         '👀 최근 본 상품',
         recentAll,
