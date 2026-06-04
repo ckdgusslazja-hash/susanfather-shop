@@ -1189,7 +1189,26 @@ function getRecentProducts() {
   }
 }
 
+function getHomeCategoryLabel(id) {
+  if (id === 'weeklyTop') return '금주 TOP 5';
+  if (id === 'all') return '전체';
+  return HOME_CATEGORIES.find((c) => c.id === id)?.name || '상품';
+}
+
 function filterProducts() {
+  if (state.category === 'weeklyTop') {
+    let list = getWeeklyTopProducts();
+    const q = (state.searchQuery || '').trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.origin.toLowerCase().includes(q) ||
+          getCategoryName(p.category).includes(q)
+      );
+    }
+    return list;
+  }
   return filterProductsByCategory(state.category, state.searchQuery);
 }
 
@@ -1511,7 +1530,7 @@ function renderWeeklyTopSection() {
     <section class="home-row-section home-weekly-top" aria-label="금주 TOP 5 상품">
       <div class="home-row-section__head home-weekly-top__head">
         <h2 class="home-row-section__title home-weekly-top__title">🏆 금주 TOP 5 상품!</h2>
-        <button type="button" class="home-row-section__more" onclick="selectCategory('all')">더보기 ›</button>
+        <button type="button" class="home-row-section__more" onclick="selectCategory('weeklyTop')">더보기 ›</button>
       </div>
       <p class="home-weekly-top__sub">${weekLabel} · 인기 베스트</p>
       <div class="home-scroll home-scroll--weekly-top">${products
@@ -1656,7 +1675,7 @@ function renderHome() {
     state.category === 'all'
       ? recentAll
       : recentAll.filter((p) => products.some((fp) => fp.id === p.id));
-  const catName = HOME_CATEGORIES.find((c) => c.id === state.category)?.name || '전체';
+  const catName = getHomeCategoryLabel(state.category);
   const isCategoryView = state.category !== 'all';
   const banner = HOME_BANNERS[state.homeBannerIndex];
   const searchValue = state.searchDraft !== undefined && state.page === 'home'
