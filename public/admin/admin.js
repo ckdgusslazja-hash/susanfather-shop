@@ -699,6 +699,7 @@ const Admin = {
         originalPrice: fd.get('originalPrice'),
         unit: fd.get('unit'),
         origin: fd.get('origin'),
+        deliveryDays: fd.get('deliveryDays'),
         stock: fd.get('stock'),
         badge: fd.get('badge'),
         emoji: fd.get('emoji'),
@@ -985,6 +986,12 @@ const Admin = {
       originalPrice: Number(fd.get('originalPrice') || fd.get('price')),
       unit: String(fd.get('unit') || '1개'),
       origin: fd.get('origin'),
+      deliveryDays: (() => {
+        const raw = fd.get('deliveryDays');
+        if (raw === '' || raw == null) return null;
+        const n = Math.floor(Number(raw));
+        return Number.isFinite(n) && n >= 1 ? Math.min(30, n) : null;
+      })(),
       stock: Number(fd.get('stock')),
       badge: fd.get('badge'),
       emoji: fd.get('emoji'),
@@ -1440,6 +1447,16 @@ const Admin = {
             <div class="form-row"><label>기본 정가</label><input name="originalPrice" type="number" value="${p.originalPrice ?? p.price ?? ''}" placeholder="15000" oninput="Admin.updateAllOptionPreviews()" /></div>
             <div class="form-row"><label>재고</label><input name="stock" type="number" value="${p.stock ?? 50}" /></div>
             <div class="form-row"><label>산지</label><input name="origin" value="${this.esc(p.origin)}" /></div>
+            <div class="form-row">
+              <label>도착 예상</label>
+              <div class="delivery-days-field">
+                <input name="deliveryDays" type="number" min="1" max="30" step="1"
+                  value="${p.deliveryDays != null && p.deliveryDays !== '' ? Number(p.deliveryDays) : ''}"
+                  placeholder="비움" />
+                <span class="delivery-days-field__suffix">일 이내 도착</span>
+              </div>
+              <p class="admin-hint">예: 3 입력 → 쇼핑몰에 「3일 이내 도착」 표시. 비우면 기본 「내일 도착」.</p>
+            </div>
             <div class="form-row"><label>이모지</label><input name="emoji" value="${this.esc(p.emoji || '🛒')}" /></div>
 
             <div class="form-row full">

@@ -252,6 +252,15 @@ function getDeliveryLabel() {
   return `내일(${days[tomorrow.getDay()]}) 새벽 7시 전 도착`;
 }
 
+function getProductArrivalLabel(product, detailed = false) {
+  const raw = product?.deliveryDays;
+  if (raw != null && raw !== '' && Number.isFinite(Number(raw))) {
+    const n = Math.max(1, Math.min(30, Math.floor(Number(raw))));
+    return `${n}일 이내 도착`;
+  }
+  return detailed ? getDeliveryLabel() : getShortDeliveryLabel();
+}
+
 function saveCart() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.cart));
 }
@@ -1286,7 +1295,7 @@ function renderHomeScrollCard(product) {
         ${unitLabel ? `<p class="h-card__unit">${unitLabel}</p>` : ''}
         <p class="h-card__ship">
           <span class="h-card__ship-badge">🚀 산지직송</span>
-          <span class="h-card__ship-date">${getShortDeliveryLabel()}</span>
+          <span class="h-card__ship-date">${getProductArrivalLabel(product)}</span>
         </p>
         <p class="h-card__rating">
           <span class="h-card__stars">${'★'.repeat(fullStars)}${'☆'.repeat(5 - fullStars)}</span>
@@ -1692,7 +1701,7 @@ function renderDetail() {
         <div class="pdp-shipping">
           <div class="pdp-shipping__row">
             <span class="pdp-shipping__badge">🚀 산지직송</span>
-            <span class="pdp-shipping__arrival">${getDeliveryLabel()}</span>
+            <span class="pdp-shipping__arrival">${getProductArrivalLabel(product, true)}</span>
           </div>
           <div class="pdp-shipping__row pdp-shipping__row--sub">
             <span>🚚 ${freeShip ? '무료배송' : `배송비 ${formatPrice(SHIPPING_FEE)}`}</span>

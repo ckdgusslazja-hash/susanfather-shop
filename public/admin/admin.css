@@ -376,6 +376,25 @@ a { color: #2d6a4f; }
 }
 .admin-hint { font-size: 0.82rem; color: #666; margin-bottom: 12px; }
 
+.delivery-days-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.delivery-days-field input {
+  width: 88px;
+  max-width: 100%;
+}
+
+.delivery-days-field__suffix {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+}
+
 .checkbox-row {
   display: flex;
   flex-wrap: wrap;

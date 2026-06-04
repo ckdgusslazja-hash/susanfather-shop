@@ -667,6 +667,22 @@ function buildAdminImages(mainImage: string, productId: string) {
   return [{ id: `${productId}-a1`, url, label: '대표 상품컷' }];
 }
 
+function parseDeliveryDays(
+  raw: unknown,
+  existing?: unknown
+): number | undefined {
+  if (raw === null || raw === '') return undefined;
+  if (raw === undefined) {
+    if (existing === null || existing === '') return undefined;
+    if (existing === undefined) return undefined;
+    const prev = Math.floor(Number(existing));
+    return Number.isFinite(prev) && prev >= 1 ? Math.min(30, prev) : undefined;
+  }
+  const n = Math.floor(Number(raw));
+  if (!Number.isFinite(n) || n < 1) return undefined;
+  return Math.min(30, n);
+}
+
 function buildProductRecord(body: Record<string, unknown>, id: string, existing?: Record<string, unknown>) {
   const name = String(body.name || existing?.name || '').trim();
   const category = String(body.category || existing?.category || 'fruit');
@@ -722,6 +738,7 @@ function buildProductRecord(body: Record<string, unknown>, id: string, existing?
     detailBlocks,
     shippingGuide: String(body.shippingGuide ?? existing?.shippingGuide ?? defaultProductPolicies().shippingGuide),
     returnGuide: String(body.returnGuide ?? existing?.returnGuide ?? defaultProductPolicies().returnGuide),
+    deliveryDays: parseDeliveryDays(body.deliveryDays, existing?.deliveryDays),
     sortIndex:
       existing?.sortIndex !== undefined && existing?.sortIndex !== null
         ? Number(existing.sortIndex)
