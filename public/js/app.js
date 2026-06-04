@@ -245,11 +245,87 @@ function getSelectedOption(product) {
   return getProductOption(product, id);
 }
 
+const KST_DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
+const ORDER_CUTOFF_HOUR_KST = 11;
+
+function getKstDateTimeParts(now = new Date()) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    })
+      .formatToParts(now)
+      .filter((p) => p.type !== 'literal')
+      .map((p) => [p.type, p.value])
+  );
+  return {
+    year: Number(parts.year),
+    month: Number(parts.month),
+    day: Number(parts.day),
+    hour: Number(parts.hour),
+    minute: Number(parts.minute),
+  };
+}
+
+function kstWeekday(year, month, day) {
+  return new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+}
+
+function addKstCalendarDays(year, month, day, addDays) {
+  const next = new Date(Date.UTC(year, month - 1, day + addDays));
+  return {
+    year: next.getUTCFullYear(),
+    month: next.getUTCMonth() + 1,
+    day: next.getUTCDate(),
+  };
+}
+
+function kstCalendarDayDiff(y1, m1, d1, y2, m2, d2) {
+  const a = Date.UTC(y1, m1 - 1, d1);
+  const b = Date.UTC(y2, m2 - 1, d2);
+  return Math.round((b - a) / 86400000);
+}
+
+/** 11시 전 주문 → +1일, 11시 이후 → +2일. 도착일이 일요일이면 월요일로 (일요일 택배 없음) */
+function computeDefaultArrival(now = new Date()) {
+  const kst = getKstDateTimeParts(now);
+  const leadDays = kst.hour < ORDER_CUTOFF_HOUR_KST ? 1 : 2;
+  let arrival = addKstCalendarDays(kst.year, kst.month, kst.day, leadDays);
+  let weekday = kstWeekday(arrival.year, arrival.month, arrival.day);
+  while (weekday === 0) {
+    arrival = addKstCalendarDays(arrival.year, arrival.month, arrival.day, 1);
+    weekday = kstWeekday(arrival.year, arrival.month, arrival.day);
+  }
+  const diffDays = kstCalendarDayDiff(kst.year, kst.month, kst.day, arrival.year, arrival.month, arrival.day);
+  return {
+    arrival,
+    diffDays,
+    dayName: KST_DAY_NAMES[weekday],
+  };
+}
+
+function formatDefaultArrivalLabel(detailed = false) {
+  const { diffDays, dayName } = computeDefaultArrival();
+  if (diffDays === 1) {
+    return detailed ? `내일(${dayName}) 새벽 7시 전 도착` : `내일(${dayName}) 도착`;
+  }
+  if (diffDays === 2) {
+    return `이틀 뒤(${dayName}) 도착`;
+  }
+  return `${diffDays}일 후(${dayName}) 도착`;
+}
+
 function getDeliveryLabel() {
-  const days = ['일', '월', '화', '수', '목', '금', '토'];
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return `내일(${days[tomorrow.getDay()]}) 새벽 7시 전 도착`;
+  return formatDefaultArrivalLabel(true);
+}
+
+function getShortDeliveryLabel() {
+  return formatDefaultArrivalLabel(false);
 }
 
 function getProductArrivalLabel(product, detailed = false) {
@@ -258,7 +334,7 @@ function getProductArrivalLabel(product, detailed = false) {
     const n = Math.max(1, Math.min(30, Math.floor(Number(raw))));
     return `${n}일 이내 도착`;
   }
-  return detailed ? getDeliveryLabel() : getShortDeliveryLabel();
+  return formatDefaultArrivalLabel(detailed);
 }
 
 function saveCart() {
@@ -1254,13 +1330,6 @@ function getUnitPriceLabel(product) {
   else if (u === 'g') per100g = (product.price / amount) * 100;
   if (per100g > 0) return `(100g당 ${Math.round(per100g).toLocaleString()}원)`;
   return '';
-}
-
-function getShortDeliveryLabel() {
-  const days = ['일', '월', '화', '수', '목', '금', '토'];
-  const t = new Date();
-  t.setDate(t.getDate() + 1);
-  return `내일(${days[t.getDay()]}) 도착`;
 }
 
 function renderHomeScrollCard(product) {

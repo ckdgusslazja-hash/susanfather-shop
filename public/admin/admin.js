@@ -1455,7 +1455,7 @@ const Admin = {
                   placeholder="비움" />
                 <span class="delivery-days-field__suffix">일 이내 도착</span>
               </div>
-              <p class="admin-hint">예: 3 입력 → 쇼핑몰에 「3일 이내 도착」 표시. 비우면 기본 「내일 도착」.</p>
+              <p class="admin-hint">예: 3 입력 → 「3일 이내 도착」. 비우면 자동: 11시 전 주문 시 내일 도착, 11시 이후 이틀 뒤(일요일 미배송 반영).</p>
             </div>
             <div class="form-row"><label>이모지</label><input name="emoji" value="${this.esc(p.emoji || '🛒')}" /></div>
 
