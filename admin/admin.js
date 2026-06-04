@@ -186,22 +186,33 @@ const Admin = {
     const baseOrig = Number(product.originalPrice) || basePrice;
     const rawOpts = product.options || [];
     const looksLegacy = rawOpts.some((o) => Number(o.price) >= basePrice && Number(o.price) > 0);
+    const useOptions =
+      product.useOptions !== undefined
+        ? !!product.useOptions
+        : rawOpts.length > 1 || rawOpts.some((o) => Number(o.price) > 0);
 
     let options = rawOpts.map((o) => {
       let addPrice = Number(o.price) || 0;
-      let addOrig = Number(o.originalPrice ?? o.price) || 0;
+      let origPrice = Number(o.originalPrice) || 0;
       if (looksLegacy) {
         addPrice = Math.max(0, addPrice - basePrice);
-        addOrig = Math.max(0, addOrig - baseOrig);
+        if (origPrice > 0 && origPrice < baseOrig) {
+          origPrice = baseOrig + origPrice;
+        }
       }
-      return { label: o.label || '', price: addPrice, originalPrice: addOrig };
+      return {
+        label: o.label || '',
+        price: addPrice,
+        originalPrice: origPrice > 0 ? origPrice : '',
+      };
     });
-    if (!options.length) {
-      options = [{ label: product.unit || '', price: 0, originalPrice: 0 }];
+    if (useOptions && !options.length) {
+      options = [{ label: product.unit || '', price: 0, originalPrice: '' }];
     }
 
     this.productDraft = {
       mainImage: product.adminImages?.[0]?.url || '',
+      useOptions,
       options,
       optionLabel: product.optionLabel || '용량',
       detailBlocks,
@@ -242,6 +253,7 @@ const Admin = {
       freeShipping: fd.get('freeShipping') === 'on',
     };
     if (this.productDraft) {
+      this.productDraft.useOptions = fd.get('useOptions') === 'on';
       this.productDraft.optionLabel = fd.get('optionLabel') || '용량';
       this.productDraft.shippingGuide = fd.get('shippingGuide') || '';
       this.productDraft.returnGuide = fd.get('returnGuide') || '';
@@ -280,7 +292,20 @@ const Admin = {
 
   addProductOption() {
     this.syncProductFormState();
-    this.productDraft.options.push({ label: '', price: 0, originalPrice: 0 });
+    this.productDraft.options.push({ label: '', price: 0, originalPrice: '' });
+    this.render();
+  },
+
+  toggleUseOptions(enabled) {
+    this.syncProductFormState();
+    this.productDraft.useOptions = enabled;
+    if (enabled) {
+      const form = document.getElementById('product-form');
+      const unit = form ? String(new FormData(form).get('unit') || '').trim() : '';
+      if (!this.productDraft.options?.length) {
+        this.productDraft.options = [{ label: unit || '1kg', price: 0, originalPrice: '' }];
+      }
+    }
     this.render();
   },
 
@@ -320,18 +345,31 @@ const Admin = {
 
   renderProductOptions() {
     const d = this.productDraft;
-    if (!d) return '';
-    return d.options
-      .map(
-        (o, i) => `
+    if (!d?.useOptions) return '';
+    const form = document.getElementById('product-form');
+    const basePrice = form ? Number(new FormData(form).get('price')) || 0 : Number(this.editingProduct?.price) || 0;
+    const baseOrig =
+      form ? Number(new FormData(form).get('originalPrice')) || basePrice : Number(this.editingProduct?.originalPrice) || basePrice;
+    return `
+      <div class="option-row option-row--head">
+        <span>옵션명</span><span>추가 판매가</span><span>정가</span><span></span>
+      </div>
+      ${d.options
+      .map((o, i) => {
+        const addPrice = Number(o.price) || 0;
+        const optOrig = Number(o.originalPrice) || 0;
+        const salePreview = basePrice + addPrice;
+        const origPreview = optOrig > 0 ? optOrig : baseOrig;
+        return `
       <div class="option-row" data-index="${i}">
-        <input placeholder="옵션명 (예: 1kg)" value="${this.esc(o.label)}" onchange="Admin.productDraft.options[${i}].label=this.value" />
-        <input type="number" placeholder="추가 판매가" value="${o.price}" onchange="Admin.productDraft.options[${i}].price=this.value" />
-        <input type="number" placeholder="추가 정가" value="${o.originalPrice}" onchange="Admin.productDraft.options[${i}].originalPrice=this.value" />
+        <input placeholder="예: 2kg" value="${this.esc(o.label)}" onchange="Admin.productDraft.options[${i}].label=this.value" />
+        <input type="number" placeholder="0" value="${o.price === '' ? '' : o.price}" onchange="Admin.productDraft.options[${i}].price=this.value" title="기본 판매가에 더해짐" />
+        <input type="number" placeholder="${baseOrig || '기본 정가'}" value="${o.originalPrice === '' || o.originalPrice == null ? '' : o.originalPrice}" onchange="Admin.productDraft.options[${i}].originalPrice=this.value" title="이 옵션의 정가(합산 아님)" />
+        <span class="option-row__preview" title="적용 가격">→ ${this.fmt(salePreview)} / ${this.fmt(origPreview)}</span>
         <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.removeProductOption(${i})">삭제</button>
-      </div>`
-      )
-      .join('');
+      </div>`;
+      })
+      .join('')}`;
   },
 
   renderDetailBlocks() {
@@ -364,6 +402,11 @@ const Admin = {
     this.syncProductFormState();
     const fd = new FormData(e.target);
     const d = this.productDraft || {};
+    const useOptions = d.useOptions === true;
+    if (useOptions && !(d.options || []).length) {
+      alert('옵션 사용 시 옵션을 1개 이상 등록해 주세요.');
+      return;
+    }
     const body = {
       name: fd.get('name'),
       category: fd.get('category'),
@@ -376,12 +419,15 @@ const Admin = {
       emoji: fd.get('emoji'),
       description: fd.get('description'),
       mainImage: d.mainImage || '',
+      useOptions,
       optionLabel: d.optionLabel || fd.get('optionLabel') || '용량',
-      options: (d.options || []).map((o) => ({
-        label: o.label,
-        price: Number(o.price),
-        originalPrice: Number(o.originalPrice || o.price),
-      })),
+      options: useOptions
+        ? (d.options || []).map((o) => ({
+            label: o.label,
+            price: Number(o.price) || 0,
+            originalPrice: o.originalPrice === '' || o.originalPrice == null ? 0 : Number(o.originalPrice),
+          }))
+        : [],
       detailBlocks: d.detailBlocks || [],
       shippingGuide: d.shippingGuide || fd.get('shippingGuide') || '',
       returnGuide: d.returnGuide || fd.get('returnGuide') || '',
@@ -759,9 +805,9 @@ const Admin = {
             <div class="form-row"><label>카테고리 *</label><select name="category">${Object.entries(this.CATEGORIES).map(([k, v]) => `<option value="${k}" ${p.category === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
             <div class="form-row"><label>뱃지</label><select name="badge">${this.BADGES.map((b) => `<option value="${b}" ${(p.badge || '신선') === b ? 'selected' : ''}>${b}</option>`).join('')}</select></div>
             <div class="form-row full"><label>상품명 *</label><input name="name" required value="${this.esc(p.name)}" /></div>
-            <div class="form-row"><label>기본 단위 (옵션 1개일 때)</label><input name="unit" value="${this.esc(p.unit)}" placeholder="5kg, 1kg, 2입" /></div>
-            <div class="form-row"><label>기본 판매가</label><input name="price" type="number" value="${p.price ?? ''}" /></div>
-            <div class="form-row"><label>기본 정가</label><input name="originalPrice" type="number" value="${p.originalPrice ?? p.price ?? ''}" /></div>
+            <div class="form-row"><label>기본 단위</label><input name="unit" value="${this.esc(p.unit)}" placeholder="1kg, 500g, 2입" /></div>
+            <div class="form-row"><label>기본 판매가</label><input name="price" type="number" value="${p.price ?? ''}" placeholder="10000" /></div>
+            <div class="form-row"><label>기본 정가</label><input name="originalPrice" type="number" value="${p.originalPrice ?? p.price ?? ''}" placeholder="15000" /></div>
             <div class="form-row"><label>재고</label><input name="stock" type="number" value="${p.stock ?? 50}" /></div>
             <div class="form-row"><label>산지</label><input name="origin" value="${this.esc(p.origin)}" /></div>
             <div class="form-row"><label>이모지</label><input name="emoji" value="${this.esc(p.emoji || '🛒')}" /></div>
@@ -773,14 +819,26 @@ const Admin = {
             </div>
 
             <div class="form-row full">
-              <label>옵션</label>
-              <p class="admin-hint">기본 판매가에 더해지는 금액입니다. 기본 옵션은 추가금 0원으로 두세요.</p>
+              <label class="checkbox-inline">
+                <input type="checkbox" name="useOptions" ${d.useOptions ? 'checked' : ''} onchange="Admin.toggleUseOptions(this.checked)" />
+                옵션 사용 (용량·중량 등)
+              </label>
+            </div>
+
+            ${
+              d.useOptions
+                ? `
+            <div class="form-row full" id="product-option-fields">
+              <label>옵션 설정</label>
+              <p class="admin-hint">판매가는 <strong>기본 판매가 + 추가금</strong>, 정가는 <strong>옵션별 정가(합산 아님)</strong>입니다. 예) 기본 10,000원 +8,000원, 정가 30,000원 → 2kg 선택 시 18,000원 / 30,000원</p>
               <div class="form-row"><label>옵션 라벨</label>
                 <select name="optionLabel">${this.OPTION_LABELS.map((l) => `<option value="${l}" ${d.optionLabel === l ? 'selected' : ''}>${l}</option>`).join('')}</select>
               </div>
               <div class="option-list">${this.renderProductOptions()}</div>
               <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.addProductOption()">+ 옵션 추가</button>
-            </div>
+            </div>`
+                : ''
+            }
 
             <div class="form-row full"><label>상품 설명</label><textarea name="description" rows="3">${this.esc(p.description)}</textarea></div>
 

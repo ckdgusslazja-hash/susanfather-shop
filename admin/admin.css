@@ -234,9 +234,20 @@ a { color: #2d6a4f; }
 .option-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
 .option-row {
   display: grid;
-  grid-template-columns: 1fr 100px 100px auto;
+  grid-template-columns: 1fr 88px 88px minmax(130px, 1.1fr) auto;
   gap: 8px;
   align-items: center;
+}
+.option-row--head {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #5a6b62;
+}
+.option-row--head span:last-child { visibility: hidden; }
+.option-row__preview {
+  font-size: 0.72rem;
+  color: #1a6b4a;
+  white-space: nowrap;
 }
 
 .detail-blocks { display: flex; flex-direction: column; gap: 12px; }

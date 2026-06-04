@@ -692,13 +692,24 @@ function filterProductsByCategory(categoryId, searchQuery = '') {
   return list;
 }
 
+/** 옵션 사용 여부 (레거시 상품은 options 개수로 추정) */
+function productHasOptions(product) {
+  if (!product) return false;
+  if (product.useOptions === false) return false;
+  if (product.useOptions === true) return (product.options || []).length > 0;
+  const opts = product.options || [];
+  return opts.length > 1 || opts.some((o) => Number(o.price) > 0 || (o.label && o.label !== product.unit));
+}
+
 function getProductOption(product, optionId) {
+  if (!productHasOptions(product)) return null;
   const opts = product.options || [];
   if (!opts.length) return null;
   return opts.find((o) => o.id === optionId) || opts.find((o) => !o.price) || opts[0];
 }
 
 function getDefaultOptionId(product) {
+  if (!productHasOptions(product)) return null;
   const opts = product.options || [];
   const zero = opts.find((o) => !o.price);
   return zero ? zero.id : opts[0]?.id;
@@ -711,11 +722,11 @@ function getOptionSalePrice(product, option) {
   return base + add;
 }
 
-/** 옵션 추가금액을 기본 정가에 더한 최종 정가 */
+/** 옵션별 정가(절대값). 미입력 시 기본 정가 사용 */
 function getOptionOriginalPrice(product, option) {
-  const base = Number(product?.originalPrice ?? product?.price) || 0;
-  const add = Number(option?.originalPrice ?? option?.price) || 0;
-  return base + add;
+  const optOrig = Number(option?.originalPrice) || 0;
+  if (optOrig > 0) return optOrig;
+  return Number(product?.originalPrice ?? product?.price) || 0;
 }
 
 function getCartItemOption(product, cartItem) {

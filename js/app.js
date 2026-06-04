@@ -1191,16 +1191,18 @@ function renderDetail() {
     )
     .join('');
 
-  const optionsHtml = (product.options || [])
-    .map((opt) => {
-      const addLabel = opt.price > 0 ? ` (+${formatPrice(opt.price)})` : '';
-      return `
+  const optionsHtml = productHasOptions(product)
+    ? (product.options || [])
+        .map((opt) => {
+          const addLabel = opt.price > 0 ? ` (+${formatPrice(opt.price)})` : '';
+          return `
       <button type="button"
         class="pdp-option-pill ${state.selectedOptionId === opt.id ? 'active' : ''}"
         onclick="selectOption('${opt.id}')">${escapeHtml(opt.label)}${addLabel}</button>
     `;
-    })
-    .join('');
+        })
+        .join('')
+    : '';
 
   return `
     <div class="pdp">
@@ -1263,7 +1265,7 @@ function renderDetail() {
 
         <hr class="pdp-divider" />
 
-        ${product.options?.length ? `
+        ${productHasOptions(product) ? `
         <div class="pdp-options">
           <p class="pdp-options__label">${escapeHtml(product.optionLabel || '옵션')}: <strong>${escapeHtml(option?.label || '')}</strong></p>
           <div class="pdp-option-pills">${optionsHtml}</div>

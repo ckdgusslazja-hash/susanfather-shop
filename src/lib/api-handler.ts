@@ -511,20 +511,18 @@ function parseDetailBlocks(raw: unknown, detailsText: string) {
 }
 
 function parseProductOptions(raw: unknown, productId: string, unit: string) {
-  if (Array.isArray(raw) && raw.length) {
-    return raw.map((item, i) => {
-      const o = item as Record<string, unknown>;
-      const addPrice = Number(o.price) || 0;
-      const addOrig = Number(o.originalPrice ?? o.price) || 0;
-      return {
-        id: `${productId}-o${i + 1}`,
-        label: String(o.label || unit || `옵션${i + 1}`),
-        price: addPrice,
-        originalPrice: addOrig,
-      };
-    });
-  }
-  return [{ id: `${productId}-o1`, label: unit, price: 0, originalPrice: 0 }];
+  if (!Array.isArray(raw) || !raw.length) return [];
+  return raw.map((item, i) => {
+    const o = item as Record<string, unknown>;
+    const addPrice = Number(o.price) || 0;
+    const optOrig = Number(o.originalPrice) || 0;
+    return {
+      id: `${productId}-o${i + 1}`,
+      label: String(o.label || unit || `옵션${i + 1}`),
+      price: addPrice,
+      originalPrice: optOrig,
+    };
+  });
 }
 
 function buildAdminImages(mainImage: string, productId: string) {
@@ -541,7 +539,15 @@ function buildProductRecord(body: Record<string, unknown>, id: string, existing?
   const unit = String(body.unit || existing?.unit || '1개');
   const mainImage = String(body.mainImage || body.imageUrl || '').trim();
   const detailsText = String(body.details || '');
-  const options = parseProductOptions(body.options, id, unit);
+  const useOptions =
+    body.useOptions !== undefined
+      ? !!body.useOptions
+      : existing?.useOptions !== undefined
+        ? !!existing.useOptions
+        : Array.isArray(body.options) && body.options.length > 0
+          ? body.options.length > 1
+          : Array.isArray(existing?.options) && (existing.options as unknown[]).length > 1;
+  const options = useOptions ? parseProductOptions(body.options, id, unit) : [];
   const detailBlocks = parseDetailBlocks(body.detailBlocks, detailsText);
   const details = detailBlocks.filter((b) => b.type === 'text').map((b) => b.text || '');
 
@@ -552,7 +558,7 @@ function buildProductRecord(body: Record<string, unknown>, id: string, existing?
     categoryPath: ['식품', catName, name],
     price,
     originalPrice,
-    unit: options[0]?.label || unit,
+    unit,
     origin: String(body.origin ?? existing?.origin ?? '국내산'),
     badge: String(body.badge ?? existing?.badge ?? '신선'),
     rating: Number(existing?.rating ?? body.rating) || 4.8,
@@ -571,6 +577,7 @@ function buildProductRecord(body: Record<string, unknown>, id: string, existing?
     adminImages: mainImage
       ? buildAdminImages(mainImage, id)
       : ((existing?.adminImages as unknown[]) || buildAdminImages('', id)),
+    useOptions,
     options,
     optionLabel: String(body.optionLabel ?? existing?.optionLabel ?? '용량'),
     description: String(body.description ?? existing?.description ?? ''),
