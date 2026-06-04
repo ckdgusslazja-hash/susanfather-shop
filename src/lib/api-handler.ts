@@ -578,14 +578,20 @@ async function applyProductSortIndexBackfill(products: Record<string, unknown>[]
   });
 }
 
+function mergeProductRow(row: { id: string; data: unknown }): Record<string, unknown> {
+  const data = row.data as Record<string, unknown>;
+  return {
+    ...data,
+    id: String(data.id || row.id),
+    useOptions: data.useOptions === true,
+  };
+}
+
 async function loadAdminProducts(): Promise<Record<string, unknown>[]> {
   try {
     const rows = await prisma.product.findMany();
     if (rows.length) {
-      let products: Record<string, unknown>[] = rows.map((r) => {
-        const data = r.data as Record<string, unknown>;
-        return { ...data, useOptions: data.useOptions === true };
-      });
+      let products: Record<string, unknown>[] = rows.map((r) => mergeProductRow(r));
       products = await applyProductSortIndexBackfill(products);
       return sortProductsStable(products);
     }
@@ -1199,7 +1205,7 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
     try {
       const rows = await prisma.product.findMany();
       if (rows.length) {
-        return json(rows.map((r) => normalizeProductForClient(r.data as Record<string, unknown>)));
+        return json(rows.map((r) => normalizeProductForClient(mergeProductRow(r))));
       }
     } catch {
       /* DB 미연결 시 JSON 폴백 */
@@ -1646,8 +1652,7 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
       if (method === 'GET' && c) {
         const row = await prisma.product.findUnique({ where: { id: c } });
         if (row) {
-          const data = row.data as Record<string, unknown>;
-          return json({ ...data, useOptions: data.useOptions === true });
+          return json(mergeProductRow(row));
         }
         const list = await loadAdminProducts();
         const found = list.find((p) => p.id === c);

@@ -1661,14 +1661,27 @@ function renderProductPolicySections(product) {
     </section>`;
 }
 
+let _detailProductLoadToken = 0;
+
+function retryLoadDetailProduct() {
+  const pid = state.selectedProductId;
+  if (!pid || typeof API === 'undefined' || typeof API.loadProducts !== 'function') return;
+  const token = ++_detailProductLoadToken;
+  API.loadProducts().then(() => {
+    if (token !== _detailProductLoadToken || state.page !== 'detail' || state.selectedProductId !== pid) return;
+    render();
+  });
+}
+
 function renderDetail() {
   const product = getProduct(state.selectedProductId);
   if (!product) {
+    retryLoadDetailProduct();
     return `
       <div class="empty-state" style="padding:48px 16px">
         <div class="empty-state__icon">📦</div>
         <h3 class="empty-state__title">상품을 불러오는 중입니다</h3>
-        <p class="empty-state__desc">잠시 후 다시 시도해 주세요.</p>
+        <p class="empty-state__desc">잠시만 기다려 주세요.</p>
         <button class="btn btn--outline" type="button" onclick="navigate('home')">홈으로</button>
       </div>`;
   }

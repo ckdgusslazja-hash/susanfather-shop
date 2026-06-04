@@ -97,7 +97,8 @@ async function main() {
 
   let dbCount = 0;
   for (const p of updated) {
-    const { id, ...data } = p;
+    const id = String(p.id);
+    const data = { ...p, id };
     await prisma.product.upsert({
       where: { id },
       create: { id, data: data as Prisma.InputJsonValue },
