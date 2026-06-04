@@ -762,6 +762,23 @@ function buildProductRecord(body: Record<string, unknown>, id: string, existing?
       }
       return undefined;
     })(),
+    weeklyTop:
+      body.weeklyTop !== undefined ? !!body.weeklyTop : !!existing?.weeklyTop,
+    weeklyTopOrder: (() => {
+      const enabled =
+        body.weeklyTop !== undefined ? !!body.weeklyTop : !!existing?.weeklyTop;
+      if (!enabled) return undefined;
+      if (body.weeklyTopOrder === null || body.weeklyTopOrder === '') return undefined;
+      if (body.weeklyTopOrder !== undefined) {
+        const n = Number(body.weeklyTopOrder);
+        return Number.isFinite(n) ? Math.min(4, Math.max(0, n)) : undefined;
+      }
+      if (existing?.weeklyTopOrder !== undefined && existing?.weeklyTopOrder !== null) {
+        const n = Number(existing.weeklyTopOrder);
+        return Number.isFinite(n) ? Math.min(4, Math.max(0, n)) : undefined;
+      }
+      return undefined;
+    })(),
     hidden: body.hidden !== undefined ? !!body.hidden : !!existing?.hidden,
     sortIndex:
       existing?.sortIndex !== undefined && existing?.sortIndex !== null

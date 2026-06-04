@@ -310,6 +310,37 @@ const Admin = {
       </div>`;
   },
 
+  WEEKLY_TOP_MAX: 5,
+
+  renderWeeklyTopPanel() {
+    const list = this.getWeeklyTopProductsList();
+    const items = list
+      .map(
+        (p, i) => `
+        <li class="time-attack-item weekly-top-item">
+          <span class="time-attack-item__order weekly-top-item__order">${i + 1}</span>
+          <span class="time-attack-item__name">${this.esc(p.name)}${p.unit ? `, ${this.esc(p.unit)}` : ''}</span>
+          <span class="time-attack-item__meta">${this.fmt(p.price)}</span>
+          <span class="time-attack-item__actions">
+            <button type="button" class="btn btn--sm btn--ghost" ${i === 0 ? 'disabled' : ''} onclick="Admin.moveWeeklyTopProduct('${p.id}', -1)" aria-label="위로">↑</button>
+            <button type="button" class="btn btn--sm btn--ghost" ${i >= list.length - 1 ? 'disabled' : ''} onclick="Admin.moveWeeklyTopProduct('${p.id}', 1)" aria-label="아래로">↓</button>
+            <button type="button" class="btn btn--sm btn--danger" onclick="Admin.toggleProductWeeklyTop('${p.id}')">제거</button>
+          </span>
+        </li>`
+      )
+      .join('');
+    return `
+      <div class="panel weekly-top-panel">
+        <div class="panel__head"><h2>🏆 금주 TOP 5 상품</h2></div>
+        <p class="admin-hint">쇼핑몰 메인 「금주 TOP 5 상품!」에 노출할 상품입니다. 최대 ${this.WEEKLY_TOP_MAX}개까지 등록하며, 아래 순서대로 1~5위 배지가 표시됩니다.</p>
+        ${
+          list.length
+            ? `<ol class="time-attack-list weekly-top-list">${items}</ol>`
+            : '<p class="empty-msg">등록된 TOP 5 상품이 없습니다. 미등록 시 평점·리뷰 기준으로 자동 노출됩니다.</p>'
+        }
+      </div>`;
+  },
+
   setProductSearch(value) {
     this.productFilter = value;
     this.render();
@@ -353,6 +384,26 @@ const Admin = {
     return Math.max(...list.map((p) => Number(p.timeAttackOrder) || 0)) + 1;
   },
 
+  getWeeklyTopProductsList() {
+    return (this.products || [])
+      .filter((p) => p.weeklyTop === true)
+      .sort((a, b) => {
+        const oa = Number(a.weeklyTopOrder);
+        const ob = Number(b.weeklyTopOrder);
+        if (Number.isFinite(oa) && Number.isFinite(ob) && oa !== ob) return oa - ob;
+        if (Number.isFinite(oa) && !Number.isFinite(ob)) return -1;
+        if (!Number.isFinite(oa) && Number.isFinite(ob)) return 1;
+        return String(a.id).localeCompare(String(b.id));
+      })
+      .slice(0, this.WEEKLY_TOP_MAX);
+  },
+
+  nextWeeklyTopOrder() {
+    const list = this.getWeeklyTopProductsList();
+    if (!list.length) return 0;
+    return Math.min(this.WEEKLY_TOP_MAX - 1, Math.max(...list.map((p) => Number(p.weeklyTopOrder) || 0)) + 1);
+  },
+
   productToApiPayload(p, overrides = {}) {
     return {
       id: p.id,
@@ -386,6 +437,11 @@ const Admin = {
       timeAttackOrder:
         p.timeAttack && p.timeAttackOrder != null && p.timeAttackOrder !== ''
           ? Number(p.timeAttackOrder)
+          : null,
+      weeklyTop: !!p.weeklyTop,
+      weeklyTopOrder:
+        p.weeklyTop && p.weeklyTopOrder != null && p.weeklyTopOrder !== ''
+          ? Number(p.weeklyTopOrder)
           : null,
       hidden: !!p.hidden,
       sortIndex: p.sortIndex,
@@ -437,6 +493,60 @@ const Admin = {
     try {
       for (let i = 0; i < list.length; i++) {
         await this.saveProductTimeAttack(list[i].id, { timeAttack: true, timeAttackOrder: i });
+      }
+    } catch (err) {
+      alert(err.message || '순서 변경에 실패했습니다.');
+    }
+  },
+
+  async saveProductWeeklyTop(id, patch) {
+    const p = (this.products || []).find((x) => x.id === id);
+    if (!p) return;
+    const body = this.productToApiPayload(p, patch);
+    const res = await this.request('/api/admin/products/' + encodeURIComponent(id), {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    });
+    const saved = res?.product;
+    if (saved) {
+      const idx = this.products.findIndex((x) => x.id === id);
+      if (idx >= 0) this.products[idx] = saved;
+      if (this.editingProduct?.id === id) this.editingProduct = { ...saved };
+    } else {
+      await this.loadProducts();
+    }
+    this.render();
+  },
+
+  async toggleProductWeeklyTop(id) {
+    const p = (this.products || []).find((x) => x.id === id);
+    if (!p) return;
+    const next = !p.weeklyTop;
+    if (next && this.getWeeklyTopProductsList().length >= this.WEEKLY_TOP_MAX) {
+      alert(`금주 TOP 5는 최대 ${this.WEEKLY_TOP_MAX}개까지 등록할 수 있습니다.`);
+      return;
+    }
+    const patch = {
+      weeklyTop: next,
+      weeklyTopOrder: next ? this.nextWeeklyTopOrder() : null,
+    };
+    try {
+      await this.saveProductWeeklyTop(id, patch);
+    } catch (err) {
+      alert(err.message || '저장에 실패했습니다.');
+    }
+  },
+
+  async moveWeeklyTopProduct(id, delta) {
+    const list = [...this.getWeeklyTopProductsList()];
+    const idx = list.findIndex((p) => p.id === id);
+    if (idx < 0) return;
+    const swapIdx = idx + delta;
+    if (swapIdx < 0 || swapIdx >= list.length) return;
+    [list[idx], list[swapIdx]] = [list[swapIdx], list[idx]];
+    try {
+      for (let i = 0; i < list.length; i++) {
+        await this.saveProductWeeklyTop(list[i].id, { weeklyTop: true, weeklyTopOrder: i });
       }
     } catch (err) {
       alert(err.message || '순서 변경에 실패했습니다.');
@@ -922,6 +1032,7 @@ const Admin = {
         localDirect: fd.get('localDirect') === 'on',
         freeShipping: fd.get('freeShipping') === 'on',
         timeAttack: fd.get('timeAttack') === 'on',
+        weeklyTop: fd.get('weeklyTop') === 'on',
         hidden: fd.get('hidden') === 'on',
       };
     }
@@ -1230,6 +1341,7 @@ const Admin = {
       localDirect: fd.get('localDirect') === 'on',
       freeShipping: fd.get('freeShipping') === 'on',
       timeAttack: fd.get('timeAttack') === 'on',
+      weeklyTop: fd.get('weeklyTop') === 'on',
       hidden: fd.get('hidden') === 'on',
       timeAttackOrder: (() => {
         if (fd.get('timeAttack') !== 'on') return null;
@@ -1238,7 +1350,22 @@ const Admin = {
         if (this.editingProduct?.timeAttackOrder != null) return Number(this.editingProduct.timeAttackOrder);
         return this.nextTimeAttackOrder();
       })(),
+      weeklyTopOrder: (() => {
+        if (fd.get('weeklyTop') !== 'on') return null;
+        const raw = fd.get('weeklyTopOrder');
+        if (raw !== '' && raw != null) return Math.min(4, Math.max(0, Number(raw)));
+        if (this.editingProduct?.weeklyTopOrder != null) return Number(this.editingProduct.weeklyTopOrder);
+        return this.nextWeeklyTopOrder();
+      })(),
     };
+    if (body.weeklyTop) {
+      const editId = this.editingProduct?.id;
+      const topCount = this.getWeeklyTopProductsList().filter((x) => x.id !== editId).length;
+      if (topCount >= this.WEEKLY_TOP_MAX) {
+        alert(`금주 TOP 5는 최대 ${this.WEEKLY_TOP_MAX}개까지 등록할 수 있습니다.`);
+        return;
+      }
+    }
     try {
       let res;
       const isEdit = !!(this.editingProduct?.id && this.products.some((p) => p.id === this.editingProduct.id));
@@ -1614,6 +1741,7 @@ const Admin = {
         const checked = this.isProductSelected(p.id);
         const rowClass = [
           p.timeAttack ? 'row--time-attack' : '',
+          p.weeklyTop ? 'row--weekly-top' : '',
           p.hidden ? 'row--hidden-product' : '',
           !Number(p.stock) ? 'row--soldout' : '',
         ]
@@ -1624,12 +1752,13 @@ const Admin = {
             <input type="checkbox" class="product-row-check" data-product-id="${p.id}" ${checked ? 'checked' : ''} onchange="Admin.toggleProductSelection('${p.id}', this.checked)" aria-label="${this.esc(p.name)} 선택" />
           </td>
           <td>${img ? `<img class="thumb" src="${img}" alt="" onerror="this.style.display='none'" />` : '📦'}</td>
-          <td><strong>${this.esc(p.name)}</strong>${p.timeAttack ? ' <span class="badge badge--time-attack">타임어택</span>' : ''}<br><small>${this.esc(p.unit)} · ${this.CATEGORIES[p.category] || p.category}</small></td>
+          <td><strong>${this.esc(p.name)}</strong>${p.timeAttack ? ' <span class="badge badge--time-attack">타임어택</span>' : ''}${p.weeklyTop ? ' <span class="badge badge--weekly-top">TOP5</span>' : ''}<br><small>${this.esc(p.unit)} · ${this.CATEGORIES[p.category] || p.category}</small></td>
           <td>${this.fmt(p.price)}</td>
           <td>${p.stock ?? '-'}개</td>
           <td>${this.renderProductStatus(p)}</td>
           <td class="product-actions-cell">
             <button type="button" class="btn btn--sm ${p.timeAttack ? 'btn--warn' : 'btn--ghost'}" onclick="Admin.toggleProductTimeAttack('${p.id}')">${p.timeAttack ? '⚡ 해제' : '⚡ 타임어택'}</button>
+            <button type="button" class="btn btn--sm ${p.weeklyTop ? 'btn--warn' : 'btn--ghost'}" onclick="Admin.toggleProductWeeklyTop('${p.id}')">${p.weeklyTop ? '🏆 해제' : '🏆 TOP5'}</button>
             <button class="btn btn--sm btn--ghost" onclick="Admin.openProductForm('${p.id}')">수정</button>
             <button class="btn btn--sm btn--danger" onclick="Admin.deleteProduct('${p.id}')">삭제</button>
           </td>
@@ -1660,6 +1789,7 @@ const Admin = {
 
     return `
       ${this.renderTimeAttackPanel()}
+      ${this.renderWeeklyTopPanel()}
       <div class="panel">
         <div class="panel__head">
           <h2>상품 관리 ${q || cat || taOnly || hiddenOnly ? `(${list.length} / ${total}개)` : `(${total}개)`}</h2>
@@ -1764,12 +1894,18 @@ const Admin = {
               <label class="checkbox-inline"><input type="checkbox" name="localDirect" ${p.localDirect !== false ? 'checked' : ''} /> 산지직송</label>
               <label class="checkbox-inline"><input type="checkbox" name="freeShipping" ${p.freeShipping ? 'checked' : ''} /> 무료배송</label>
               <label class="checkbox-inline checkbox-inline--time-attack"><input type="checkbox" name="timeAttack" ${p.timeAttack ? 'checked' : ''} /> 메인 타임어택 노출</label>
+              <label class="checkbox-inline checkbox-inline--weekly-top"><input type="checkbox" name="weeklyTop" ${p.weeklyTop ? 'checked' : ''} /> 금주 TOP 5 노출</label>
               <label class="checkbox-inline"><input type="checkbox" name="hidden" ${p.hidden ? 'checked' : ''} /> 쇼핑몰 숨김 (목록·상세 미노출)</label>
             </div>
             <div class="form-row">
               <label>타임어택 순서</label>
               <input name="timeAttackOrder" type="number" min="0" step="1" value="${p.timeAttack && p.timeAttackOrder != null && p.timeAttackOrder !== '' ? Number(p.timeAttackOrder) : ''}" placeholder="체크 시 비우면 자동" />
               <p class="admin-hint">타임어택 체크 시 사용 · 숫자가 작을수록 앞에 노출</p>
+            </div>
+            <div class="form-row">
+              <label>TOP 5 순위</label>
+              <input name="weeklyTopOrder" type="number" min="0" max="4" step="1" value="${p.weeklyTop && p.weeklyTopOrder != null && p.weeklyTopOrder !== '' ? Number(p.weeklyTopOrder) : ''}" placeholder="0=1위 · 최대 4=5위" />
+              <p class="admin-hint">TOP 5 체크 시 사용 · 0이 1위, 최대 5개까지 등록</p>
             </div>
 
             <div class="form-row full">

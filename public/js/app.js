@@ -1354,18 +1354,23 @@ function getUnitPriceLabel(product) {
   return '';
 }
 
-function renderHomeScrollCard(product) {
+function renderHomeScrollCard(product, rank) {
   const img = getAdminProductImages(product)[0];
   const discount = Math.round((1 - product.price / product.originalPrice) * 100);
   const reviewCount = getReviewsByProduct(product.id).length;
   const saleLabel = product.badge === '유기농' ? '유기농특가' : '산지특가';
   const unitLabel = getUnitPriceLabel(product);
   const fullStars = Math.round(product.rating);
+  const rankBadge =
+    rank != null
+      ? `<span class="h-card__rank h-card__rank--${rank}" aria-label="${rank}위">${rank}</span>`
+      : '';
 
   return `
-    <article class="h-card">
+    <article class="h-card${rank != null ? ' h-card--ranked' : ''}">
       <button type="button" class="h-card__inner" onclick="navigate('detail',{productId:'${product.id}'})">
         <div class="h-card__img">
+          ${rankBadge}
           ${
             img?.url
               ? `<img src="${img.url}" alt="" loading="lazy"
@@ -1451,6 +1456,69 @@ function startTimeAttackTimer() {
   stopTimeAttackTimer();
   tickTimeAttackTimer();
   timeAttackTimerId = setInterval(tickTimeAttackTimer, 1000);
+}
+
+const WEEKLY_TOP_MAX = 5;
+
+function getKstWeekRangeLabel() {
+  const now = new Date();
+  const dayFmt = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    month: 'numeric',
+    day: 'numeric',
+    weekday: 'short',
+  });
+  const weekdayFmt = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', weekday: 'short' });
+  const weekdayMap = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
+  const wd = weekdayMap[weekdayFmt.format(now)] ?? 0;
+  const monday = new Date(now);
+  monday.setDate(monday.getDate() - wd);
+  const sunday = new Date(monday);
+  sunday.setDate(sunday.getDate() + 6);
+  return `${dayFmt.format(monday)} ~ ${dayFmt.format(sunday)}`;
+}
+
+function sortByWeeklyTopOrder(a, b) {
+  const oa = Number(a.weeklyTopOrder);
+  const ob = Number(b.weeklyTopOrder);
+  if (Number.isFinite(oa) && Number.isFinite(ob) && oa !== ob) return oa - ob;
+  if (Number.isFinite(oa) && !Number.isFinite(ob)) return -1;
+  if (!Number.isFinite(oa) && Number.isFinite(ob)) return 1;
+  return String(a.id).localeCompare(String(b.id));
+}
+
+function getWeeklyTopProducts() {
+  const curated = getAllProducts()
+    .filter((p) => p.weeklyTop === true && Number(p.stock) > 0)
+    .sort(sortByWeeklyTopOrder)
+    .slice(0, WEEKLY_TOP_MAX);
+  if (curated.length) return curated;
+  return getAllProducts()
+    .filter((p) => Number(p.stock) > 0)
+    .sort((a, b) => {
+      const sa = Number(a.rating) * (Number(a.reviews) || 1);
+      const sb = Number(b.rating) * (Number(b.reviews) || 1);
+      return sb - sa;
+    })
+    .slice(0, WEEKLY_TOP_MAX);
+}
+
+function renderWeeklyTopSection() {
+  const products = getWeeklyTopProducts();
+  if (!products.length) return '';
+  const weekLabel = getKstWeekRangeLabel();
+  return `
+    <section class="home-row-section home-weekly-top" aria-label="금주 TOP 5 상품">
+      <div class="home-row-section__head home-weekly-top__head">
+        <h2 class="home-row-section__title home-weekly-top__title">🏆 금주 TOP 5 상품!</h2>
+        <button type="button" class="home-row-section__more" onclick="selectCategory('all')">더보기 ›</button>
+      </div>
+      <p class="home-weekly-top__sub">${weekLabel} · 인기 베스트</p>
+      <div class="home-scroll home-scroll--weekly-top">${products
+        .map((p, i) => renderHomeScrollCard(p, i + 1))
+        .join('')}</div>
+    </section>
+  `;
 }
 
 const DONT_MISS_SHUFFLE_MS = 6 * 60 * 60 * 1000;
@@ -1652,6 +1720,7 @@ function renderHome() {
       ${
         !isCategoryView
           ? `
+      ${renderWeeklyTopSection()}
       ${renderTimeAttackSection()}
       ${renderDontMissSection()}
       ${renderTimeAttackSection()}
