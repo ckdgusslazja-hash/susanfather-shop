@@ -1373,7 +1373,95 @@ function getUnitPriceLabel(product) {
   return '';
 }
 
-function renderHomeScrollCard(product, rank) {
+const liveViewerCounts = new Map();
+const liveViewerBases = new Map();
+let liveViewerTimerId = null;
+
+function hashProductSeed(id) {
+  let h = 0;
+  const s = String(id);
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function getLiveViewerBase(product) {
+  const seed = hashProductSeed(product.id);
+  const buyers = Number(product.recentBuyers) || 0;
+  const fromBuyers = buyers > 0 ? Math.floor(buyers * 0.12) + 8 : 0;
+  const base = fromBuyers || 14 + (seed % 52);
+  return Math.min(132, Math.max(9, base));
+}
+
+function initLiveViewerForProducts(products) {
+  products.forEach((p) => {
+    if (!liveViewerBases.has(p.id)) {
+      const base = getLiveViewerBase(p);
+      liveViewerBases.set(p.id, base);
+      const jitter = Math.floor((Math.random() - 0.5) * 8);
+      liveViewerCounts.set(p.id, Math.max(6, base + jitter));
+    }
+  });
+}
+
+function getLiveViewerDisplayCount(productId) {
+  return liveViewerCounts.get(productId) ?? liveViewerBases.get(productId) ?? 12;
+}
+
+function syncLiveViewerDom() {
+  document.querySelectorAll('[data-live-view-product]').forEach((el) => {
+    const id = el.getAttribute('data-live-view-product');
+    if (id) el.textContent = String(getLiveViewerDisplayCount(id));
+  });
+}
+
+function tickLiveViewers() {
+  const ids = [...liveViewerCounts.keys()];
+  if (!ids.length) return;
+  const bumps = 2 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < bumps; i++) {
+    const id = ids[Math.floor(Math.random() * ids.length)];
+    const base = liveViewerBases.get(id) || 20;
+    const cur = liveViewerCounts.get(id) || base;
+    const r = Math.random();
+    let delta = 0;
+    if (r < 0.38) delta = -1;
+    else if (r < 0.76) delta = 1;
+    else if (r < 0.9) delta = 2;
+    else delta = -2;
+    const next = Math.max(
+      Math.floor(base * 0.62),
+      Math.min(Math.ceil(base * 1.48), cur + delta)
+    );
+    liveViewerCounts.set(id, next);
+  }
+  syncLiveViewerDom();
+}
+
+function stopLiveViewerTicker() {
+  if (liveViewerTimerId) {
+    clearTimeout(liveViewerTimerId);
+    liveViewerTimerId = null;
+  }
+}
+
+function scheduleLiveViewerTick() {
+  stopLiveViewerTicker();
+  const delay = 1800 + Math.floor(Math.random() * 1600);
+  liveViewerTimerId = setTimeout(() => {
+    tickLiveViewers();
+    if (state.page === 'home' && state.category === 'all') scheduleLiveViewerTick();
+  }, delay);
+}
+
+function startLiveViewerTicker() {
+  const byId = new Map();
+  [...getTimeAttackProducts(), ...getWeeklyTopProducts()].forEach((p) => byId.set(p.id, p));
+  initLiveViewerForProducts([...byId.values()]);
+  syncLiveViewerDom();
+  scheduleLiveViewerTick();
+}
+
+function renderHomeScrollCard(product, rank, showLiveViewers) {
   const img = getAdminProductImages(product)[0];
   const discount = Math.round((1 - product.price / product.originalPrice) * 100);
   const reviewCount = getReviewsByProduct(product.id).length;
@@ -1384,6 +1472,12 @@ function renderHomeScrollCard(product, rank) {
     rank != null
       ? `<span class="h-card__rank h-card__rank--${rank}" aria-label="${rank}위">${rank}</span>`
       : '';
+  const viewingHtml = showLiveViewers
+    ? `<p class="h-card__viewing" aria-live="polite">
+        <span class="h-card__viewing-pulse" aria-hidden="true"></span>
+        <span class="h-card__viewing-count" data-live-view-product="${product.id}">${getLiveViewerDisplayCount(product.id)}</span>명이 보는 중
+      </p>`
+    : '';
 
   return `
     <article class="h-card${rank != null ? ' h-card--ranked' : ''}">
@@ -1399,6 +1493,7 @@ function renderHomeScrollCard(product, rank) {
           }
         </div>
         <p class="h-card__name">${escapeHtml(product.name)}, ${escapeHtml(product.unit)}</p>
+        ${viewingHtml}
         <p class="h-card__orig">
           <span class="h-card__orig-label">${saleLabel}</span>
           <span class="h-card__orig-price">${formatPrice(product.originalPrice)}</span>
@@ -1534,7 +1629,7 @@ function renderWeeklyTopSection() {
       </div>
       <p class="home-weekly-top__sub">${weekLabel} · 인기 베스트</p>
       <div class="home-scroll home-scroll--weekly-top">${products
-        .map((p, i) => renderHomeScrollCard(p, i + 1))
+        .map((p, i) => renderHomeScrollCard(p, i + 1, true))
         .join('')}</div>
     </section>
   `;
@@ -1578,7 +1673,7 @@ function renderDontMissSection() {
         <button type="button" class="home-row-section__more" onclick="selectCategory('all')">더보기 ›</button>
       </div>
       <p class="home-dont-miss__sub">6시간마다 추천 상품이 새로 섞입니다</p>
-      <div class="home-scroll">${products.map(renderHomeScrollCard).join('')}</div>
+      <div class="home-scroll">${products.map((p) => renderHomeScrollCard(p, null, true)).join('')}</div>
     </section>
   `;
 }
@@ -2453,8 +2548,13 @@ function render() {
   if (typeof renderSiteFooter === 'function') renderSiteFooter();
   if (state.page === 'checkout' && typeof bindCheckoutAddress === 'function') bindCheckoutAddress();
   updateNotificationPanel();
-  if (state.page === 'home' && state.category === 'all') startTimeAttackTimer();
-  else stopTimeAttackTimer();
+  if (state.page === 'home' && state.category === 'all') {
+    startTimeAttackTimer();
+    startLiveViewerTicker();
+  } else {
+    stopTimeAttackTimer();
+    stopLiveViewerTicker();
+  }
 }
 
 function bindPaymentOptions() {
@@ -2486,10 +2586,12 @@ function selectCategory(id) {
   }
   syncHashFromState(true);
   render();
-  const catName = HOME_CATEGORIES.find((c) => c.id === id)?.name || '상품';
+  const catName = getHomeCategoryLabel(id);
   setTimeout(() => {
     document.getElementById('home-product-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    showToast(id === 'all' ? '전체 상품을 보여드립니다' : `${catName} 상품만 표시합니다`);
+    if (id === 'all') showToast('전체 상품을 보여드립니다');
+    else if (id === 'weeklyTop') showToast('금주 TOP 5 상품만 표시합니다');
+    else showToast(`${catName} 상품만 표시합니다`);
   }, 80);
 }
 
