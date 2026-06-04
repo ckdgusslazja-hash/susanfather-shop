@@ -1511,11 +1511,12 @@ function renderDetail() {
 
   return `
     <div class="pdp">
+      <header class="pdp-topbar" aria-label="상품 상세">
+        <button type="button" class="pdp-topbar__btn" onclick="navigate('home')" aria-label="뒤로">←</button>
+        <p class="pdp-topbar__title">${escapeHtml(product.name)}</p>
+        <button type="button" class="pdp-topbar__btn ${isWished ? 'is-wished' : ''}" onclick="toggleWishlist('${product.id}')" aria-label="찜">${isWished ? '♥' : '♡'}</button>
+      </header>
       <section class="pdp-hero">
-        <div class="pdp-hero__top">
-          <button type="button" class="pdp-hero__btn" onclick="navigate('home')" aria-label="뒤로">←</button>
-          <button type="button" class="pdp-hero__btn ${isWished ? 'is-wished' : ''}" onclick="toggleWishlist('${product.id}')" aria-label="찜">${isWished ? '♥' : '♡'}</button>
-        </div>
         <p class="pdp-hero__crumb">${crumbs.map((c) => escapeHtml(c)).join(' › ')}</p>
         <div class="pdp-carousel" id="pdp-carousel">
           <div class="pdp-carousel__track" style="transform:translateX(-${state.carouselIndex * 100}%)">
