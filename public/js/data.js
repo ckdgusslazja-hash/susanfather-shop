@@ -94,7 +94,7 @@ const PRODUCTS = [
   P({
     id: 'fr1',
     category: 'fruit',
-    name: '제주 감귤 5kg',
+    name: '제주 감귤',
     price: 28900,
     originalPrice: 35000,
     unit: '5kg 박스',
@@ -118,7 +118,7 @@ const PRODUCTS = [
   P({
     id: 'fr2',
     category: 'fruit',
-    name: '문경 사과 2kg',
+    name: '문경 사과',
     price: 15900,
     originalPrice: 19800,
     unit: '2kg',
@@ -133,7 +133,7 @@ const PRODUCTS = [
   P({
     id: 'fr3',
     category: 'fruit',
-    name: '상주 샤인머스켓 1.5kg',
+    name: '상주 샤인머스켓',
     price: 24900,
     originalPrice: 32000,
     unit: '1.5kg',
@@ -148,7 +148,7 @@ const PRODUCTS = [
   P({
     id: 'fr4',
     category: 'fruit',
-    name: '국산 딸기 750g',
+    name: '국산 딸기',
     price: 12900,
     originalPrice: 16500,
     unit: '750g',
@@ -162,7 +162,7 @@ const PRODUCTS = [
   P({
     id: 'fr5',
     category: 'fruit',
-    name: '필리핀 망고 2입',
+    name: '필리핀 망고',
     price: 18900,
     originalPrice: 24000,
     unit: '2입',
@@ -177,7 +177,7 @@ const PRODUCTS = [
   P({
     id: 'vg1',
     category: 'veg',
-    name: '유기농 대파 1kg',
+    name: '유기농 대파',
     price: 4900,
     originalPrice: 6500,
     unit: '1kg',
@@ -194,7 +194,7 @@ const PRODUCTS = [
   P({
     id: 'vg2',
     category: 'veg',
-    name: '제철 시금치 300g',
+    name: '제철 시금치',
     price: 3500,
     originalPrice: 4500,
     unit: '300g',
@@ -208,7 +208,7 @@ const PRODUCTS = [
   P({
     id: 'vg3',
     category: 'veg',
-    name: '못난이 당근 3kg',
+    name: '못난이 당근',
     price: 8900,
     originalPrice: 12000,
     unit: '3kg',
@@ -223,7 +223,7 @@ const PRODUCTS = [
   P({
     id: 'vg4',
     category: 'veg',
-    name: '국산 애호박 2개',
+    name: '국산 애호박',
     price: 5900,
     originalPrice: 7500,
     unit: '2개',
@@ -252,7 +252,7 @@ const PRODUCTS = [
   P({
     id: 'sf1',
     category: 'seafood',
-    name: '국내산 광어회 500g',
+    name: '국내산 광어회',
     price: 45000,
     originalPrice: 52000,
     unit: '500g',
@@ -276,7 +276,7 @@ const PRODUCTS = [
   P({
     id: 'sf2',
     category: 'seafood',
-    name: '통영 생굴 1kg',
+    name: '통영 생굴',
     price: 16900,
     originalPrice: 21000,
     unit: '1kg',
@@ -290,7 +290,7 @@ const PRODUCTS = [
   P({
     id: 'sf3',
     category: 'seafood',
-    name: '제주 고등어 2마리',
+    name: '제주 고등어',
     price: 11900,
     originalPrice: 15000,
     unit: '2마리',
@@ -304,7 +304,7 @@ const PRODUCTS = [
   P({
     id: 'sf4',
     category: 'seafood',
-    name: '보리 새우 500g',
+    name: '보리 새우',
     price: 13900,
     originalPrice: 17500,
     unit: '500g',
@@ -318,7 +318,7 @@ const PRODUCTS = [
   P({
     id: 'sf5',
     category: 'seafood',
-    name: '연어 스테이크 300g',
+    name: '연어 스테이크',
     price: 21900,
     originalPrice: 28000,
     unit: '300g',
@@ -334,7 +334,7 @@ const PRODUCTS = [
   P({
     id: 'dr1',
     category: 'dried',
-    name: '국산 멸치볶음 500g',
+    name: '국산 멸치볶음',
     price: 12900,
     originalPrice: 16000,
     unit: '500g',
@@ -347,7 +347,7 @@ const PRODUCTS = [
   P({
     id: 'dr2',
     category: 'dried',
-    name: '건오징어 5마리',
+    name: '건오징어',
     price: 18900,
     originalPrice: 24000,
     unit: '5마리',
@@ -361,7 +361,7 @@ const PRODUCTS = [
   P({
     id: 'dr3',
     category: 'dried',
-    name: '건다시마 500g',
+    name: '건다시마',
     price: 9900,
     originalPrice: 12500,
     unit: '500g',
@@ -374,7 +374,7 @@ const PRODUCTS = [
   P({
     id: 'dr4',
     category: 'dried',
-    name: '말린 미역 200g',
+    name: '말린 미역',
     price: 7900,
     originalPrice: 9900,
     unit: '200g',
@@ -388,7 +388,7 @@ const PRODUCTS = [
   P({
     id: 'dr5',
     category: 'dried',
-    name: '건새우 300g',
+    name: '건새우',
     price: 14900,
     originalPrice: 18500,
     unit: '300g',
@@ -403,7 +403,7 @@ const PRODUCTS = [
   P({
     id: 'mt1',
     category: 'meat',
-    name: '한우 1+ 등심 300g',
+    name: '한우 1+ 등심',
     price: 48900,
     originalPrice: 58000,
     unit: '300g',
@@ -419,7 +419,7 @@ const PRODUCTS = [
   P({
     id: 'mt2',
     category: 'meat',
-    name: '국내산 돼지 뒷고기 600g',
+    name: '국내산 돼지 뒷고기',
     price: 9900,
     originalPrice: 13000,
     unit: '600g',
@@ -432,7 +432,7 @@ const PRODUCTS = [
   P({
     id: 'mt3',
     category: 'meat',
-    name: '무항생제 닭가슴살 1kg',
+    name: '무항생제 닭가슴살',
     price: 11900,
     originalPrice: 14900,
     unit: '1kg',
@@ -448,7 +448,7 @@ const PRODUCTS = [
   P({
     id: 'mt4',
     category: 'meat',
-    name: '유정란 30구',
+    name: '유정란',
     price: 8900,
     originalPrice: 11000,
     unit: '30구',
@@ -464,7 +464,7 @@ const PRODUCTS = [
   P({
     id: 'mt5',
     category: 'meat',
-    name: '오리 훈제 슬라이스 200g',
+    name: '오리 훈제 슬라이스',
     price: 12900,
     originalPrice: 16500,
     unit: '200g',
@@ -479,7 +479,7 @@ const PRODUCTS = [
   P({
     id: 'gr1',
     category: 'grain',
-    name: '유기농 햅쌀 10kg',
+    name: '유기농 햅쌀',
     price: 38500,
     originalPrice: 42000,
     unit: '10kg',
@@ -505,7 +505,7 @@ const PRODUCTS = [
   P({
     id: 'gr2',
     category: 'grain',
-    name: '국산 찹쌀 4kg',
+    name: '국산 찹쌀',
     price: 14900,
     originalPrice: 18000,
     unit: '4kg',
@@ -518,7 +518,7 @@ const PRODUCTS = [
   P({
     id: 'gr3',
     category: 'grain',
-    name: '국산 콩 2kg',
+    name: '국산 콩',
     price: 16900,
     originalPrice: 21000,
     unit: '2kg',
@@ -532,7 +532,7 @@ const PRODUCTS = [
   P({
     id: 'gr4',
     category: 'grain',
-    name: '보리쌀 5kg',
+    name: '보리쌀',
     price: 12900,
     originalPrice: 16000,
     unit: '5kg',
@@ -545,7 +545,7 @@ const PRODUCTS = [
   P({
     id: 'gr5',
     category: 'grain',
-    name: '혼합 15곡 2kg',
+    name: '혼합 15곡',
     price: 11900,
     originalPrice: 15000,
     unit: '2kg',
@@ -563,7 +563,7 @@ const PRODUCTS = [
   P({
     id: 'pr1',
     category: 'processed',
-    name: '전통 재래식 된장 2kg',
+    name: '전통 재래식 된장',
     price: 18900,
     originalPrice: 24000,
     unit: '2kg',
@@ -577,7 +577,7 @@ const PRODUCTS = [
   P({
     id: 'pr2',
     category: 'processed',
-    name: '순창 고추장 1.2kg',
+    name: '순창 고추장',
     price: 15900,
     originalPrice: 19500,
     unit: '1.2kg',
@@ -592,7 +592,7 @@ const PRODUCTS = [
   P({
     id: 'pr3',
     category: 'processed',
-    name: '포기김치 3kg',
+    name: '포기김치',
     price: 22900,
     originalPrice: 28000,
     unit: '3kg',
@@ -606,7 +606,7 @@ const PRODUCTS = [
   P({
     id: 'pr4',
     category: 'processed',
-    name: '국산 들기름 300ml',
+    name: '국산 들기름',
     price: 17900,
     originalPrice: 22000,
     unit: '300ml',
@@ -621,7 +621,7 @@ const PRODUCTS = [
   P({
     id: 'pr5',
     category: 'processed',
-    name: '딸기잼 500g',
+    name: '딸기잼',
     price: 8900,
     originalPrice: 11500,
     unit: '500g',
