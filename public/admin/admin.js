@@ -1179,17 +1179,20 @@ const Admin = {
     const fd = new FormData(form);
     try {
       if (key === 'shop') {
+        const existing = this.settings?.shop || {};
         await this.request('/api/admin/settings/shop', {
           method: 'PUT',
           body: JSON.stringify({
+            ...existing,
             name: fd.get('name'),
             company: fd.get('company'),
             ceo: fd.get('ceo'),
             businessNo: fd.get('businessNo'),
+            mailOrderNo: fd.get('mailOrderNo') || existing.mailOrderNo || '2020-부산북구-0891',
             address: fd.get('address'),
             email: fd.get('email'),
             phone: fd.get('phone'),
-            mailOrderNo: fd.get('mailOrderNo'),
+            hours: fd.get('hours') || existing.hours || '09:00~18:00',
           }),
         });
       } else if (key === 'payment') {
@@ -1665,6 +1668,7 @@ const Admin = {
     const bank = p.bankAccount || {};
     const o = this.settings?.order || {};
     const c = this.settings?.customerCenter || {};
+    const mailOrderNo = s.mailOrderNo || '2020-부산북구-0891';
     return `
       <form id="form-shop" class="panel" onsubmit="event.preventDefault();Admin.saveSetting('shop')">
         <h2>쇼핑몰 정보</h2>
@@ -1673,9 +1677,11 @@ const Admin = {
           <div class="form-row"><label>회사명</label><input name="company" value="${this.esc(s.company)}" /></div>
           <div class="form-row"><label>대표</label><input name="ceo" value="${this.esc(s.ceo)}" /></div>
           <div class="form-row"><label>사업자번호</label><input name="businessNo" value="${this.esc(s.businessNo)}" /></div>
+          <div class="form-row"><label>통신판매업 번호</label><input name="mailOrderNo" value="${this.esc(mailOrderNo)}" placeholder="2020-부산북구-0891" /></div>
           <div class="form-row full"><label>주소</label><input name="address" value="${this.esc(s.address)}" /></div>
           <div class="form-row"><label>이메일</label><input name="email" value="${this.esc(s.email)}" /></div>
           <div class="form-row"><label>전화</label><input name="phone" value="${this.esc(s.phone)}" /></div>
+          <div class="form-row"><label>영업시간</label><input name="hours" value="${this.esc(s.hours)}" placeholder="09:00~18:00" /></div>
         </div>
         <button class="btn" type="submit" style="margin-top:12px">저장</button>
       </form>

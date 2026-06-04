@@ -216,6 +216,38 @@ function defaultSettingsBundle() {
   };
 }
 
+async function repairShopSettingsIfNeeded() {
+  try {
+    const raw = await getSetting('shop');
+    const normalized = normalizeShopSettings(raw);
+    const current = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+    if (!String(current.mailOrderNo || '').trim()) {
+      await setSetting('shop', normalized);
+    }
+  } catch {
+    /* */
+  }
+}
+
+function normalizeShopSettings(shop: unknown) {
+  const defaults = defaultSettingsBundle().shop;
+  const s =
+    shop && typeof shop === 'object' ? { ...(shop as Record<string, unknown>) } : ({} as Record<string, unknown>);
+  return {
+    ...defaults,
+    ...s,
+    name: String(s.name || defaults.name).trim() || defaults.name,
+    company: String(s.company || defaults.company).trim() || defaults.company,
+    ceo: String(s.ceo || defaults.ceo).trim() || defaults.ceo,
+    businessNo: String(s.businessNo || defaults.businessNo).trim() || defaults.businessNo,
+    mailOrderNo: String(s.mailOrderNo || defaults.mailOrderNo).trim() || defaults.mailOrderNo,
+    address: String(s.address || defaults.address).trim() || defaults.address,
+    email: String(s.email || defaults.email).trim() || defaults.email,
+    phone: String(s.phone || defaults.phone).trim() || defaults.phone,
+    hours: String(s.hours || defaults.hours).trim() || defaults.hours,
+  };
+}
+
 function defaultProductPolicies() {
   const shippingBody = `【 배송 안내 】
 · 산지에서 직접 포장·발송하는 신선 농수산물입니다.
@@ -933,7 +965,8 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
   if (a === 'settings') {
     if (method === 'GET' && b === 'shop') {
       const defaults = defaultSettingsBundle();
-      const shop = (await getSetting('shop')) ?? defaults.shop;
+      await repairShopSettingsIfNeeded();
+      const shop = normalizeShopSettings((await getSetting('shop')) ?? defaults.shop);
       const customerCenter = normalizeCustomerCenter(
         (await getSetting('customerCenter')) ?? defaults.customerCenter
       );
@@ -1639,8 +1672,9 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
     }
 
     if (method === 'GET' && b === 'settings') {
+      await repairShopSettingsIfNeeded();
       return json({
-        shop: await getSetting('shop'),
+        shop: normalizeShopSettings(await getSetting('shop')),
         payment: await getSetting('payment'),
         order: await getSetting('order'),
         customerCenter: normalizeCustomerCenter(await getSetting('customerCenter')),
@@ -1656,7 +1690,14 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
         return json({ error: '잘못된 설정 키' }, 400);
       }
       const body = await parseBody(request);
-      await setSetting(key, body);
+      let value: unknown = body;
+      if (key === 'shop') {
+        const existing = await getSetting('shop');
+        value = normalizeShopSettings({ ...(existing as object), ...body });
+      }
+      if (key === 'customerCenter') value = normalizeCustomerCenter(body);
+      if (key === 'productPolicies') value = normalizeProductPolicies(body);
+      await setSetting(key, value);
       return json({ ok: true });
     }
 
