@@ -454,26 +454,21 @@ function parseDetailBlocks(raw: unknown, detailsText: string) {
     .map((text) => ({ type: 'text', text }));
 }
 
-function parseProductOptions(
-  raw: unknown,
-  productId: string,
-  unit: string,
-  price: number,
-  originalPrice: number
-) {
+function parseProductOptions(raw: unknown, productId: string, unit: string) {
   if (Array.isArray(raw) && raw.length) {
     return raw.map((item, i) => {
       const o = item as Record<string, unknown>;
-      const p = Number(o.price) || price;
+      const addPrice = Number(o.price) || 0;
+      const addOrig = Number(o.originalPrice ?? o.price) || 0;
       return {
         id: `${productId}-o${i + 1}`,
         label: String(o.label || unit || `옵션${i + 1}`),
-        price: p,
-        originalPrice: Number(o.originalPrice) || p,
+        price: addPrice,
+        originalPrice: addOrig,
       };
     });
   }
-  return [{ id: `${productId}-o1`, label: unit, price, originalPrice }];
+  return [{ id: `${productId}-o1`, label: unit, price: 0, originalPrice: 0 }];
 }
 
 function buildAdminImages(mainImage: string, productId: string) {
@@ -490,7 +485,7 @@ function buildProductRecord(body: Record<string, unknown>, id: string, existing?
   const unit = String(body.unit || existing?.unit || '1개');
   const mainImage = String(body.mainImage || body.imageUrl || '').trim();
   const detailsText = String(body.details || '');
-  const options = parseProductOptions(body.options, id, unit, price, originalPrice);
+  const options = parseProductOptions(body.options, id, unit);
   const detailBlocks = parseDetailBlocks(body.detailBlocks, detailsText);
   const details = detailBlocks.filter((b) => b.type === 'text').map((b) => b.text || '');
 
@@ -499,8 +494,8 @@ function buildProductRecord(body: Record<string, unknown>, id: string, existing?
     name,
     category,
     categoryPath: ['식품', catName, name],
-    price: options[0]?.price ?? price,
-    originalPrice: options[0]?.originalPrice ?? originalPrice,
+    price,
+    originalPrice,
     unit: options[0]?.label || unit,
     origin: String(body.origin ?? existing?.origin ?? '국내산'),
     badge: String(body.badge ?? existing?.badge ?? '신선'),

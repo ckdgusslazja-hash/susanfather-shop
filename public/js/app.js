@@ -241,10 +241,7 @@ function getCartCount() {
 }
 
 function getCartSubtotal() {
-  return state.cart.reduce((sum, item) => {
-    const p = getProduct(item.productId);
-    return sum + (p ? p.price * item.quantity : 0);
-  }, 0);
+  return state.cart.reduce((sum, item) => sum + getCartItemUnitPrice(item) * item.quantity, 0);
 }
 
 function getShippingFee(subtotal) {
@@ -728,30 +725,45 @@ document.addEventListener('keydown', (e) => {
 });
 
 function addToCart(productId, quantity = 1) {
-  const existing = state.cart.find((i) => i.productId === productId);
+  const product = getProduct(productId);
+  const optionId =
+    state.selectedProductId === productId && state.selectedOptionId
+      ? state.selectedOptionId
+      : product
+        ? getDefaultOptionId(product)
+        : null;
+  const existing = state.cart.find(
+    (i) => i.productId === productId && (i.optionId || null) === (optionId || null)
+  );
   if (existing) {
     existing.quantity += quantity;
   } else {
-    state.cart.push({ productId, quantity });
+    state.cart.push({ productId, quantity, optionId: optionId || undefined });
   }
   saveCart();
   showToast('장바구니에 담았습니다');
   render();
 }
 
-function updateCartQuantity(productId, delta) {
-  const item = state.cart.find((i) => i.productId === productId);
+function updateCartQuantity(productId, delta, optionId) {
+  const item = state.cart.find(
+    (i) => i.productId === productId && (i.optionId || null) === (optionId || null)
+  );
   if (!item) return;
   item.quantity += delta;
   if (item.quantity <= 0) {
-    state.cart = state.cart.filter((i) => i.productId !== productId);
+    state.cart = state.cart.filter(
+      (i) => !(i.productId === productId && (i.optionId || null) === (optionId || null))
+    );
   }
   saveCart();
   render();
 }
 
-function removeFromCart(productId) {
-  state.cart = state.cart.filter((i) => i.productId !== productId);
+function removeFromCart(productId, optionId) {
+  state.cart = state.cart.filter(
+    (i) => !(i.productId === productId && (i.optionId || null) === (optionId || null))
+  );
   saveCart();
   render();
 }
@@ -1148,9 +1160,9 @@ function renderDetail() {
   if (!product) return renderHome();
 
   const option = getSelectedOption(product);
-  const price = option?.price ?? product.price;
-  const originalPrice = option?.originalPrice ?? product.originalPrice;
-  const discount = Math.round((1 - price / originalPrice) * 100);
+  const price = getOptionSalePrice(product, option);
+  const originalPrice = getOptionOriginalPrice(product, option);
+  const discount = originalPrice > 0 ? Math.round((1 - price / originalPrice) * 100) : 0;
   const reviewCount = getReviewsByProduct(product.id).length;
   const adminImages = getAdminProductImages(product);
   const slides = adminImages.length ? adminImages : [{ url: null, label: '이미지 없음' }];
@@ -1180,13 +1192,14 @@ function renderDetail() {
     .join('');
 
   const optionsHtml = (product.options || [])
-    .map(
-      (opt) => `
+    .map((opt) => {
+      const addLabel = opt.price > 0 ? ` (+${formatPrice(opt.price)})` : '';
+      return `
       <button type="button"
         class="pdp-option-pill ${state.selectedOptionId === opt.id ? 'active' : ''}"
-        onclick="selectOption('${opt.id}')">${escapeHtml(opt.label)}</button>
-    `
-    )
+        onclick="selectOption('${opt.id}')">${escapeHtml(opt.label)}${addLabel}</button>
+    `;
+    })
     .join('');
 
   return `
@@ -1354,21 +1367,24 @@ function renderCart() {
     .map((item) => {
       const p = getProduct(item.productId);
       if (!p) return '';
+      const opt = getCartItemOption(p, item);
+      const unitPrice = getCartItemUnitPrice(item);
+      const optId = item.optionId || '';
       return `
           <div class="cart-item">
           ${renderProductThumbHtml(p, 'cart-item__visual')}
           <div class="cart-item__info">
             <h3 class="cart-item__name">${p.name}</h3>
-            <p class="cart-item__unit">${p.unit}</p>
-            <p class="cart-item__price">${formatPrice(p.price * item.quantity)}</p>
+            <p class="cart-item__unit">${escapeHtml(opt?.label || p.unit)}</p>
+            <p class="cart-item__price">${formatPrice(unitPrice * item.quantity)}</p>
           </div>
           <div class="cart-item__actions">
             <div class="quantity-control__btns">
-              <button class="quantity-control__btn" type="button" onclick="updateCartQuantity('${p.id}', -1)">−</button>
+              <button class="quantity-control__btn" type="button" onclick="updateCartQuantity('${p.id}', -1, '${optId}')">−</button>
               <span class="quantity-control__value">${item.quantity}</span>
-              <button class="quantity-control__btn" type="button" onclick="updateCartQuantity('${p.id}', 1)">+</button>
+              <button class="quantity-control__btn" type="button" onclick="updateCartQuantity('${p.id}', 1, '${optId}')">+</button>
             </div>
-            <button class="btn btn--ghost btn--sm" onclick="removeFromCart('${p.id}')">삭제</button>
+            <button class="btn btn--ghost btn--sm" onclick="removeFromCart('${p.id}', '${optId}')">삭제</button>
           </div>
         </div>
       `;
@@ -1404,7 +1420,10 @@ function renderCheckout() {
     .map((item) => {
       const p = getProduct(item.productId);
       if (!p) return '';
-      return `<div class="cart-summary__row"><span>${p.name} × ${item.quantity}</span><span>${formatPrice(p.price * item.quantity)}</span></div>`;
+      const opt = getCartItemOption(p, item);
+      const label = opt?.label ? `${p.name} (${opt.label})` : p.name;
+      const unitPrice = getCartItemUnitPrice(item);
+      return `<div class="cart-summary__row"><span>${escapeHtml(label)} × ${item.quantity}</span><span>${formatPrice(unitPrice * item.quantity)}</span></div>`;
     })
     .join('');
 
@@ -1663,7 +1682,11 @@ function changeQty(delta) {
 function buyNow(productId) {
   const product = getProduct(productId);
   if (!product) return;
-  state.cart = [{ productId, quantity: state.quantity }];
+  const optionId =
+    state.selectedProductId === productId && state.selectedOptionId
+      ? state.selectedOptionId
+      : getDefaultOptionId(product);
+  state.cart = [{ productId, quantity: state.quantity, optionId: optionId || undefined }];
   saveCart();
   navigate('checkout');
 }
@@ -1696,7 +1719,11 @@ async function submitOrder(e) {
     shipping,
     total,
     orderName: buildOrderName(),
-    items: state.cart.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+    items: state.cart.map((i) => ({
+      productId: i.productId,
+      quantity: i.quantity,
+      optionId: i.optionId || null,
+    })),
   };
 
   const btn = document.getElementById('checkout-submit-btn');
@@ -1760,7 +1787,11 @@ async function submitOrder(e) {
           subtotal,
           shipping,
           total,
-          items: state.cart.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+          items: state.cart.map((i) => ({
+      productId: i.productId,
+      quantity: i.quantity,
+      optionId: i.optionId || null,
+    })),
           created_at: new Date().toISOString(),
         };
       }

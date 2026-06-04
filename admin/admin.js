@@ -182,13 +182,22 @@ const Admin = {
     }
     if (!detailBlocks.length) detailBlocks = [{ type: 'text', text: '' }];
 
-    let options = (product.options || []).map((o) => ({
-      label: o.label || '',
-      price: o.price ?? '',
-      originalPrice: o.originalPrice ?? o.price ?? '',
-    }));
+    const basePrice = Number(product.price) || 0;
+    const baseOrig = Number(product.originalPrice) || basePrice;
+    const rawOpts = product.options || [];
+    const looksLegacy = rawOpts.some((o) => Number(o.price) >= basePrice && Number(o.price) > 0);
+
+    let options = rawOpts.map((o) => {
+      let addPrice = Number(o.price) || 0;
+      let addOrig = Number(o.originalPrice ?? o.price) || 0;
+      if (looksLegacy) {
+        addPrice = Math.max(0, addPrice - basePrice);
+        addOrig = Math.max(0, addOrig - baseOrig);
+      }
+      return { label: o.label || '', price: addPrice, originalPrice: addOrig };
+    });
     if (!options.length) {
-      options = [{ label: product.unit || '', price: product.price ?? '', originalPrice: product.originalPrice ?? '' }];
+      options = [{ label: product.unit || '', price: 0, originalPrice: 0 }];
     }
 
     this.productDraft = {
@@ -271,7 +280,7 @@ const Admin = {
 
   addProductOption() {
     this.syncProductFormState();
-    this.productDraft.options.push({ label: '', price: '', originalPrice: '' });
+    this.productDraft.options.push({ label: '', price: 0, originalPrice: 0 });
     this.render();
   },
 
@@ -317,8 +326,8 @@ const Admin = {
         (o, i) => `
       <div class="option-row" data-index="${i}">
         <input placeholder="옵션명 (예: 1kg)" value="${this.esc(o.label)}" onchange="Admin.productDraft.options[${i}].label=this.value" />
-        <input type="number" placeholder="판매가" value="${o.price}" onchange="Admin.productDraft.options[${i}].price=this.value" />
-        <input type="number" placeholder="정가" value="${o.originalPrice}" onchange="Admin.productDraft.options[${i}].originalPrice=this.value" />
+        <input type="number" placeholder="추가 판매가" value="${o.price}" onchange="Admin.productDraft.options[${i}].price=this.value" />
+        <input type="number" placeholder="추가 정가" value="${o.originalPrice}" onchange="Admin.productDraft.options[${i}].originalPrice=this.value" />
         <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.removeProductOption(${i})">삭제</button>
       </div>`
       )
@@ -355,13 +364,12 @@ const Admin = {
     this.syncProductFormState();
     const fd = new FormData(e.target);
     const d = this.productDraft || {};
-    const firstOpt = d.options?.[0] || {};
     const body = {
       name: fd.get('name'),
       category: fd.get('category'),
-      price: Number(firstOpt.price || fd.get('price')),
-      originalPrice: Number(firstOpt.originalPrice || firstOpt.price || fd.get('originalPrice') || fd.get('price')),
-      unit: String(firstOpt.label || fd.get('unit') || '1개'),
+      price: Number(fd.get('price')),
+      originalPrice: Number(fd.get('originalPrice') || fd.get('price')),
+      unit: String(fd.get('unit') || '1개'),
       origin: fd.get('origin'),
       stock: Number(fd.get('stock')),
       badge: fd.get('badge'),
@@ -766,6 +774,7 @@ const Admin = {
 
             <div class="form-row full">
               <label>옵션</label>
+              <p class="admin-hint">기본 판매가에 더해지는 금액입니다. 기본 옵션은 추가금 0원으로 두세요.</p>
               <div class="form-row"><label>옵션 라벨</label>
                 <select name="optionLabel">${this.OPTION_LABELS.map((l) => `<option value="${l}" ${d.optionLabel === l ? 'selected' : ''}>${l}</option>`).join('')}</select>
               </div>

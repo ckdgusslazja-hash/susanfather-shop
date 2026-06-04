@@ -694,13 +694,40 @@ function filterProductsByCategory(categoryId, searchQuery = '') {
 
 function getProductOption(product, optionId) {
   const opts = product.options || [];
-  return opts.find((o) => o.id === optionId) || opts.find((o) => o.price === product.price) || opts[1] || opts[0];
+  if (!opts.length) return null;
+  return opts.find((o) => o.id === optionId) || opts.find((o) => !o.price) || opts[0];
 }
 
 function getDefaultOptionId(product) {
   const opts = product.options || [];
-  const match = opts.find((o) => o.price === product.price);
-  return match ? match.id : opts[0]?.id;
+  const zero = opts.find((o) => !o.price);
+  return zero ? zero.id : opts[0]?.id;
+}
+
+/** 옵션 추가금액을 기본 판매가에 더한 최종 판매가 */
+function getOptionSalePrice(product, option) {
+  const base = Number(product?.price) || 0;
+  const add = Number(option?.price) || 0;
+  return base + add;
+}
+
+/** 옵션 추가금액을 기본 정가에 더한 최종 정가 */
+function getOptionOriginalPrice(product, option) {
+  const base = Number(product?.originalPrice ?? product?.price) || 0;
+  const add = Number(option?.originalPrice ?? option?.price) || 0;
+  return base + add;
+}
+
+function getCartItemOption(product, cartItem) {
+  if (!product) return null;
+  const id = cartItem.optionId || getDefaultOptionId(product);
+  return getProductOption(product, id);
+}
+
+function getCartItemUnitPrice(cartItem) {
+  const p = getProduct(cartItem.productId);
+  if (!p) return 0;
+  return getOptionSalePrice(p, getCartItemOption(p, cartItem));
 }
 
 const REVIEW_ONLY_IMAGE_URLS = new Set();

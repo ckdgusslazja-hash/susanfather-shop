@@ -368,7 +368,10 @@ function renderOrderItemsList(items) {
         .map((item) => {
           const product = getProduct(item.productId);
           const qty = item.quantity || 1;
-          const price = product ? product.price * qty : 0;
+          const opt = product ? getCartItemOption(product, item) : null;
+          const unitPrice = product ? getOptionSalePrice(product, opt) : 0;
+          const price = unitPrice * qty;
+          const optLabel = opt?.label ? ` · ${opt.label}` : '';
           const thumb = product
             ? renderProductThumbHtml(product, 'order-items__thumb')
             : '<div class="order-items__thumb order-items__thumb--empty">📦</div>';
@@ -376,7 +379,7 @@ function renderOrderItemsList(items) {
         <li class="order-items__row">
           ${thumb}
           <div class="order-items__info">
-            <p class="order-items__name">${escapeHtml(product?.name || '상품')}</p>
+            <p class="order-items__name">${escapeHtml(product?.name || '상품')}${escapeHtml(optLabel)}</p>
             <p class="order-items__meta">수량 ${qty}${product ? ` · ${formatPrice(price)}` : ''}</p>
           </div>
           ${product ? `<button type="button" class="btn btn--ghost btn--sm" onclick="navigate('detail',{productId:'${product.id}'})">상품보기</button>` : ''}
