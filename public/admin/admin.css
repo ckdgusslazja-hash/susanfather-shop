@@ -353,6 +353,87 @@ a { color: #2d6a4f; }
 .badge--awaiting { background: #fce7f3; color: #9d174d; }
 .badge--cancel { background: #fee2e2; color: #991b1b; }
 .badge--pending { background: #fef3c7; color: #92400e; }
+.badge--time-attack { background: #ffedd5; color: #c2410c; font-size: 0.72rem; margin-left: 4px; }
+
+.time-attack-panel {
+  margin-bottom: 16px;
+  border: 1px solid #fed7aa;
+  background: linear-gradient(180deg, #fffaf5 0%, #fff 100%);
+}
+
+.time-attack-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.time-attack-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #f3f4f6;
+}
+
+.time-attack-item__order {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ff7043;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.time-attack-item__name {
+  flex: 1;
+  min-width: 140px;
+  font-weight: 600;
+}
+
+.time-attack-item__meta {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.time-attack-item__actions {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.row--time-attack {
+  background: #fffaf5;
+}
+
+.product-actions-cell {
+  white-space: nowrap;
+}
+
+.product-actions-cell .btn {
+  margin: 2px 0;
+}
+
+.btn--warn {
+  background: #ff7043;
+  color: #fff;
+  border-color: #ff7043;
+}
+
+.checkbox-inline--time-attack {
+  font-weight: 600;
+  color: #c2410c;
+}
 
 .form-grid {
   display: grid;

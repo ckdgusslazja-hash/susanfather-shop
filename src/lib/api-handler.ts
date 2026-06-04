@@ -745,6 +745,23 @@ function buildProductRecord(body: Record<string, unknown>, id: string, existing?
     shippingGuide: String(body.shippingGuide ?? existing?.shippingGuide ?? defaultProductPolicies().shippingGuide),
     returnGuide: String(body.returnGuide ?? existing?.returnGuide ?? defaultProductPolicies().returnGuide),
     deliveryDays: parseDeliveryDays(body.deliveryDays, existing?.deliveryDays),
+    timeAttack:
+      body.timeAttack !== undefined ? !!body.timeAttack : !!existing?.timeAttack,
+    timeAttackOrder: (() => {
+      const enabled =
+        body.timeAttack !== undefined ? !!body.timeAttack : !!existing?.timeAttack;
+      if (!enabled) return undefined;
+      if (body.timeAttackOrder === null || body.timeAttackOrder === '') return undefined;
+      if (body.timeAttackOrder !== undefined) {
+        const n = Number(body.timeAttackOrder);
+        return Number.isFinite(n) ? n : undefined;
+      }
+      if (existing?.timeAttackOrder !== undefined && existing?.timeAttackOrder !== null) {
+        const n = Number(existing.timeAttackOrder);
+        return Number.isFinite(n) ? n : undefined;
+      }
+      return undefined;
+    })(),
     sortIndex:
       existing?.sortIndex !== undefined && existing?.sortIndex !== null
         ? Number(existing.sortIndex)

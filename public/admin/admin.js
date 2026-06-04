@@ -12,6 +12,7 @@ const Admin = {
   members: [],
   productFilter: '',
   productCategoryFilter: '',
+  productTimeAttackFilter: false,
   productOrderIds: [],
   orderFilter: '',
   editingProduct: null,
@@ -213,9 +214,39 @@ const Admin = {
     const q = (this.productFilter || '').trim().toLowerCase();
     const cat = this.productCategoryFilter || '';
     return (this.products || []).filter((p) => {
+      if (this.productTimeAttackFilter && !p.timeAttack) return false;
       if (cat && p.category !== cat) return false;
       return this.matchProductSearch(p, q);
     });
+  },
+
+  renderTimeAttackPanel() {
+    const list = this.getTimeAttackProductsList();
+    const items = list
+      .map(
+        (p, i) => `
+        <li class="time-attack-item">
+          <span class="time-attack-item__order">${i + 1}</span>
+          <span class="time-attack-item__name">${this.esc(p.name)}${p.unit ? `, ${this.esc(p.unit)}` : ''}</span>
+          <span class="time-attack-item__meta">${this.fmt(p.price)}</span>
+          <span class="time-attack-item__actions">
+            <button type="button" class="btn btn--sm btn--ghost" ${i === 0 ? 'disabled' : ''} onclick="Admin.moveTimeAttackProduct('${p.id}', -1)" aria-label="위로">↑</button>
+            <button type="button" class="btn btn--sm btn--ghost" ${i >= list.length - 1 ? 'disabled' : ''} onclick="Admin.moveTimeAttackProduct('${p.id}', 1)" aria-label="아래로">↓</button>
+            <button type="button" class="btn btn--sm btn--danger" onclick="Admin.toggleProductTimeAttack('${p.id}')">제거</button>
+          </span>
+        </li>`
+      )
+      .join('');
+    return `
+      <div class="panel time-attack-panel">
+        <div class="panel__head"><h2>⚡ 메인 타임어택 상품</h2></div>
+        <p class="admin-hint">쇼핑몰 메인 「타임어택」에 노출할 상품입니다. 아래 순서대로 <strong>최대 4개</strong>까지 표시됩니다. 아래 목록에서 「타임어택」 버튼으로 추가·제거할 수 있습니다.</p>
+        ${
+          list.length
+            ? `<ol class="time-attack-list">${items}</ol>`
+            : '<p class="empty-msg">등록된 타임어택 상품이 없습니다. 상품 목록에서 추가해 주세요.</p>'
+        }
+      </div>`;
   },
 
   setProductSearch(value) {
@@ -231,6 +262,120 @@ const Admin = {
   clearProductSearch() {
     this.productFilter = '';
     this.productCategoryFilter = '';
+    this.productTimeAttackFilter = false;
+    this.render();
+  },
+
+  getTimeAttackProductsList() {
+    return (this.products || [])
+      .filter((p) => p.timeAttack === true)
+      .sort((a, b) => {
+        const oa = Number(a.timeAttackOrder);
+        const ob = Number(b.timeAttackOrder);
+        if (Number.isFinite(oa) && Number.isFinite(ob) && oa !== ob) return oa - ob;
+        if (Number.isFinite(oa) && !Number.isFinite(ob)) return -1;
+        if (!Number.isFinite(oa) && Number.isFinite(ob)) return 1;
+        return String(a.id).localeCompare(String(b.id));
+      });
+  },
+
+  nextTimeAttackOrder() {
+    const list = this.getTimeAttackProductsList();
+    if (!list.length) return 0;
+    return Math.max(...list.map((p) => Number(p.timeAttackOrder) || 0)) + 1;
+  },
+
+  productToApiPayload(p, overrides = {}) {
+    return {
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      price: Number(p.price),
+      originalPrice: Number(p.originalPrice ?? p.price),
+      unit: p.unit || '1개',
+      origin: p.origin,
+      deliveryDays: p.deliveryDays ?? null,
+      stock: Number(p.stock),
+      badge: p.badge,
+      emoji: p.emoji,
+      description: p.description,
+      mainImage: p.adminImages?.[0]?.url || '',
+      useOptions: p.useOptions === true,
+      optionLabel: p.optionLabel || '용량',
+      options: (p.options || []).map((o) => ({
+        label: o.label,
+        price: Number(o.price) || 0,
+        originalPrice: o.originalPrice === '' || o.originalPrice == null ? 0 : Number(o.originalPrice),
+      })),
+      detailHtml: p.detailHtml || '',
+      detailBlocks: p.detailBlocks || [],
+      shippingGuide: p.shippingGuide || '',
+      returnGuide: p.returnGuide || '',
+      organic: !!p.organic,
+      localDirect: p.localDirect !== false,
+      freeShipping: !!p.freeShipping,
+      timeAttack: !!p.timeAttack,
+      timeAttackOrder:
+        p.timeAttack && p.timeAttackOrder != null && p.timeAttackOrder !== ''
+          ? Number(p.timeAttackOrder)
+          : null,
+      sortIndex: p.sortIndex,
+      ...overrides,
+    };
+  },
+
+  async saveProductTimeAttack(id, patch) {
+    const p = (this.products || []).find((x) => x.id === id);
+    if (!p) return;
+    const body = this.productToApiPayload(p, patch);
+    const res = await this.request('/api/admin/products/' + encodeURIComponent(id), {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    });
+    const saved = res?.product;
+    if (saved) {
+      const idx = this.products.findIndex((x) => x.id === id);
+      if (idx >= 0) this.products[idx] = saved;
+      if (this.editingProduct?.id === id) this.editingProduct = { ...saved };
+    } else {
+      await this.loadProducts();
+    }
+    this.render();
+  },
+
+  async toggleProductTimeAttack(id) {
+    const p = (this.products || []).find((x) => x.id === id);
+    if (!p) return;
+    const next = !p.timeAttack;
+    const patch = {
+      timeAttack: next,
+      timeAttackOrder: next ? this.nextTimeAttackOrder() : null,
+    };
+    try {
+      await this.saveProductTimeAttack(id, patch);
+    } catch (err) {
+      alert(err.message || '저장에 실패했습니다.');
+    }
+  },
+
+  async moveTimeAttackProduct(id, delta) {
+    const list = [...this.getTimeAttackProductsList()];
+    const idx = list.findIndex((p) => p.id === id);
+    if (idx < 0) return;
+    const swapIdx = idx + delta;
+    if (swapIdx < 0 || swapIdx >= list.length) return;
+    [list[idx], list[swapIdx]] = [list[swapIdx], list[idx]];
+    try {
+      for (let i = 0; i < list.length; i++) {
+        await this.saveProductTimeAttack(list[i].id, { timeAttack: true, timeAttackOrder: i });
+      }
+    } catch (err) {
+      alert(err.message || '순서 변경에 실패했습니다.');
+    }
+  },
+
+  setProductTimeAttackFilter(on) {
+    this.productTimeAttackFilter = !!on;
     this.render();
   },
 
@@ -707,6 +852,7 @@ const Admin = {
         organic: fd.get('organic') === 'on',
         localDirect: fd.get('localDirect') === 'on',
         freeShipping: fd.get('freeShipping') === 'on',
+        timeAttack: fd.get('timeAttack') === 'on',
       };
     }
     if (this.productDraft) {
@@ -1013,6 +1159,14 @@ const Admin = {
       organic: fd.get('organic') === 'on',
       localDirect: fd.get('localDirect') === 'on',
       freeShipping: fd.get('freeShipping') === 'on',
+      timeAttack: fd.get('timeAttack') === 'on',
+      timeAttackOrder: (() => {
+        if (fd.get('timeAttack') !== 'on') return null;
+        const raw = fd.get('timeAttackOrder');
+        if (raw !== '' && raw != null) return Number(raw);
+        if (this.editingProduct?.timeAttackOrder != null) return Number(this.editingProduct.timeAttackOrder);
+        return this.nextTimeAttackOrder();
+      })(),
     };
     try {
       let res;
@@ -1379,16 +1533,18 @@ const Admin = {
     const total = (this.products || []).length;
     const q = (this.productFilter || '').trim();
     const cat = this.productCategoryFilter || '';
+    const taOnly = this.productTimeAttackFilter;
     const rows = list
       .map((p) => {
         const img = p.adminImages?.[0]?.url || '';
-        return `<tr>
+        return `<tr class="${p.timeAttack ? 'row--time-attack' : ''}">
           <td>${img ? `<img class="thumb" src="${img}" alt="" onerror="this.style.display='none'" />` : '📦'}</td>
-          <td><strong>${this.esc(p.name)}</strong><br><small>${this.esc(p.unit)} · ${this.CATEGORIES[p.category] || p.category}</small></td>
+          <td><strong>${this.esc(p.name)}</strong>${p.timeAttack ? ' <span class="badge badge--time-attack">타임어택</span>' : ''}<br><small>${this.esc(p.unit)} · ${this.CATEGORIES[p.category] || p.category}</small></td>
           <td>${this.fmt(p.price)}</td>
           <td>${p.stock ?? '-'}개</td>
           <td>${this.badge(p.stock > 0 ? 'paid' : 'cancel').replace('결제완료', '판매중').replace('취소', '품절')}</td>
-          <td>
+          <td class="product-actions-cell">
+            <button type="button" class="btn btn--sm ${p.timeAttack ? 'btn--warn' : 'btn--ghost'}" onclick="Admin.toggleProductTimeAttack('${p.id}')">${p.timeAttack ? '⚡ 해제' : '⚡ 타임어택'}</button>
             <button class="btn btn--sm btn--ghost" onclick="Admin.openProductForm('${p.id}')">수정</button>
             <button class="btn btn--sm btn--danger" onclick="Admin.deleteProduct('${p.id}')">삭제</button>
           </td>
@@ -1396,15 +1552,17 @@ const Admin = {
       })
       .join('');
 
-    const emptyMsg =
-      q || cat
+    const emptyMsg = taOnly
+      ? '타임어택으로 지정된 상품이 없습니다.'
+      : q || cat
         ? '검색 조건에 맞는 상품이 없습니다.'
         : '등록된 상품이 없습니다.';
 
     return `
+      ${this.renderTimeAttackPanel()}
       <div class="panel">
         <div class="panel__head">
-          <h2>상품 관리 ${q || cat ? `(${list.length} / ${total}개)` : `(${total}개)`}</h2>
+          <h2>상품 관리 ${q || cat || taOnly ? `(${list.length} / ${total}개)` : `(${total}개)`}</h2>
           <div class="toolbar">
             <input type="search" class="product-search-input" placeholder="상품명·카테고리·단위·산지 검색" value="${this.esc(this.productFilter)}" oninput="Admin.setProductSearch(this.value)" />
             <select onchange="Admin.setProductCategoryFilter(this.value)">
@@ -1416,7 +1574,8 @@ const Admin = {
                 )
                 .join('')}
             </select>
-            ${q || cat ? `<button type="button" class="btn btn--sm btn--ghost" onclick="Admin.clearProductSearch()">검색 초기화</button>` : ''}
+            <button type="button" class="btn btn--sm ${taOnly ? 'btn--warn' : 'btn--ghost'}" onclick="Admin.setProductTimeAttackFilter(!Admin.productTimeAttackFilter)">${taOnly ? '⚡ 타임어택만' : '타임어택만 보기'}</button>
+            ${q || cat || taOnly ? `<button type="button" class="btn btn--sm btn--ghost" onclick="Admin.clearProductSearch()">검색 초기화</button>` : ''}
             <button class="btn" onclick="Admin.openProductForm(null)">+ 상품 등록</button>
           </div>
         </div>
@@ -1499,6 +1658,12 @@ const Admin = {
               <label class="checkbox-inline"><input type="checkbox" name="organic" ${p.organic ? 'checked' : ''} /> 유기농</label>
               <label class="checkbox-inline"><input type="checkbox" name="localDirect" ${p.localDirect !== false ? 'checked' : ''} /> 산지직송</label>
               <label class="checkbox-inline"><input type="checkbox" name="freeShipping" ${p.freeShipping ? 'checked' : ''} /> 무료배송</label>
+              <label class="checkbox-inline checkbox-inline--time-attack"><input type="checkbox" name="timeAttack" ${p.timeAttack ? 'checked' : ''} /> 메인 타임어택 노출</label>
+            </div>
+            <div class="form-row">
+              <label>타임어택 순서</label>
+              <input name="timeAttackOrder" type="number" min="0" step="1" value="${p.timeAttack && p.timeAttackOrder != null && p.timeAttackOrder !== '' ? Number(p.timeAttackOrder) : ''}" placeholder="체크 시 비우면 자동" />
+              <p class="admin-hint">타임어택 체크 시 사용 · 숫자가 작을수록 앞에 노출 (메인 최대 4개)</p>
             </div>
 
             <div class="form-row full">
