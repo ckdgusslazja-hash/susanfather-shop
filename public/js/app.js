@@ -1437,10 +1437,13 @@ function stopTimeAttackTimer() {
 }
 
 function tickTimeAttackTimer() {
-  const el = document.getElementById('time-attack-timer');
-  if (!el) return;
+  const els = document.querySelectorAll('.time-attack-timer');
+  if (!els.length) return;
   const ms = getTimeAttackRemainingMs();
-  el.textContent = formatTimeAttackCountdown(ms);
+  const text = formatTimeAttackCountdown(ms);
+  els.forEach((el) => {
+    el.textContent = text;
+  });
   if (ms <= 0) stopTimeAttackTimer();
 }
 
@@ -1515,7 +1518,7 @@ function renderTimeAttackSection() {
       <div class="home-row-section__head home-time-attack__head">
         <h2 class="home-row-section__title home-time-attack__title">
           <span class="home-time-attack__label">타임어택</span>
-          <span class="time-attack-timer" id="time-attack-timer" aria-live="polite">${countdown}</span>
+          <span class="time-attack-timer" aria-live="polite">${countdown}</span>
         </h2>
         <button type="button" class="home-row-section__more" onclick="selectCategory('sale')">더보기 ›</button>
       </div>
@@ -1651,6 +1654,7 @@ function renderHome() {
           ? `
       ${renderTimeAttackSection()}
       ${renderDontMissSection()}
+      ${renderTimeAttackSection()}
       ${renderHomeScrollSection(
         '👀 최근 본 상품',
         recentAll,
