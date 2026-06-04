@@ -1,10 +1,36 @@
 const STORAGE_KEY = 'greenharvest_cart';
+const LAST_ORDER_KEY = 'greenharvest_last_order';
+
+const APP_PAGES = new Set([
+  'home',
+  'detail',
+  'reviews',
+  'cart',
+  'checkout',
+  'complete',
+  'login',
+  'signup',
+  'find-id',
+  'find-pw',
+  'change-password',
+  'mypage',
+  'addresses',
+  'shop-info',
+  'terms',
+  'privacy',
+  'order-detail',
+  'order-lookup',
+  'customer-center',
+  'inquiry',
+  'write-review',
+]);
 
 let state = {
   page: 'home',
   category: 'all',
   selectedProductId: null,
   selectedOptionId: null,
+  orderId: null,
   carouselIndex: 0,
   quantity: 1,
   cart: [],
@@ -249,6 +275,131 @@ function getShippingFee(subtotal) {
   return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
 }
 
+function saveLastOrder(order) {
+  state.lastOrder = order || null;
+  try {
+    if (order) sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify(order));
+    else sessionStorage.removeItem(LAST_ORDER_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+function loadLastOrder() {
+  try {
+    const raw = sessionStorage.getItem(LAST_ORDER_KEY);
+    if (raw) state.lastOrder = JSON.parse(raw);
+  } catch {
+    state.lastOrder = null;
+  }
+}
+
+let _restoringHash = false;
+
+function serializeRoute() {
+  const q = new URLSearchParams();
+  switch (state.page) {
+    case 'home':
+      if (state.category && state.category !== 'all') q.set('category', state.category);
+      if (state.searchQuery?.trim()) q.set('q', state.searchQuery.trim());
+      break;
+    case 'detail':
+      if (state.selectedProductId) q.set('productId', state.selectedProductId);
+      if (state.selectedOptionId) q.set('optionId', state.selectedOptionId);
+      if (state.quantity > 1) q.set('qty', String(state.quantity));
+      break;
+    case 'reviews':
+    case 'write-review':
+      if (state.reviewProductId || state.selectedProductId) {
+        q.set('productId', state.reviewProductId || state.selectedProductId);
+      }
+      break;
+    case 'mypage':
+      if (state.mypageTab && state.mypageTab !== 'orders') q.set('tab', state.mypageTab);
+      break;
+    case 'order-detail':
+      if (state.orderId) q.set('orderId', state.orderId);
+      break;
+    default:
+      break;
+  }
+  const qs = q.toString();
+  return `#/${state.page}${qs ? `?${qs}` : ''}`;
+}
+
+function parseRouteHash() {
+  const raw = window.location.hash.replace(/^#\/?/, '').trim();
+  if (!raw) return { page: 'home', params: {} };
+  const [path, query = ''] = raw.split('?');
+  const page = path || 'home';
+  const params = Object.fromEntries(new URLSearchParams(query));
+  return { page, params };
+}
+
+function syncHashFromState(replace = false) {
+  if (_restoringHash) return;
+  const next = serializeRoute();
+  if (window.location.hash === next) return;
+  const url = `${window.location.pathname}${window.location.search}${next}`;
+  if (replace) history.replaceState(null, '', url);
+  else window.location.hash = next;
+}
+
+function buildNavigateParams(page, routeParams = {}) {
+  const params = { restore: true, skipScroll: true };
+  if (page === 'home') {
+    if (routeParams.category) params.category = routeParams.category;
+    if (routeParams.q) params.q = routeParams.q;
+    return params;
+  }
+  if (page === 'detail') {
+    if (routeParams.productId) params.productId = routeParams.productId;
+    if (routeParams.optionId) params.optionId = routeParams.optionId;
+    if (routeParams.qty) params.qty = routeParams.qty;
+    return params;
+  }
+  if (page === 'reviews' || page === 'write-review') {
+    if (routeParams.productId) params.reviewProductId = routeParams.productId;
+    return params;
+  }
+  if (page === 'mypage') {
+    if (routeParams.tab) params.mypageTab = routeParams.tab;
+    return params;
+  }
+  if (page === 'order-detail') {
+    if (routeParams.orderId) params.orderId = routeParams.orderId;
+    return params;
+  }
+  if (page === 'complete') loadLastOrder();
+  return params;
+}
+
+async function restoreFromHash() {
+  const { page, params } = parseRouteHash();
+  if (!APP_PAGES.has(page)) {
+    navigate('home', { skipScroll: true, replaceHash: true });
+    return;
+  }
+  if (page === 'detail' && params.productId && !getProduct(params.productId)) {
+    navigate('home', { skipScroll: true, replaceHash: true });
+    return;
+  }
+  _restoringHash = true;
+  try {
+    await navigate(page, buildNavigateParams(page, params));
+  } finally {
+    _restoringHash = false;
+  }
+}
+
+function onRouteHashChange() {
+  if (_restoringHash) return;
+  _restoringHash = true;
+  restoreFromHash().finally(() => {
+    _restoringHash = false;
+  });
+}
+
 function showToast(message) {
   const toast = document.getElementById('toast');
   toast.textContent = message;
@@ -259,15 +410,31 @@ function showToast(message) {
 function navigate(page, params = {}) {
   state.page = page;
   if (params.category) state.category = params.category;
+  if (params.q || params.searchQuery) {
+    const query = String(params.q || params.searchQuery).trim();
+    state.searchQuery = query;
+    state.searchDraft = query;
+  }
+  if (params.mypageTab) state.mypageTab = params.mypageTab;
   if (params.productId) {
     state.selectedProductId = params.productId;
-    state.reviewProductId = params.productId;
-    state.quantity = 1;
-    state.carouselIndex = 0;
-    const p = getProduct(params.productId);
-    if (p) {
-      state.selectedOptionId = getDefaultOptionId(p);
-      saveRecentProduct(p.id);
+    if (!params.reviewProductId) state.reviewProductId = params.productId;
+    if (params.restore) {
+      if (params.qty) state.quantity = Math.max(1, Number(params.qty) || 1);
+      const p = getProduct(params.productId);
+      if (p) {
+        state.selectedOptionId = params.optionId || getDefaultOptionId(p);
+        if (params.qty) state.quantity = Math.min(state.quantity, p.stock || state.quantity);
+      }
+    } else {
+      state.reviewProductId = params.productId;
+      state.quantity = 1;
+      state.carouselIndex = 0;
+      const p = getProduct(params.productId);
+      if (p) {
+        state.selectedOptionId = getDefaultOptionId(p);
+        saveRecentProduct(p.id);
+      }
     }
   }
   if (params.reviewProductId) {
@@ -275,6 +442,9 @@ function navigate(page, params = {}) {
   }
   if (params.reviewFilter) state.reviewFilter = params.reviewFilter;
   if (params.orderId) state.orderId = params.orderId;
+  if (page === 'complete' && !state.lastOrder) loadLastOrder();
+
+  if (!params.restore) syncHashFromState(!!params.replaceHash);
 
   const needReviews = ['reviews', 'detail', 'write-review'].includes(page);
   const pid =
@@ -282,14 +452,14 @@ function navigate(page, params = {}) {
   if (needReviews && pid && typeof ensureReviews === 'function') {
     const tasks = [ensureReviews(pid)];
     if (typeof ensureReviewEligibility === 'function') tasks.push(ensureReviewEligibility(pid));
-    Promise.all(tasks).then(() => {
+    return Promise.all(tasks).then(() => {
       render();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (!params.skipScroll) window.scrollTo({ top: 0, behavior: 'smooth' });
     });
-    return;
   }
   render();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (!params.skipScroll) window.scrollTo({ top: 0, behavior: 'smooth' });
+  return Promise.resolve();
 }
 
 function renderStars(rating, max = 5) {
@@ -849,6 +1019,7 @@ function submitHomeSearch() {
   state.searchDraft = q;
   if (input) input.value = q;
   if (state.page === 'home') {
+    syncHashFromState(true);
     updateHomeProductList();
     showToast(q ? `"${q}" 검색했습니다` : '전체 상품을 보여드립니다');
   }
@@ -1298,6 +1469,7 @@ function renderDetail() {
 
 function selectOption(optionId) {
   state.selectedOptionId = optionId;
+  syncHashFromState(true);
   render();
 }
 
@@ -1664,6 +1836,7 @@ function selectCategory(id) {
     navigate('home', { category: id });
     return;
   }
+  syncHashFromState(true);
   render();
   const catName = HOME_CATEGORIES.find((c) => c.id === id)?.name || '상품';
   setTimeout(() => {
@@ -1678,6 +1851,7 @@ function changeQty(delta) {
   state.quantity = Math.max(1, Math.min(product.stock, state.quantity + delta));
   const el = document.getElementById('qty-display');
   if (el) el.textContent = state.quantity;
+  if (state.page === 'detail') syncHashFromState(true);
   render();
 }
 
@@ -1758,7 +1932,7 @@ async function submitOrder(e) {
     }
 
     if (prepare.transfer) {
-      state.lastOrder = {
+      saveLastOrder({
         id: prepare.orderId,
         name: fd.get('name'),
         phone: fd.get('phone'),
@@ -1774,7 +1948,7 @@ async function submitOrder(e) {
         testMode: false,
         transfer: true,
         bankAccount: prepare.bankAccount,
-      };
+      });
       if (!API.user) {
         state.guestOrderView = {
           id: prepare.orderId,
@@ -1858,7 +2032,7 @@ async function handlePaymentReturn() {
     }
     try {
       const res = await API.confirmPayment({ paymentKey, orderId, amount });
-      state.lastOrder = buildLastOrderFromApi(res.order, { testMode: res.testMode });
+      saveLastOrder(buildLastOrderFromApi(res.order, { testMode: res.testMode }));
       if (!API.user) state.guestOrderView = res.order;
       state.cart = [];
       saveCart();
@@ -1894,7 +2068,15 @@ async function initApp() {
     if (typeof API !== 'undefined') {
       await Promise.all([API.loadShopSettings(), API.loadProducts(), API.loadPaymentSettings(), loadNotifications()]);
     }
+    const hadPaymentReturn = window.location.search.includes('payment=');
     await handlePaymentReturn();
+    if (!hadPaymentReturn) {
+      if (window.location.hash) {
+        await restoreFromHash();
+      } else {
+        syncHashFromState(true);
+      }
+    }
     render();
   } finally {
     hideAppLoader();
@@ -1915,3 +2097,4 @@ function hideAppLoader() {
 }
 
 /* initApp()는 pages-extra.js에서 호출 */
+window.addEventListener('hashchange', onRouteHashChange);

@@ -259,9 +259,7 @@ function renderMypage() {
 }
 
 function setMypageTab(tab) {
-  state.mypageTab = tab;
-  render();
-  if (tab === 'orders') initMypageOrders();
+  navigate('mypage', { mypageTab: tab, skipScroll: true });
 }
 
 function getWishlistProducts() {
