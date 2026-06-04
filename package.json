@@ -10,6 +10,8 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "reviews:generate": "node scripts/generate-review-seeds.mjs",
+    "reviews:seed": "node scripts/generate-review-seeds.mjs && tsx scripts/upsert-reviews.ts",
     "db:setup": "prisma db push && tsx prisma/seed.ts",
     "legacy:server": "node server/index.js",
     "deploy": "powershell -ExecutionPolicy Bypass -File scripts/vercel-deploy-auto.ps1",

@@ -812,106 +812,31 @@ function renderProductThumbHtml(product, className) {
   </div>`;
 }
 
-const REVIEW_AUTHORS = [
-  '김*연',
-  '박*준',
-  '이*희',
-  '최*아',
-  '정*우',
-  '한*지',
-  '윤*석',
-  '조*민',
-  '강*현',
-  '서*영',
-];
-const REVIEW_TITLES = [
-  '만족합니다',
-  '신선해요',
-  '재구매할게요',
-  '가성비 최고',
-  '선물용으로 좋아요',
-  '배송이 빨라요',
-  '맛있어요',
-  '포장이 깔끔해요',
-];
-const REVIEW_COMMENTS = [
-  '기대 이상으로 좋았어요. 다음에도 주문할 예정입니다.',
-  '산지에서 바로 온 느낌이 나요. 신선합니다.',
-  '가족이 다 맛있다고 해서 또 샀어요.',
-  '가격 대비 품질이 훌륭합니다.',
-  '포장 상태도 좋고 상품도 만족스러워요.',
-  '배송 빠르고 상품 상태 완벽해요.',
-];
-
 function buildReviews() {
-  const featured = [
-    {
-      id: 'r1',
-      productId: 'fr1',
-      author: '김*연',
-      rating: 5,
-      date: '2026-05-18',
-      title: '당도 진짜 최고예요',
-      content: '박스 열자마자 감귤 향이 가득나요. 껍질도 얇고 과즙이 터져서 아이들이랑 금방 다 먹었어요.',
-      images: REVIEW_IMG.fruit,
-      helpful: 42,
-      verified: true,
-    },
-    {
-      id: 'r2',
-      productId: 'sf1',
-      author: '정*우',
-      rating: 5,
-      date: '2026-05-15',
-      title: '회집 부럽지 않아요',
-      content: '아이스팩 가득 들어와서 완전 차가웠고, 회 두께도 딱 좋아요.',
-      images: REVIEW_IMG.seafood,
-      helpful: 36,
-      verified: true,
-    },
-    {
-      id: 'r3',
-      productId: 'gr1',
-      author: '조*민',
-      rating: 5,
-      date: '2026-05-20',
-      title: '밥맛이 확 달라졌어요',
-      content: '쌀눈이 살아있고 찰기가 좋아요. 유기농이라 아이 밥으로도 안심.',
-      images: REVIEW_IMG.grain,
-      helpful: 51,
-      verified: true,
-    },
-  ];
+  const seeds =
+    typeof REVIEW_SEED_DATA !== 'undefined' && REVIEW_SEED_DATA.length
+      ? REVIEW_SEED_DATA
+      : [];
+  const out = seeds.map((r) => ({
+    id: r.id,
+    productId: r.productId,
+    author: r.author,
+    rating: r.rating,
+    date: r.date,
+    title: r.title,
+    content: r.content,
+    images: r.images || [],
+    helpful: r.helpful ?? 0,
+    verified: !!r.verified,
+  }));
 
-  const out = [...featured];
-  let rid = 100;
-
-  PRODUCTS.forEach((product, pi) => {
-    const have = out.filter((r) => r.productId === product.id).length;
-    const need = 3 - have;
-    const catImgs = REVIEW_IMG[product.category] || [];
-
-    for (let i = 0; i < need; i++) {
-      const images =
-        i === 0 && catImgs.length ? [catImgs[pi % catImgs.length]] : i === 1 && catImgs[1] ? [catImgs[1]] : [];
-      out.push({
-        id: `r${rid++}`,
-        productId: product.id,
-        author: REVIEW_AUTHORS[(pi + i) % REVIEW_AUTHORS.length],
-        rating: i === 0 ? 5 : 4 + (pi % 2),
-        date: `2026-0${(pi % 5) + 1}-${String(8 + i).padStart(2, '0')}`,
-        title: REVIEW_TITLES[(pi + i) % REVIEW_TITLES.length],
-        content: `${product.name} — ${REVIEW_COMMENTS[(pi + i) % REVIEW_COMMENTS.length]}`,
-        images,
-        helpful: 6 + pi * 2 + i * 3,
-        verified: i < 2,
-      });
-    }
-
+  PRODUCTS.forEach((product) => {
     const productReviews = out.filter((r) => r.productId === product.id);
     product.reviews = productReviews.length;
-    const avg = productReviews.reduce((s, r) => s + r.rating, 0) / productReviews.length;
-    product.rating = Math.round(avg * 10) / 10;
+    if (productReviews.length) {
+      const avg = productReviews.reduce((s, r) => s + r.rating, 0) / productReviews.length;
+      product.rating = Math.round(avg * 10) / 10;
+    }
   });
 
   return out;

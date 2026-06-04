@@ -81,30 +81,8 @@ function readJsonFile<T>(filePath: string): T | null {
 }
 
 function getSampleReviews(): SeedReview[] {
-  return [
-    {
-      id: 'rv-seed-1',
-      productId: 'fr1',
-      author: '김*연',
-      rating: 5,
-      title: '당도 최고',
-      content: '배송 빠르고 감귤이 신선해요. 재구매할게요.',
-      images: [],
-      helpful: 12,
-      verified: true,
-    },
-    {
-      id: 'rv-seed-2',
-      productId: 'sf1',
-      author: '이*수',
-      rating: 5,
-      title: '회 fresh',
-      content: '포장 꼼꼼하고 싱싱합니다.',
-      images: [],
-      helpful: 8,
-      verified: true,
-    },
-  ];
+  const reviewsPath = path.join(process.cwd(), 'data', 'reviews.json');
+  return readJsonFile<SeedReview[]>(reviewsPath) || [];
 }
 
 async function seedSettings() {
@@ -154,12 +132,10 @@ async function seedProducts() {
 }
 
 async function seedReviews() {
-  const count = await prisma.review.count();
-  if (count > 0) return;
-
   const reviewsPath = path.join(process.cwd(), 'data', 'reviews.json');
   let reviews = readJsonFile<SeedReview[]>(reviewsPath);
   if (!reviews?.length) reviews = getSampleReviews();
+  if (!reviews?.length) return;
 
   for (const r of reviews) {
     const createdAt = r.date ? new Date(r.date) : undefined;

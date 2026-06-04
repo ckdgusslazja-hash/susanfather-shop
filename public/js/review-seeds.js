@@ -1,0 +1,1345 @@
+/** 자동 생성 — scripts/generate-review-seeds.mjs */
+const REVIEW_SEED_DATA = [
+  {
+    "id": "r1",
+    "productId": "fr1",
+    "author": "김*연",
+    "rating": 5,
+    "date": "2026-05-18",
+    "title": "당도 진짜 최고예요",
+    "content": "박스 열자마자 감귤 향이 가득나요. 껍질도 얇고 과즙이 터져서 아이들이랑 금방 다 먹었어요. 5kg 샀는데 일주일도 안 돼서 또 주문합니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1547514704-5ce6f96618df?w=600&q=80"
+    ],
+    "helpful": 42,
+    "verified": true
+  },
+  {
+    "id": "r2",
+    "productId": "fr1",
+    "author": "박*준",
+    "rating": 5,
+    "date": "2026-05-02",
+    "title": "부모님 선물로 보냈는데 만족",
+    "content": "어머니가 마트 감귤이랑 비교도 안 된다고 하시네요. 포장도 깨진 거 하나 없이 왔어요. 택배 도착 다음날 바로 드셨다고 연락 왔습니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1557800634-7bf3edea8808?w=600&q=80"
+    ],
+    "helpful": 28,
+    "verified": true
+  },
+  {
+    "id": "r3",
+    "productId": "fr1",
+    "author": "이*희",
+    "rating": 4,
+    "date": "2026-04-21",
+    "title": "대체로 달아요",
+    "content": "대부분 달고 좋은데 한두 개는 살짝 시었어요. 그래도 산지 직송이라 신선하고 가격은 마트보다 나은 편이에요.",
+    "images": [],
+    "helpful": 11,
+    "verified": true
+  },
+  {
+    "id": "r4",
+    "productId": "fr2",
+    "author": "최*아",
+    "rating": 5,
+    "date": "2026-05-14",
+    "title": "아삭아삭 그대로",
+    "content": "문경 사과 맛이 확실히 다르네요. 냉장고에 넣어뒀다가 껍질 벗겨 먹었는데 바삭하고 달아요. 2kg이라 금방 없어질 듯.",
+    "images": [
+      "https://images.unsplash.com/photo-1547514704-5ce6f96618df?w=600&q=80"
+    ],
+    "helpful": 19,
+    "verified": true
+  },
+  {
+    "id": "r5",
+    "productId": "fr2",
+    "author": "정*우",
+    "rating": 5,
+    "date": "2026-05-06",
+    "title": "아이 간식으로 딱",
+    "content": "딸이 사과만 찾아요. 크기도 고르고 상처 난 것 없이 왔습니다. 재주문 버튼 눌렀어요.",
+    "images": [],
+    "helpful": 14,
+    "verified": true
+  },
+  {
+    "id": "r6",
+    "productId": "fr2",
+    "author": "한*지",
+    "rating": 4,
+    "date": "2026-04-28",
+    "title": "달긴 한데 크기가 조금 작아요",
+    "content": "맛은 만족인데 기대했던 것보다 알이 작은 편이에요. 그래도 신선해서 나쁘진 않습니다.",
+    "images": [],
+    "helpful": 7,
+    "verified": true
+  },
+  {
+    "id": "r7",
+    "productId": "fr3",
+    "author": "윤*석",
+    "rating": 5,
+    "date": "2026-05-20",
+    "title": "샤인머스켓 선물 대박",
+    "content": "친구 생일 선물로 보냈는데 알이 굵고 당도 미쳤다고 연락 왔어요. 포장 박스도 고급스럽게 와서 다음에도 여기서 살게요.",
+    "images": [
+      "https://images.unsplash.com/photo-1547514704-5ce6f96618df?w=600&q=80"
+    ],
+    "helpful": 33,
+    "verified": true
+  },
+  {
+    "id": "r8",
+    "productId": "fr3",
+    "author": "조*민",
+    "rating": 5,
+    "date": "2026-05-11",
+    "title": "비싼 값 하는 맛",
+    "content": "백화점 샤인이랑 비교해도 손색 없어요. 송이별로 잘 감싸져 있어서 깨진 것도 없었습니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1557800634-7bf3edea8808?w=600&q=80"
+    ],
+    "helpful": 22,
+    "verified": true
+  },
+  {
+    "id": "r9",
+    "productId": "fr3",
+    "author": "강*현",
+    "rating": 4,
+    "date": "2026-04-30",
+    "title": "달고 맛있는데 배송 하루 늦음",
+    "content": "상품은 만족인데 택배가 하루 늦게 와서 별 하나 뺐어요. 도착하니까는 상태는 아주 좋았습니다.",
+    "images": [],
+    "helpful": 9,
+    "verified": true
+  },
+  {
+    "id": "r10",
+    "productId": "fr4",
+    "author": "서*영",
+    "rating": 5,
+    "date": "2026-05-16",
+    "title": "딸기 향이 진해요",
+    "content": "논산 딸기인지 모르겠는데 마트 딸기랑 비교가 안 돼요. 위에 꼭지도 파랗고 신선해요. 요거트에 올려 먹었습니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1547514704-5ce6f96618df?w=600&q=80"
+    ],
+    "helpful": 24,
+    "verified": true
+  },
+  {
+    "id": "r11",
+    "productId": "fr4",
+    "author": "오*진",
+    "rating": 5,
+    "date": "2026-05-08",
+    "title": "아이가 혼자 다 먹음",
+    "content": "750g인데 하루 만에 없어졌어요 ㅋㅋ 달고 촉촉합니다. 냉장 배송이라 왔을 때도 차가웠어요.",
+    "images": [],
+    "helpful": 16,
+    "verified": true
+  },
+  {
+    "id": "r12",
+    "productId": "fr4",
+    "author": "임*수",
+    "rating": 4,
+    "date": "2026-04-25",
+    "title": "맛은 좋은데 몇 알은 물렀어요",
+    "content": "전체적으로는 만족인데 밑에 깔린 쪽 두세 알은 살짝 눌려 있었어요. 그래도 먹을 만했습니다.",
+    "images": [],
+    "helpful": 8,
+    "verified": true
+  },
+  {
+    "id": "r13",
+    "productId": "fr5",
+    "author": "배*린",
+    "rating": 5,
+    "date": "2026-05-12",
+    "title": "망고 숙도 딱 좋아요",
+    "content": "노랗게 잘 익어서 왔어요. 칼로 잘라서 먹었는데 섬유 없이 부드럽고 달아요. 아들이 두 입만에 한 개 끝.",
+    "images": [
+      "https://images.unsplash.com/photo-1547514704-5ce6f96618df?w=600&q=80"
+    ],
+    "helpful": 18,
+    "verified": true
+  },
+  {
+    "id": "r14",
+    "productId": "fr5",
+    "author": "송*호",
+    "rating": 5,
+    "date": "2026-05-03",
+    "title": "여름 간식으로 추천",
+    "content": "냉동실에 잠깐 넣었다가 먹으니 아이스크림 같아요. 2입이라 가격 대비 괜찮습니다.",
+    "images": [],
+    "helpful": 12,
+    "verified": true
+  },
+  {
+    "id": "r15",
+    "productId": "fr5",
+    "author": "류*나",
+    "rating": 4,
+    "date": "2026-04-18",
+    "title": "한 알은 조금 덜 익음",
+    "content": "한 알은 더 두면 될 것 같고 한 알은 바로 먹기 좋았어요. 맛 자체는 만족합니다.",
+    "images": [],
+    "helpful": 6,
+    "verified": true
+  },
+  {
+    "id": "r16",
+    "productId": "vg1",
+    "author": "황*영",
+    "rating": 5,
+    "date": "2026-05-17",
+    "title": "국물에 넣으니 향이 확",
+    "content": "유기농 대파라 그런지 향이 진하고 시들지도 않아요. 된장찌개 끓였는데 마트 대파랑 차이 납니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=80"
+    ],
+    "helpful": 15,
+    "verified": true
+  },
+  {
+    "id": "r17",
+    "productId": "vg1",
+    "author": "문*결",
+    "rating": 5,
+    "date": "2026-05-09",
+    "title": "1kg이 알차요",
+    "content": "두 봉지로 왔는데 흙도 많이 안 묻어 있고 길이도 고르습니다. 반찬용으로 썰어서 냉동 보관 중.",
+    "images": [],
+    "helpful": 10,
+    "verified": true
+  },
+  {
+    "id": "r18",
+    "productId": "vg1",
+    "author": "신*아",
+    "rating": 4,
+    "date": "2026-04-22",
+    "title": "좋은데 일부 잎이 시들었어요",
+    "content": "대부분은 싱싱한데 겉잎 몇 장은 노랗게 시들었어요. 먹는 데는 문제 없었습니다.",
+    "images": [],
+    "helpful": 5,
+    "verified": true
+  },
+  {
+    "id": "r19",
+    "productId": "vg2",
+    "author": "권*훈",
+    "rating": 5,
+    "date": "2026-05-15",
+    "title": "시금치 나물 최고",
+    "content": "잎이 넓고 뿌리 쪽도 시들지 않았어요. 소금에 데쳐서 참기름 넣었는데 고소하고 부드러워요.",
+    "images": [
+      "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=80"
+    ],
+    "helpful": 13,
+    "verified": true
+  },
+  {
+    "id": "r20",
+    "productId": "vg2",
+    "author": "남*경",
+    "rating": 5,
+    "date": "2026-05-07",
+    "title": "국에 넣어도 풀리지 않음",
+    "content": "된장국에 넣었는데 풀지 않고 초록색 유지됐어요. 300g이라 두 끼 먹기 딱 좋았습니다.",
+    "images": [],
+    "helpful": 9,
+    "verified": true
+  },
+  {
+    "id": "r21",
+    "productId": "vg2",
+    "author": "김*연",
+    "rating": 4,
+    "date": "2026-04-20",
+    "title": "양은 적은 편",
+    "content": "신선도는 만족인데 300g이 생각보다 적어요. 맛은 좋아서 또 살 수는 있어요.",
+    "images": [],
+    "helpful": 4,
+    "verified": true
+  },
+  {
+    "id": "r22",
+    "productId": "vg3",
+    "author": "박*준",
+    "rating": 5,
+    "date": "2026-05-19",
+    "title": "못난이인데 맛은 그대로",
+    "content": "모양은 진짜 못났는데 당근 맛은 달고 아삭해요. 3kg이라 죽이랑 볶음 여러 번 했습니다. 가성비 최고.",
+    "images": [
+      "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=80"
+    ],
+    "helpful": 21,
+    "verified": true
+  },
+  {
+    "id": "r23",
+    "productId": "vg3",
+    "author": "이*희",
+    "rating": 5,
+    "date": "2026-05-10",
+    "title": "아이 도시락용으로",
+    "content": "스틱으로 잘라서 도시락에 넣었는데 아이가 당근도 먹네요. 흙도 잘 씻겨져 있었어요.",
+    "images": [],
+    "helpful": 14,
+    "verified": true
+  },
+  {
+    "id": "r24",
+    "productId": "vg3",
+    "author": "최*아",
+    "rating": 5,
+    "date": "2026-04-27",
+    "title": "특가라서 샀는데 만족",
+    "content": "마트 못난이보다 싸고 양도 많아요. 냉장고 한 칸 꽉 찼지만 한 달은 거뜬할 듯.",
+    "images": [],
+    "helpful": 11,
+    "verified": true
+  },
+  {
+    "id": "r25",
+    "productId": "vg4",
+    "author": "정*우",
+    "rating": 5,
+    "date": "2026-05-13",
+    "title": "애호박 찌개에 딱",
+    "content": "쫄깃하고 씨도 작아요. 두 개 다 크기 비슷하게 왔고 상처 없었습니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=80"
+    ],
+    "helpful": 12,
+    "verified": true
+  },
+  {
+    "id": "r26",
+    "productId": "vg4",
+    "author": "한*지",
+    "rating": 4,
+    "date": "2026-05-01",
+    "title": "하나는 조금 물렀어요",
+    "content": "한 개는 완벽했는데 한 개는 끝부분이 살짝 눌려 있었어요. 찌개에는 문제없이 넣었어요.",
+    "images": [],
+    "helpful": 6,
+    "verified": true
+  },
+  {
+    "id": "r27",
+    "productId": "vg4",
+    "author": "윤*석",
+    "rating": 5,
+    "date": "2026-04-19",
+    "title": "볶음밥에 넣어도 좋아요",
+    "content": "껍질 얇아서 채 썰기 편하고 볶아도 물러지지 않아요. 국산 애호박이라 믿고 삽니다.",
+    "images": [],
+    "helpful": 8,
+    "verified": true
+  },
+  {
+    "id": "r28",
+    "productId": "vg5",
+    "author": "조*민",
+    "rating": 5,
+    "date": "2026-05-18",
+    "title": "5kg 망 든든해요",
+    "content": "양파 크기 고르고 마른 편이라 오래 둘 수 있을 것 같아요. 무안 양파 맛나다고 하던데 맞네요.",
+    "images": [
+      "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=80"
+    ],
+    "helpful": 17,
+    "verified": true
+  },
+  {
+    "id": "r29",
+    "productId": "vg5",
+    "author": "강*현",
+    "rating": 5,
+    "date": "2026-05-04",
+    "title": "가정용으로 최고",
+    "content": "매번 마트에서 두세 개씩 사다니 이제 여기서 한 번에 시킵니다. 포장 망도 튼튼해요.",
+    "images": [],
+    "helpful": 13,
+    "verified": true
+  },
+  {
+    "id": "r30",
+    "productId": "vg5",
+    "author": "서*영",
+    "rating": 4,
+    "date": "2026-04-16",
+    "title": "몇 알 껍질 벗겨짐",
+    "content": "배송 중에 몇 알 껍질이 벗겨진 것 있었는데 속은 괜찮았어요. 양이 많아서 그냥 씀.",
+    "images": [],
+    "helpful": 7,
+    "verified": true
+  },
+  {
+    "id": "r31",
+    "productId": "sf1",
+    "author": "정*우",
+    "rating": 5,
+    "date": "2026-05-15",
+    "title": "회집 부럽지 않아요",
+    "content": "아이스팩 가득 들어와서 완전 차가웠고, 회 두께도 딱 좋아요. 완도 광어 맞는지 모르겠는데 신선합니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=600&q=80"
+    ],
+    "helpful": 36,
+    "verified": true
+  },
+  {
+    "id": "r32",
+    "productId": "sf1",
+    "author": "김*연",
+    "rating": 5,
+    "date": "2026-05-08",
+    "title": "모임용으로 500g",
+    "content": "친구들이랑 모임인데 회 양도 넉넉하고 비린내 전혀 없었어요. 초장이랑 같이 먹으니 금방 없어졌습니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1564489568509-70e53b853148?w=600&q=80"
+    ],
+    "helpful": 29,
+    "verified": true
+  },
+  {
+    "id": "r33",
+    "productId": "sf1",
+    "author": "박*준",
+    "rating": 4,
+    "date": "2026-04-29",
+    "title": "맛은 만족 배송은 조심히",
+    "content": "맛은 최고인데 박스 모서리가 살짝 눌려 왔어요. 회 자체는 문제 없었습니다.",
+    "images": [],
+    "helpful": 12,
+    "verified": true
+  },
+  {
+    "id": "r34",
+    "productId": "sf2",
+    "author": "이*희",
+    "rating": 5,
+    "date": "2026-05-17",
+    "title": "통영 굴 비빔밥",
+    "content": "굴이 탱탱하고 비린내 없어요. 쌀뜨물에 넣어 비빔밥 했는데 진짜 맛있었습니다. 1kg이 알차요.",
+    "images": [
+      "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=600&q=80"
+    ],
+    "helpful": 23,
+    "verified": true
+  },
+  {
+    "id": "r35",
+    "productId": "sf2",
+    "author": "최*아",
+    "rating": 5,
+    "date": "2026-05-06",
+    "title": "국에 넣어도 좋아요",
+    "content": "굴국 끓였는데 국물이 시원해요. 세척도 잘 되어 있어서 손질 거의 안 했습니다.",
+    "images": [],
+    "helpful": 15,
+    "verified": true
+  },
+  {
+    "id": "r36",
+    "productId": "sf2",
+    "author": "한*지",
+    "rating": 4,
+    "date": "2026-04-24",
+    "title": "껍질 깨진 게 몇 개",
+    "content": "대부분 살아있는데 껍질 깨진 게 조금 있었어요. 먹는 데는 괜찮았습니다.",
+    "images": [],
+    "helpful": 8,
+    "verified": true
+  },
+  {
+    "id": "r37",
+    "productId": "sf3",
+    "author": "윤*석",
+    "rating": 5,
+    "date": "2026-05-14",
+    "title": "제주 고등어 구이",
+    "content": "살이 두툼하고 비린내 없어요. 소금만 뿌려 구웠는데 밥 두 공기 먹었습니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=600&q=80"
+    ],
+    "helpful": 18,
+    "verified": true
+  },
+  {
+    "id": "r38",
+    "productId": "sf3",
+    "author": "조*민",
+    "rating": 5,
+    "date": "2026-05-02",
+    "title": "조림해도 맛있어요",
+    "content": "구이 말고 조림했는데도 살이 잘 안 흩어지고 맛있어요. 2마리라 가족 네 명이 나눠 먹기 좋았어요.",
+    "images": [],
+    "helpful": 11,
+    "verified": true
+  },
+  {
+    "id": "r39",
+    "productId": "sf3",
+    "author": "강*현",
+    "rating": 5,
+    "date": "2026-04-20",
+    "title": "냉장 상태 좋음",
+    "content": "도착하자마자 냉장 넣었는데 비늘도 반짝이고 신선했습니다.",
+    "images": [],
+    "helpful": 9,
+    "verified": true
+  },
+  {
+    "id": "r40",
+    "productId": "sf4",
+    "author": "서*영",
+    "rating": 5,
+    "date": "2026-05-19",
+    "title": "보리새우 볶음 최고",
+    "content": "머리 손질된 거 와서 바로 팬에 볶았어요. 탱탱하고 달콤해요. 맥주 안주로 딱입니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=600&q=80"
+    ],
+    "helpful": 20,
+    "verified": true
+  },
+  {
+    "id": "r41",
+    "productId": "sf4",
+    "author": "오*진",
+    "rating": 5,
+    "date": "2026-05-11",
+    "title": "라면에 넣어도 좋아요",
+    "content": "라면 끓일 때 넣었는데 국물이 확 달라졌어요. 500g이라 두 번 요리했습니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1564489568509-70e53b853148?w=600&q=80"
+    ],
+    "helpful": 14,
+    "verified": true
+  },
+  {
+    "id": "r42",
+    "productId": "sf4",
+    "author": "임*수",
+    "rating": 4,
+    "date": "2026-04-28",
+    "title": "일부 작은 새우 섞임",
+    "content": "큰 것도 많은데 작은 것도 꽤 섞여 있었어요. 맛은 신선해서 만족합니다.",
+    "images": [],
+    "helpful": 7,
+    "verified": true
+  },
+  {
+    "id": "r43",
+    "productId": "sf5",
+    "author": "배*린",
+    "rating": 5,
+    "date": "2026-05-16",
+    "title": "에어프라이어에 구웠어요",
+    "content": "기름기 적당하고 살이 촉촉해요. 레몬 뿌려 먹었는데 고급 레스토랑 맛.",
+    "images": [
+      "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=600&q=80"
+    ],
+    "helpful": 25,
+    "verified": true
+  },
+  {
+    "id": "r44",
+    "productId": "sf5",
+    "author": "송*호",
+    "rating": 5,
+    "date": "2026-05-07",
+    "title": "아이 도시락용",
+    "content": "살짝 구워서 도시락에 넣었더니 아이가 다 먹어왔어요. 300g이라 한 끼 분량 딱.",
+    "images": [],
+    "helpful": 16,
+    "verified": true
+  },
+  {
+    "id": "r45",
+    "productId": "sf5",
+    "author": "류*나",
+    "rating": 4,
+    "date": "2026-04-23",
+    "title": "한쪽 살 색이 조금 어두움",
+    "content": "대부분은 좋았는데 한쪽만 색이 살짝 어두웠어요. 먹어보니 맛은 괜찮았습니다.",
+    "images": [],
+    "helpful": 6,
+    "verified": true
+  },
+  {
+    "id": "r46",
+    "productId": "dr1",
+    "author": "황*영",
+    "rating": 5,
+    "date": "2026-05-12",
+    "title": "멸치볶음 바삭해요",
+    "content": "신안 멸치인지 모르겠는데 고소하고 바삭해요. 밥도둑 맞습니다. 500g 통이 커서 오래 먹을 듯.",
+    "images": [
+      "https://images.unsplash.com/photo-1559056199-641a0ac8b55c?w=600&q=80"
+    ],
+    "helpful": 14,
+    "verified": true
+  },
+  {
+    "id": "r47",
+    "productId": "dr1",
+    "author": "문*결",
+    "rating": 5,
+    "date": "2026-04-30",
+    "title": "도시락 반찬용",
+    "content": "아이 도시락에 조금씩 넣어주는데 질리지 않게 잘 먹어요. 짜지도 않아서 좋아요.",
+    "images": [],
+    "helpful": 9,
+    "verified": true
+  },
+  {
+    "id": "r48",
+    "productId": "dr1",
+    "author": "신*아",
+    "rating": 4,
+    "date": "2026-04-15",
+    "title": "조금 짠 편",
+    "content": "맛은 좋은데 저는 조금 짠 편이에요. 밥이랑 같이 먹으면 괜찮았습니다.",
+    "images": [],
+    "helpful": 5,
+    "verified": true
+  },
+  {
+    "id": "r49",
+    "productId": "dr2",
+    "author": "권*훈",
+    "rating": 5,
+    "date": "2026-05-18",
+    "title": "건오징어 쫄깃",
+    "content": "캠핑 가서 숯불에 구웠는데 향이 미쳤어요. 5마리라 넉넉하고 두께도 고릅니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1559056199-641a0ac8b55c?w=600&q=80"
+    ],
+    "helpful": 19,
+    "verified": true
+  },
+  {
+    "id": "r50",
+    "productId": "dr2",
+    "author": "남*경",
+    "rating": 5,
+    "date": "2026-05-09",
+    "title": "안주로 최고",
+    "content": "맥주랑 먹었는데 포항 건오징어 맛 맞는 것 같아요. 너무 딱딱하지 않아 씹기 좋아요.",
+    "images": [],
+    "helpful": 12,
+    "verified": true
+  },
+  {
+    "id": "r51",
+    "productId": "dr2",
+    "author": "김*연",
+    "rating": 4,
+    "date": "2026-04-26",
+    "title": "한 마리 크기 작음",
+    "content": "대부분 만족인데 한 마리만 유난히 작았어요. 나머지는 다 좋았습니다.",
+    "images": [],
+    "helpful": 6,
+    "verified": true
+  },
+  {
+    "id": "r52",
+    "productId": "dr3",
+    "author": "박*준",
+    "rating": 5,
+    "date": "2026-05-14",
+    "title": "국물이 진해져요",
+    "content": "된장찌개에 넣었더니 국물 맛이 확 살아났어요. 500g이라 여러 번 끓이기 좋습니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1559056199-641a0ac8b55c?w=600&q=80"
+    ],
+    "helpful": 11,
+    "verified": true
+  },
+  {
+    "id": "r53",
+    "productId": "dr3",
+    "author": "이*희",
+    "rating": 5,
+    "date": "2026-05-03",
+    "title": "미역국에도 넣어봤어요",
+    "content": "다시마 향이 좋아서 미역국에도 넣었는데 시원해요. 속초 산지라 믿고 삽니다.",
+    "images": [],
+    "helpful": 8,
+    "verified": true
+  },
+  {
+    "id": "r54",
+    "productId": "dr3",
+    "author": "최*아",
+    "rating": 5,
+    "date": "2026-04-18",
+    "title": "가격 대비 양 많음",
+    "content": "마트보다 저렴하고 양도 많아요. 통에 담겨 와서 보관도 편합니다.",
+    "images": [],
+    "helpful": 7,
+    "verified": true
+  },
+  {
+    "id": "r55",
+    "productId": "dr4",
+    "author": "정*우",
+    "rating": 5,
+    "date": "2026-05-16",
+    "title": "미역국 끓이기 좋아요",
+    "content": "진도 미역이라 그런지 불리면 두께가 좋아요. 미역국 끓였는데 식구들이 다 맛있다고 해요.",
+    "images": [
+      "https://images.unsplash.com/photo-1559056199-641a0ac8b55c?w=600&q=80"
+    ],
+    "helpful": 13,
+    "verified": true
+  },
+  {
+    "id": "r56",
+    "productId": "dr4",
+    "author": "한*지",
+    "rating": 4,
+    "date": "2026-05-05",
+    "title": "일부 조각이 잘게 부서짐",
+    "content": "포장은 괜찮았는데 밑에 조각 몇 개는 잘게 부서져 있었어요. 국에는 문제없음.",
+    "images": [],
+    "helpful": 5,
+    "verified": true
+  },
+  {
+    "id": "r57",
+    "productId": "dr4",
+    "author": "윤*석",
+    "rating": 5,
+    "date": "2026-04-22",
+    "title": "200g이 적당해요",
+    "content": "가족 네 명 미역국 한 번 끓이기에 딱이에요. 향도 좋고 깨끗해 보입니다.",
+    "images": [],
+    "helpful": 6,
+    "verified": true
+  },
+  {
+    "id": "r58",
+    "productId": "dr5",
+    "author": "조*민",
+    "rating": 5,
+    "date": "2026-05-11",
+    "title": "떡국에 넣었어요",
+    "content": "건새우 육수 내서 떡국 끓였는데 국물이 진해요. 고소한 냄새가 좋습니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1559056199-641a0ac8b55c?w=600&q=80"
+    ],
+    "helpful": 15,
+    "verified": true
+  },
+  {
+    "id": "r59",
+    "productId": "dr5",
+    "author": "강*현",
+    "rating": 5,
+    "date": "2026-04-29",
+    "title": "볶음밥 토핑",
+    "content": "볶음밥에 송송 썰어 넣었더니 맛이 확 살아났어요. 300g이라 여러 번 쓸 수 있어요.",
+    "images": [],
+    "helpful": 10,
+    "verified": true
+  },
+  {
+    "id": "r60",
+    "productId": "dr5",
+    "author": "서*영",
+    "rating": 4,
+    "date": "2026-04-14",
+    "title": "머리 큰 것도 있음",
+    "content": "대부분 좋은데 머리 큰 새우도 섞여 있어서 손질 조금 했어요. 맛은 만족.",
+    "images": [],
+    "helpful": 4,
+    "verified": true
+  },
+  {
+    "id": "r61",
+    "productId": "mt1",
+    "author": "오*진",
+    "rating": 5,
+    "date": "2026-05-20",
+    "title": "특별한 날 구이",
+    "content": "결혼기념일이라 주문했는데 마블링 진짜 예뻐요. 집에서 구워도 고깃집 맛 났습니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1603048588665-791a8bf8bbda?w=600&q=80"
+    ],
+    "helpful": 31,
+    "verified": true
+  },
+  {
+    "id": "r62",
+    "productId": "mt1",
+    "author": "임*수",
+    "rating": 5,
+    "date": "2026-05-12",
+    "title": "냉장 포장 완벽",
+    "content": "아이스팩 두껍게 와서 고기 색도 선홍빛 그대로예요. 300g이라 두 사람이 먹기 딱.",
+    "images": [],
+    "helpful": 22,
+    "verified": true
+  },
+  {
+    "id": "r63",
+    "productId": "mt1",
+    "author": "배*린",
+    "rating": 4,
+    "date": "2026-04-28",
+    "title": "가격은 비싸지만 맛은 인정",
+    "content": "한우 값이니까요. 맛은 확실히 다르고 부드러워요. 가끔 특별한 날에만 살 듯.",
+    "images": [],
+    "helpful": 14,
+    "verified": true
+  },
+  {
+    "id": "r64",
+    "productId": "mt2",
+    "author": "송*호",
+    "rating": 5,
+    "date": "2026-05-17",
+    "title": "삼겹살 파티",
+    "content": "600g이라 네 명이 먹기 충분했어요. 기름기 적당하고 냄새 없습니다. 재주문 예정.",
+    "images": [
+      "https://images.unsplash.com/photo-1603048588665-791a8bf8bbda?w=600&q=80"
+    ],
+    "helpful": 18,
+    "verified": true
+  },
+  {
+    "id": "r65",
+    "productId": "mt2",
+    "author": "류*나",
+    "rating": 5,
+    "date": "2026-05-08",
+    "title": "가성비 좋아요",
+    "content": "마트 삼겹살보다 싸고 두께도 좋아요. 집에서 구워 먹었는데 만족합니다.",
+    "images": [],
+    "helpful": 12,
+    "verified": true
+  },
+  {
+    "id": "r66",
+    "productId": "mt2",
+    "author": "황*영",
+    "rating": 4,
+    "date": "2026-04-25",
+    "title": "한 점 살짝 변색",
+    "content": "대부분 좋았는데 한 점만 살짝 변색된 게 있었어요. 나머지는 문제없이 구웠습니다.",
+    "images": [],
+    "helpful": 6,
+    "verified": true
+  },
+  {
+    "id": "r67",
+    "productId": "mt3",
+    "author": "문*결",
+    "rating": 5,
+    "date": "2026-05-15",
+    "title": "다이어트 중인데 든든",
+    "content": "무항생제라 믿고 먹어요. 에어프라이어에 구워 샐러드랑 먹었는데 포만감 좋습니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1603048588665-791a8bf8bbda?w=600&q=80"
+    ],
+    "helpful": 16,
+    "verified": true
+  },
+  {
+    "id": "r68",
+    "productId": "mt3",
+    "author": "신*아",
+    "rating": 5,
+    "date": "2026-05-06",
+    "title": "1kg이 알차요",
+    "content": "냉동실에 나눠 담아뒀어요. 한 끼 150g씩 먹으니 일주일은 거뜬해요.",
+    "images": [],
+    "helpful": 11,
+    "verified": true
+  },
+  {
+    "id": "r69",
+    "productId": "mt3",
+    "author": "권*훈",
+    "rating": 4,
+    "date": "2026-04-21",
+    "title": "조금 질긴 부분 있음",
+    "content": "대부분 부드러운데 가끔 질긴 조각이 있어요. 가격 생각하면 만족합니다.",
+    "images": [],
+    "helpful": 7,
+    "verified": true
+  },
+  {
+    "id": "r70",
+    "productId": "mt4",
+    "author": "남*경",
+    "rating": 5,
+    "date": "2026-05-19",
+    "title": "노른자 색 진해요",
+    "content": "유정란이라 그런지 노른자가 진한 주황색이에요. 계란찜 했더니 고소하고 맛있어요.",
+    "images": [
+      "https://images.unsplash.com/photo-1603048588665-791a8bf8bbda?w=600&q=80"
+    ],
+    "helpful": 20,
+    "verified": true
+  },
+  {
+    "id": "r71",
+    "productId": "mt4",
+    "author": "김*연",
+    "rating": 5,
+    "date": "2026-05-10",
+    "title": "30구 통 든든",
+    "content": "깨진 알 하나 없이 왔어요. 아이 간식으로 삶은 계란 만들어 냉장고에 쟁여둡니다.",
+    "images": [],
+    "helpful": 14,
+    "verified": true
+  },
+  {
+    "id": "r72",
+    "productId": "mt4",
+    "author": "박*준",
+    "rating": 5,
+    "date": "2026-04-27",
+    "title": "베이킹에도 씀",
+    "content": "카스테라 만들었는데 폼 잘 올라요. 신선하고 품질 좋습니다.",
+    "images": [],
+    "helpful": 9,
+    "verified": true
+  },
+  {
+    "id": "r73",
+    "productId": "mt5",
+    "author": "이*희",
+    "rating": 5,
+    "date": "2026-05-13",
+    "title": "훈제향 좋아요",
+    "content": "슬라이스 돼 있어서 샐러드에 바로 올렸어요. 오리 훈제 특유의 향이 은은하고 맛있습니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1603048588665-791a8bf8bbda?w=600&q=80"
+    ],
+    "helpful": 13,
+    "verified": true
+  },
+  {
+    "id": "r74",
+    "productId": "mt5",
+    "author": "최*아",
+    "rating": 4,
+    "date": "2026-05-02",
+    "title": "양이 조금 적어요",
+    "content": "맛은 만족인데 200g이라 혼자 먹기엔 순삭이에요. 다음엔 두 개 살까 봅니다.",
+    "images": [],
+    "helpful": 6,
+    "verified": true
+  },
+  {
+    "id": "r75",
+    "productId": "mt5",
+    "author": "정*우",
+    "rating": 5,
+    "date": "2026-04-19",
+    "title": "안주로 딱",
+    "content": "맥주 한잔할 때 곁들였는데 질리지 않고 고소해요. 포장도 깔끔했습니다.",
+    "images": [],
+    "helpful": 8,
+    "verified": true
+  },
+  {
+    "id": "r76",
+    "productId": "gr1",
+    "author": "조*민",
+    "rating": 5,
+    "date": "2026-05-20",
+    "title": "밥맛이 확 달라졌어요",
+    "content": "쌀눈이 살아있고 찰기가 좋아요. 유기농이라 아이 밥으로도 안심하고 10kg 샀습니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1586201375767-b5aca44feeb0?w=600&q=80"
+    ],
+    "helpful": 51,
+    "verified": true
+  },
+  {
+    "id": "r77",
+    "productId": "gr1",
+    "author": "한*지",
+    "rating": 5,
+    "date": "2026-05-14",
+    "title": "이천 쌀 맞는 맛",
+    "content": "이천 햅쌀 먹어본 사람이면 알아요. 윤기 나고 고소합니다. 진공 포장이라 벌레 걱정도 없어요.",
+    "images": [
+      "https://images.unsplash.com/photo-1536304997881-eca99e64d77e?w=600&q=80"
+    ],
+    "helpful": 38,
+    "verified": true
+  },
+  {
+    "id": "r78",
+    "productId": "gr1",
+    "author": "윤*석",
+    "rating": 5,
+    "date": "2026-05-03",
+    "title": "무료배송까지",
+    "content": "10kg인데 배송비 없어서 마트보다 총액이 싸요. 밥풀도 적게 나와서 만족합니다.",
+    "images": [],
+    "helpful": 27,
+    "verified": true
+  },
+  {
+    "id": "r79",
+    "productId": "gr2",
+    "author": "강*현",
+    "rating": 5,
+    "date": "2026-05-16",
+    "title": "떡 만들기 좋아요",
+    "content": "찹쌀이라 찰기가 좋아요. 인절미 만들었는데 쫄깃하고 잘 늘어납니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1586201375767-b5aca44feeb0?w=600&q=80"
+    ],
+    "helpful": 14,
+    "verified": true
+  },
+  {
+    "id": "r80",
+    "productId": "gr2",
+    "author": "서*영",
+    "rating": 5,
+    "date": "2026-05-07",
+    "title": "진과용으로 샀어요",
+    "content": "명절 전에 주문했는데 잡곡 빠짐없이 왔어요. 씻어서 바로 쓸 수 있었습니다.",
+    "images": [],
+    "helpful": 10,
+    "verified": true
+  },
+  {
+    "id": "r81",
+    "productId": "gr2",
+    "author": "오*진",
+    "rating": 4,
+    "date": "2026-04-24",
+    "title": "포장 봉지 한 곳 찢어짐",
+    "content": "쌀은 좋은데 배송 중 봉지가 살짝 찢어져 왔어요. 내용물은 괜찮았습니다.",
+    "images": [],
+    "helpful": 5,
+    "verified": true
+  },
+  {
+    "id": "r82",
+    "productId": "gr3",
+    "author": "임*수",
+    "rating": 5,
+    "date": "2026-05-18",
+    "title": "두부가 고소해요",
+    "content": "안동 콩으로 두부 했더니 고소함이 다르네요. 2kg이라 콩자반도 해 먹었습니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1586201375767-b5aca44feeb0?w=600&q=80"
+    ],
+    "helpful": 16,
+    "verified": true
+  },
+  {
+    "id": "r83",
+    "productId": "gr3",
+    "author": "배*린",
+    "rating": 5,
+    "date": "2026-05-09",
+    "title": "콩국수에 사용",
+    "content": "여름에 콩국수 끓였는데 국물이 진해요. 알도 크고 깨끗해 보입니다.",
+    "images": [],
+    "helpful": 11,
+    "verified": true
+  },
+  {
+    "id": "r84",
+    "productId": "gr3",
+    "author": "송*호",
+    "rating": 4,
+    "date": "2026-04-26",
+    "title": "불린 시간이 좀 걸림",
+    "content": "맛은 좋은데 불리는 시간이 길어요. 미리 불려두면 문제없습니다.",
+    "images": [],
+    "helpful": 6,
+    "verified": true
+  },
+  {
+    "id": "r85",
+    "productId": "gr4",
+    "author": "류*나",
+    "rating": 5,
+    "date": "2026-05-12",
+    "title": "보리밥 고소",
+    "content": "보리밥 지었는데 고소하고 소화도 잘 될 것 같아요. 5kg 가격 괜찮습니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1586201375767-b5aca44feeb0?w=600&q=80"
+    ],
+    "helpful": 12,
+    "verified": true
+  },
+  {
+    "id": "r86",
+    "productId": "gr4",
+    "author": "황*영",
+    "rating": 5,
+    "date": "2026-04-30",
+    "title": "건강식단용",
+    "content": "백미랑 반반 섞어 지었는데 향도 좋고 씹는 맛도 살아있어요.",
+    "images": [],
+    "helpful": 8,
+    "verified": true
+  },
+  {
+    "id": "r87",
+    "productId": "gr4",
+    "author": "문*결",
+    "rating": 4,
+    "date": "2026-04-17",
+    "title": "일부 검은 알 섞임",
+    "content": "보리 특성인지 검은 알이 조금 섞여 있었는데 먹는 데 문제는 없었어요.",
+    "images": [],
+    "helpful": 4,
+    "verified": true
+  },
+  {
+    "id": "r88",
+    "productId": "gr5",
+    "author": "신*아",
+    "rating": 5,
+    "date": "2026-05-17",
+    "title": "잡곡밥 매일",
+    "content": "15곡 믹스라 영양 챙기기 좋아요. 불리지 않고 바로 밥 지었는데 잘 익었습니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1586201375767-b5aca44feeb0?w=600&q=80"
+    ],
+    "helpful": 15,
+    "verified": true
+  },
+  {
+    "id": "r89",
+    "productId": "gr5",
+    "author": "권*훈",
+    "rating": 5,
+    "date": "2026-05-08",
+    "title": "아이 밥에 섞어줌",
+    "content": "아이가 잡곡밥도 잘 먹어요. 고소하고 씹는 맛이 좋다고 하네요.",
+    "images": [],
+    "helpful": 10,
+    "verified": true
+  },
+  {
+    "id": "r90",
+    "productId": "gr5",
+    "author": "남*경",
+    "rating": 5,
+    "date": "2026-04-22",
+    "title": "유기농이라 안심",
+    "content": "성분 보니 국내산 위주라 믿고 삽니다. 2kg 포장이라 한 달 정도 먹을 듯.",
+    "images": [],
+    "helpful": 7,
+    "verified": true
+  },
+  {
+    "id": "r91",
+    "productId": "pr1",
+    "author": "김*연",
+    "rating": 5,
+    "date": "2026-05-15",
+    "title": "된장찌개 맛이 깊어요",
+    "content": "담양 된장인지 모르겠는데 2년 숙성 맛이 나요. 찌개 끓였더니 식구들이 반찬 안 찾아요.",
+    "images": [
+      "https://images.unsplash.com/photo-1626804475297-41608ea09b8d?w=600&q=80"
+    ],
+    "helpful": 17,
+    "verified": true
+  },
+  {
+    "id": "r92",
+    "productId": "pr1",
+    "author": "박*준",
+    "rating": 5,
+    "date": "2026-05-06",
+    "title": "쌈장으로도 씀",
+    "content": "된장에 고추장 섞어 쌈장 만들었는데 맛있어요. 2kg 통이라 오래 쓸 수 있어요.",
+    "images": [],
+    "helpful": 11,
+    "verified": true
+  },
+  {
+    "id": "r93",
+    "productId": "pr1",
+    "author": "이*희",
+    "rating": 4,
+    "date": "2026-04-25",
+    "title": "짠 편이라 조금만",
+    "content": "맛은 좋은데 저희 입맛엔 조금 짜서 양 조절해서 씁니다. 품질은 만족.",
+    "images": [],
+    "helpful": 6,
+    "verified": true
+  },
+  {
+    "id": "r94",
+    "productId": "pr2",
+    "author": "최*아",
+    "rating": 5,
+    "date": "2026-05-19",
+    "title": "순창 고추장 맛",
+    "content": "매콤달콤 균형이 좋아요. 비빔밥에 넣었더니 색도 예쁘고 맛도 살아있어요.",
+    "images": [
+      "https://images.unsplash.com/photo-1626804475297-41608ea09b8d?w=600&q=80"
+    ],
+    "helpful": 19,
+    "verified": true
+  },
+  {
+    "id": "r95",
+    "productId": "pr2",
+    "author": "정*우",
+    "rating": 5,
+    "date": "2026-05-11",
+    "title": "양념의 기본",
+    "content": "1.2kg이라 된통으로 왔는데 위생적으로 포장돼 있었어요. 재구매했습니다.",
+    "images": [],
+    "helpful": 13,
+    "verified": true
+  },
+  {
+    "id": "r96",
+    "productId": "pr2",
+    "author": "한*지",
+    "rating": 5,
+    "date": "2026-04-28",
+    "title": "명품이라 그런지",
+    "content": "마트 고추장이랑 확실히 다르네요. 고기 양념에 넣어도 잘 어울립니다.",
+    "images": [],
+    "helpful": 9,
+    "verified": true
+  },
+  {
+    "id": "r97",
+    "productId": "pr3",
+    "author": "윤*석",
+    "rating": 5,
+    "date": "2026-05-18",
+    "title": "김치 아삭해요",
+    "content": "포기김치인데 아삭하고 숙성도 적당해요. 3kg이라 냉장고 한 칸 차지하지만 든든합니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1626804475297-41608ea09b8d?w=600&q=80"
+    ],
+    "helpful": 24,
+    "verified": true
+  },
+  {
+    "id": "r98",
+    "productId": "pr3",
+    "author": "조*민",
+    "rating": 5,
+    "date": "2026-05-09",
+    "title": "국물도 맛있음",
+    "content": "김치국 끓였는데 국물이 시원해요. 매운 정도도 저희 입맛에 딱이었어요.",
+    "images": [
+      "https://images.unsplash.com/photo-1626804475297-41608ea09b8d?w=600&q=80"
+    ],
+    "helpful": 16,
+    "verified": true
+  },
+  {
+    "id": "r99",
+    "productId": "pr3",
+    "author": "강*현",
+    "rating": 4,
+    "date": "2026-04-26",
+    "title": "배송 중 포장 살짝 눌림",
+    "content": "맛은 만족인데 박스가 살짝 눌려 왔어요. 김치 속은 괜찮았습니다.",
+    "images": [],
+    "helpful": 8,
+    "verified": true
+  },
+  {
+    "id": "r100",
+    "productId": "pr4",
+    "author": "서*영",
+    "rating": 5,
+    "date": "2026-05-14",
+    "title": "들기름 향 진해요",
+    "content": "나물에 뿌렸더니 고소함이 확 살아났어요. 유기농이라 믿고 씁니다.",
+    "images": [
+      "https://images.unsplash.com/photo-1626804475297-41608ea09b8d?w=600&q=80"
+    ],
+    "helpful": 14,
+    "verified": true
+  },
+  {
+    "id": "r101",
+    "productId": "pr4",
+    "author": "오*진",
+    "rating": 5,
+    "date": "2026-05-05",
+    "title": "비빔밥에 한 숟가락",
+    "content": "참기름이랑 섞어 비빔밥 했는데 맛있어요. 300ml라 조금 아쉽지만 품질은 최고.",
+    "images": [],
+    "helpful": 9,
+    "verified": true
+  },
+  {
+    "id": "r102",
+    "productId": "pr4",
+    "author": "임*수",
+    "rating": 4,
+    "date": "2026-04-20",
+    "title": "가격은 있지만 만족",
+    "content": "조금 비싼 편이지만 향이 좋아서 계속 쓸 것 같아요.",
+    "images": [],
+    "helpful": 5,
+    "verified": true
+  },
+  {
+    "id": "r103",
+    "productId": "pr5",
+    "author": "배*린",
+    "rating": 5,
+    "date": "2026-05-16",
+    "title": "딸기알이 많아요",
+    "content": "빵에 발랐는데 딸기 과육이 많아요. 너무 달지 않고 자연스러운 단맛.",
+    "images": [
+      "https://images.unsplash.com/photo-1626804475297-41608ea09b8d?w=600&q=80"
+    ],
+    "helpful": 12,
+    "verified": true
+  },
+  {
+    "id": "r104",
+    "productId": "pr5",
+    "author": "송*호",
+    "rating": 5,
+    "date": "2026-05-07",
+    "title": "요거트 토핑",
+    "content": "플레인 요거트에 올려 먹었더니 아이가 좋아해요. 500g 통이라 한 달은 거뜬.",
+    "images": [],
+    "helpful": 8,
+    "verified": true
+  },
+  {
+    "id": "r105",
+    "productId": "pr5",
+    "author": "류*나",
+    "rating": 4,
+    "date": "2026-04-18",
+    "title": "조금 묽은 편",
+    "content": "맛은 좋은데 제 스타일은 조금 더 걸쭉했으면 해요. 그래도 재구매 의사 있어요.",
+    "images": [],
+    "helpful": 4,
+    "verified": true
+  }
+];
