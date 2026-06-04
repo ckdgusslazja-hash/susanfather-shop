@@ -1591,11 +1591,6 @@ function renderHome() {
       )}
       ${renderTimeAttackSection()}
       ${renderHomeScrollSection('🛍️ 이 상품 놓치지 마세요!', getAllProducts(), "selectCategory('all')")}
-      ${renderHomeScrollSection(
-        '🔥 고민하는 사이 품절! 산지 마감특가',
-        filterProductsByCategory('sale'),
-        "selectCategory('sale')"
-      )}
       `
           : `
       ${renderHomeScrollSection(

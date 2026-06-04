@@ -1,67 +1,5 @@
 [
   {
-    "id": "fr5",
-    "name": "필리핀 망고",
-    "unit": "2입",
-    "badge": "신선",
-    "emoji": "🥭",
-    "price": 18900,
-    "stock": 35,
-    "origin": "수입 필리핀",
-    "rating": 4.3,
-    "details": [
-      "<br>"
-    ],
-    "options": [
-      {
-        "id": "fr5-o1",
-        "label": "0",
-        "price": 5100,
-        "originalPrice": 24000
-      },
-      {
-        "id": "fr5-o2",
-        "label": "12000",
-        "price": 28100,
-        "originalPrice": 47000
-      }
-    ],
-    "organic": false,
-    "reviews": 3,
-    "category": "fruit",
-    "gradient": "linear-gradient(135deg, #ffd43b, #fab005)",
-    "couponNote": "",
-    "detailHtml": "<p><br></p>",
-    "useOptions": true,
-    "adminImages": [
-      {
-        "id": "fr5-a1",
-        "url": "/images/products/fr5.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "부드럽고 달콤한 노란 망고. 아이 간식으로 좋아요.",
-    "localDirect": false,
-    "optionLabel": "용량",
-    "returnGuide": "",
-    "categoryPath": [
-      "식품",
-      "제철과일",
-      "필리핀 망고"
-    ],
-    "deliveryDays": 3,
-    "detailBlocks": [
-      {
-        "text": "<br>",
-        "type": "text"
-      }
-    ],
-    "freeShipping": true,
-    "recentBuyers": 80,
-    "originalPrice": 24000,
-    "shippingGuide": ""
-  },
-  {
     "id": "vg1",
     "name": "유기농 대파",
     "unit": "1kg",
@@ -89,6 +27,7 @@
     "category": "veg",
     "gradient": "linear-gradient(135deg, #8ce99a, #37b24d)",
     "couponNote": "",
+    "timeAttack": false,
     "adminImages": [
       {
         "id": "vg1-a1",
@@ -128,6 +67,7 @@
     "category": "fruit",
     "gradient": "linear-gradient(135deg, #b197fc, #7950f2)",
     "couponNote": "",
+    "timeAttack": true,
     "useOptions": false,
     "adminImages": [
       {
@@ -158,53 +98,8 @@
     "freeShipping": false,
     "recentBuyers": 80,
     "originalPrice": 32000,
-    "shippingGuide": ""
-  },
-  {
-    "id": "vg4",
-    "name": "국산 애호박",
-    "unit": "2개",
-    "badge": "신선",
-    "emoji": "🥒",
-    "price": 5900,
-    "stock": 35,
-    "origin": "강원 평창",
-    "rating": 4.3,
-    "details": [
-      "산지 직송",
-      "신선 포장 배송"
-    ],
-    "options": [
-      {
-        "id": "vg4-o1",
-        "label": "2개",
-        "price": 5900,
-        "originalPrice": 7500
-      }
-    ],
-    "organic": false,
-    "reviews": 3,
-    "category": "veg",
-    "gradient": "linear-gradient(135deg, #a9e34b, #74b816)",
-    "couponNote": "",
-    "adminImages": [
-      {
-        "id": "vg4-a1",
-        "url": "/images/products/vg4.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "쫄깃한 국산 애호박. 찌개·볶음에 활용하세요.",
-    "localDirect": false,
-    "optionLabel": "용량",
-    "categoryPath": [
-      "식품",
-      "신선채소",
-      "국산 애호박"
-    ],
-    "freeShipping": false,
-    "recentBuyers": 80,
-    "originalPrice": 7500
+    "shippingGuide": "",
+    "timeAttackOrder": 4
   },
   {
     "id": "vg5",
@@ -233,6 +128,7 @@
     "category": "veg",
     "gradient": "linear-gradient(135deg, #dee2e6, #868e96)",
     "couponNote": "",
+    "timeAttack": false,
     "adminImages": [
       {
         "id": "vg5-a1",
@@ -251,52 +147,6 @@
     "freeShipping": false,
     "recentBuyers": 80,
     "originalPrice": 9900
-  },
-  {
-    "id": "sf2",
-    "name": "통영 생굴",
-    "unit": "1kg",
-    "badge": "신선",
-    "emoji": "🦪",
-    "price": 16900,
-    "stock": 35,
-    "origin": "경남 통영",
-    "rating": 5,
-    "details": [
-      "산지 직송",
-      "신선 포장 배송"
-    ],
-    "options": [
-      {
-        "id": "sf2-o1",
-        "label": "1kg",
-        "price": 16900,
-        "originalPrice": 21000
-      }
-    ],
-    "organic": false,
-    "reviews": 3,
-    "category": "seafood",
-    "gradient": "linear-gradient(135deg, #adb5bd, #495057)",
-    "couponNote": "",
-    "adminImages": [
-      {
-        "id": "sf2-a1",
-        "url": "/images/products/sf2.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "통영 바다의 싱싱한 생굴. 비빔밥·국에 제철 맛.",
-    "localDirect": true,
-    "optionLabel": "용량",
-    "categoryPath": [
-      "식품",
-      "수산물",
-      "통영 생굴"
-    ],
-    "freeShipping": false,
-    "recentBuyers": 80,
-    "originalPrice": 21000
   },
   {
     "id": "sf3",
@@ -325,6 +175,7 @@
     "category": "seafood",
     "gradient": "linear-gradient(135deg, #339af0, #1864ab)",
     "couponNote": "",
+    "timeAttack": false,
     "adminImages": [
       {
         "id": "sf3-a1",
@@ -371,6 +222,7 @@
     "category": "seafood",
     "gradient": "linear-gradient(135deg, #ff8787, #e03131)",
     "couponNote": "",
+    "timeAttack": false,
     "adminImages": [
       {
         "id": "sf4-a1",
@@ -389,6 +241,53 @@
     "freeShipping": false,
     "recentBuyers": 80,
     "originalPrice": 17500
+  },
+  {
+    "id": "sf2",
+    "name": "통영 생굴",
+    "unit": "1kg",
+    "badge": "신선",
+    "emoji": "🦪",
+    "price": 16900,
+    "stock": 35,
+    "origin": "경남 통영",
+    "rating": 5,
+    "details": [
+      "산지 직송",
+      "신선 포장 배송"
+    ],
+    "options": [
+      {
+        "id": "sf2-o1",
+        "label": "1kg",
+        "price": 16900,
+        "originalPrice": 21000
+      }
+    ],
+    "organic": false,
+    "reviews": 3,
+    "category": "seafood",
+    "gradient": "linear-gradient(135deg, #adb5bd, #495057)",
+    "couponNote": "",
+    "timeAttack": false,
+    "adminImages": [
+      {
+        "id": "sf2-a1",
+        "url": "/images/products/sf2.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "통영 바다의 싱싱한 생굴. 비빔밥·국에 제철 맛.",
+    "localDirect": true,
+    "optionLabel": "용량",
+    "categoryPath": [
+      "식품",
+      "수산물",
+      "통영 생굴"
+    ],
+    "freeShipping": false,
+    "recentBuyers": 80,
+    "originalPrice": 21000
   },
   {
     "id": "sf5",
@@ -417,6 +316,7 @@
     "category": "seafood",
     "gradient": "linear-gradient(135deg, #ff6b6b, #c92a2a)",
     "couponNote": "",
+    "timeAttack": false,
     "adminImages": [
       {
         "id": "sf5-a1",
@@ -437,14 +337,14 @@
     "originalPrice": 28000
   },
   {
-    "id": "dr2",
-    "name": "건오징어",
-    "unit": "5마리",
+    "id": "vg4",
+    "name": "국산 애호박",
+    "unit": "2개",
     "badge": "신선",
-    "emoji": "🦑",
-    "price": 18900,
+    "emoji": "🥒",
+    "price": 5900,
     "stock": 35,
-    "origin": "경북 포항",
+    "origin": "강원 평창",
     "rating": 4.3,
     "details": [
       "산지 직송",
@@ -452,127 +352,85 @@
     ],
     "options": [
       {
-        "id": "dr2-o1",
-        "label": "5마리",
-        "price": 18900,
-        "originalPrice": 24000
+        "id": "vg4-o1",
+        "label": "2개",
+        "price": 5900,
+        "originalPrice": 7500
       }
     ],
     "organic": false,
     "reviews": 3,
-    "category": "dried",
-    "gradient": "linear-gradient(135deg, #e599f7, #9c36b5)",
+    "category": "veg",
+    "gradient": "linear-gradient(135deg, #a9e34b, #74b816)",
     "couponNote": "",
+    "timeAttack": false,
     "adminImages": [
       {
-        "id": "dr2-a1",
-        "url": "/images/products/dr2.png",
+        "id": "vg4-a1",
+        "url": "/images/products/vg4.png",
         "label": "대표 상품컷"
       }
     ],
-    "description": "쫄깃한 건오징어. 안주·캠핑용으로 좋아요.",
-    "localDirect": true,
-    "optionLabel": "용량",
-    "categoryPath": [
-      "식품",
-      "건어물",
-      "건오징어"
-    ],
-    "freeShipping": false,
-    "recentBuyers": 80,
-    "originalPrice": 24000
-  },
-  {
-    "id": "dr4",
-    "name": "말린 미역",
-    "unit": "200g",
-    "badge": "신선",
-    "emoji": "🌊",
-    "price": 7900,
-    "stock": 35,
-    "origin": "전남 진도",
-    "rating": 4.3,
-    "details": [
-      "산지 직송",
-      "신선 포장 배송"
-    ],
-    "options": [
-      {
-        "id": "dr4-o1",
-        "label": "200g",
-        "price": 7900,
-        "originalPrice": 9900
-      }
-    ],
-    "organic": false,
-    "reviews": 3,
-    "category": "dried",
-    "gradient": "linear-gradient(135deg, #3bc9db, #1098ad)",
-    "couponNote": "",
-    "adminImages": [
-      {
-        "id": "dr4-a1",
-        "url": "/images/products/dr4.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "진도 무척 미역. 미역국·salad용.",
-    "localDirect": true,
-    "optionLabel": "용량",
-    "categoryPath": [
-      "식품",
-      "건어물",
-      "말린 미역"
-    ],
-    "freeShipping": false,
-    "recentBuyers": 80,
-    "originalPrice": 9900
-  },
-  {
-    "id": "dr5",
-    "name": "건새우",
-    "unit": "300g",
-    "badge": "신선",
-    "emoji": "🦐",
-    "price": 14900,
-    "stock": 35,
-    "origin": "인천",
-    "rating": 5,
-    "details": [
-      "산지 직송",
-      "신선 포장 배송"
-    ],
-    "options": [
-      {
-        "id": "dr5-o1",
-        "label": "300g",
-        "price": 14900,
-        "originalPrice": 18500
-      }
-    ],
-    "organic": false,
-    "reviews": 3,
-    "category": "dried",
-    "gradient": "linear-gradient(135deg, #ffa8a8, #f03e3e)",
-    "couponNote": "",
-    "adminImages": [
-      {
-        "id": "dr5-a1",
-        "url": "/images/products/dr5.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "고소한 건새우. 떡국·볶음밥 토핑.",
+    "description": "쫄깃한 국산 애호박. 찌개·볶음에 활용하세요.",
     "localDirect": false,
     "optionLabel": "용량",
     "categoryPath": [
       "식품",
-      "건어물",
-      "건새우"
+      "신선채소",
+      "국산 애호박"
     ],
     "freeShipping": false,
     "recentBuyers": 80,
-    "originalPrice": 18500
+    "originalPrice": 7500
+  },
+  {
+    "id": "dr3",
+    "name": "건다시마",
+    "unit": "500g",
+    "badge": "신선",
+    "emoji": "🌿",
+    "price": 9900,
+    "stock": 35,
+    "origin": "강원 속초",
+    "rating": 5,
+    "details": [
+      "<br>"
+    ],
+    "options": [],
+    "organic": false,
+    "reviews": 3,
+    "category": "dried",
+    "gradient": "linear-gradient(135deg, #2b8a3e, #087f5b)",
+    "couponNote": "",
+    "detailHtml": "<p><br></p>",
+    "timeAttack": false,
+    "useOptions": false,
+    "adminImages": [
+      {
+        "id": "dr3-a1",
+        "url": "/images/products/dr3.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "국물 내기 좋은 건다시마. 된장찌개에 필수.",
+    "localDirect": false,
+    "optionLabel": "용량",
+    "returnGuide": "",
+    "categoryPath": [
+      "식품",
+      "건어물",
+      "건다시마"
+    ],
+    "detailBlocks": [
+      {
+        "text": "<br>",
+        "type": "text"
+      }
+    ],
+    "freeShipping": false,
+    "recentBuyers": 80,
+    "originalPrice": 12500,
+    "shippingGuide": ""
   },
   {
     "id": "mt1",
@@ -602,6 +460,7 @@
     "category": "meat",
     "gradient": "linear-gradient(135deg, #ffc9c9, #e03131)",
     "couponNote": "",
+    "timeAttack": true,
     "adminImages": [
       {
         "id": "mt1-a1",
@@ -619,7 +478,149 @@
     ],
     "freeShipping": false,
     "recentBuyers": 80,
-    "originalPrice": 58000
+    "originalPrice": 58000,
+    "timeAttackOrder": 2
+  },
+  {
+    "id": "dr2",
+    "name": "건오징어",
+    "unit": "5마리",
+    "badge": "신선",
+    "emoji": "🦑",
+    "price": 18900,
+    "stock": 35,
+    "origin": "경북 포항",
+    "rating": 4.3,
+    "details": [
+      "산지 직송",
+      "신선 포장 배송"
+    ],
+    "options": [
+      {
+        "id": "dr2-o1",
+        "label": "5마리",
+        "price": 18900,
+        "originalPrice": 24000
+      }
+    ],
+    "organic": false,
+    "reviews": 3,
+    "category": "dried",
+    "gradient": "linear-gradient(135deg, #e599f7, #9c36b5)",
+    "couponNote": "",
+    "timeAttack": false,
+    "adminImages": [
+      {
+        "id": "dr2-a1",
+        "url": "/images/products/dr2.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "쫄깃한 건오징어. 안주·캠핑용으로 좋아요.",
+    "localDirect": true,
+    "optionLabel": "용량",
+    "categoryPath": [
+      "식품",
+      "건어물",
+      "건오징어"
+    ],
+    "freeShipping": false,
+    "recentBuyers": 80,
+    "originalPrice": 24000
+  },
+  {
+    "id": "dr5",
+    "name": "건새우",
+    "unit": "300g",
+    "badge": "신선",
+    "emoji": "🦐",
+    "price": 14900,
+    "stock": 35,
+    "origin": "인천",
+    "rating": 5,
+    "details": [
+      "산지 직송",
+      "신선 포장 배송"
+    ],
+    "options": [
+      {
+        "id": "dr5-o1",
+        "label": "300g",
+        "price": 14900,
+        "originalPrice": 18500
+      }
+    ],
+    "organic": false,
+    "reviews": 3,
+    "category": "dried",
+    "gradient": "linear-gradient(135deg, #ffa8a8, #f03e3e)",
+    "couponNote": "",
+    "timeAttack": false,
+    "adminImages": [
+      {
+        "id": "dr5-a1",
+        "url": "/images/products/dr5.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "고소한 건새우. 떡국·볶음밥 토핑.",
+    "localDirect": false,
+    "optionLabel": "용량",
+    "categoryPath": [
+      "식품",
+      "건어물",
+      "건새우"
+    ],
+    "freeShipping": false,
+    "recentBuyers": 80,
+    "originalPrice": 18500
+  },
+  {
+    "id": "dr4",
+    "name": "말린 미역",
+    "unit": "200g",
+    "badge": "신선",
+    "emoji": "🌊",
+    "price": 7900,
+    "stock": 35,
+    "origin": "전남 진도",
+    "rating": 4.3,
+    "details": [
+      "산지 직송",
+      "신선 포장 배송"
+    ],
+    "options": [
+      {
+        "id": "dr4-o1",
+        "label": "200g",
+        "price": 7900,
+        "originalPrice": 9900
+      }
+    ],
+    "organic": false,
+    "reviews": 3,
+    "category": "dried",
+    "gradient": "linear-gradient(135deg, #3bc9db, #1098ad)",
+    "couponNote": "",
+    "timeAttack": false,
+    "adminImages": [
+      {
+        "id": "dr4-a1",
+        "url": "/images/products/dr4.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "진도 무척 미역. 미역국·salad용.",
+    "localDirect": true,
+    "optionLabel": "용량",
+    "categoryPath": [
+      "식품",
+      "건어물",
+      "말린 미역"
+    ],
+    "freeShipping": false,
+    "recentBuyers": 80,
+    "originalPrice": 9900
   },
   {
     "id": "mt2",
@@ -648,6 +649,7 @@
     "category": "meat",
     "gradient": "linear-gradient(135deg, #ffc9c9, #f06595)",
     "couponNote": "",
+    "timeAttack": false,
     "adminImages": [
       {
         "id": "mt2-a1",
@@ -695,6 +697,7 @@
     "category": "meat",
     "gradient": "linear-gradient(135deg, #ffe066, #fab005)",
     "couponNote": "",
+    "timeAttack": false,
     "adminImages": [
       {
         "id": "mt3-a1",
@@ -713,100 +716,6 @@
     "freeShipping": false,
     "recentBuyers": 80,
     "originalPrice": 14900
-  },
-  {
-    "id": "dr3",
-    "name": "건다시마",
-    "unit": "500g",
-    "badge": "신선",
-    "emoji": "🌿",
-    "price": 9900,
-    "stock": 35,
-    "origin": "강원 속초",
-    "rating": 5,
-    "details": [
-      "<br>"
-    ],
-    "options": [],
-    "organic": false,
-    "reviews": 3,
-    "category": "dried",
-    "gradient": "linear-gradient(135deg, #2b8a3e, #087f5b)",
-    "couponNote": "",
-    "detailHtml": "<p><br></p>",
-    "useOptions": false,
-    "adminImages": [
-      {
-        "id": "dr3-a1",
-        "url": "/images/products/dr3.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "국물 내기 좋은 건다시마. 된장찌개에 필수.",
-    "localDirect": false,
-    "optionLabel": "용량",
-    "returnGuide": "",
-    "categoryPath": [
-      "식품",
-      "건어물",
-      "건다시마"
-    ],
-    "detailBlocks": [
-      {
-        "text": "<br>",
-        "type": "text"
-      }
-    ],
-    "freeShipping": false,
-    "recentBuyers": 80,
-    "originalPrice": 12500,
-    "shippingGuide": ""
-  },
-  {
-    "id": "mt5",
-    "name": "오리 훈제 슬라이스",
-    "unit": "200g",
-    "badge": "신선",
-    "emoji": "🦆",
-    "price": 12900,
-    "stock": 35,
-    "origin": "충남",
-    "rating": 4.3,
-    "details": [
-      "산지 직송",
-      "신선 포장 배송"
-    ],
-    "options": [
-      {
-        "id": "mt5-o1",
-        "label": "200g",
-        "price": 12900,
-        "originalPrice": 16500
-      }
-    ],
-    "organic": false,
-    "reviews": 3,
-    "category": "meat",
-    "gradient": "linear-gradient(135deg, #b197fc, #7048e8)",
-    "couponNote": "",
-    "adminImages": [
-      {
-        "id": "mt5-a1",
-        "url": "/images/products/mt5.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "향긋한 훈제 오리. 샐러드·안주로 좋습니다.",
-    "localDirect": false,
-    "optionLabel": "용량",
-    "categoryPath": [
-      "식품",
-      "정육·계란",
-      "오리 훈제 슬라이스"
-    ],
-    "freeShipping": false,
-    "recentBuyers": 80,
-    "originalPrice": 16500
   },
   {
     "id": "gr2",
@@ -835,6 +744,7 @@
     "category": "grain",
     "gradient": "linear-gradient(135deg, #ffe066, #fab005)",
     "couponNote": "",
+    "timeAttack": false,
     "adminImages": [
       {
         "id": "gr2-a1",
@@ -881,6 +791,7 @@
     "category": "grain",
     "gradient": "linear-gradient(135deg, #d8f5a2, #66a80f)",
     "couponNote": "",
+    "timeAttack": false,
     "adminImages": [
       {
         "id": "gr3-a1",
@@ -899,98 +810,6 @@
     "freeShipping": false,
     "recentBuyers": 80,
     "originalPrice": 21000
-  },
-  {
-    "id": "gr4",
-    "name": "보리쌀",
-    "unit": "5kg",
-    "badge": "신선",
-    "emoji": "🌾",
-    "price": 12900,
-    "stock": 35,
-    "origin": "전남",
-    "rating": 4.3,
-    "details": [
-      "산지 직송",
-      "신선 포장 배송"
-    ],
-    "options": [
-      {
-        "id": "gr4-o1",
-        "label": "5kg",
-        "price": 12900,
-        "originalPrice": 16000
-      }
-    ],
-    "organic": false,
-    "reviews": 3,
-    "category": "grain",
-    "gradient": "linear-gradient(135deg, #e9ecef, #868e96)",
-    "couponNote": "",
-    "adminImages": [
-      {
-        "id": "gr4-a1",
-        "url": "/images/products/gr4.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "고소한 보리밥용 쌀. 건강 식단에 추천.",
-    "localDirect": false,
-    "optionLabel": "용량",
-    "categoryPath": [
-      "식품",
-      "곡물·쌀",
-      "보리쌀"
-    ],
-    "freeShipping": false,
-    "recentBuyers": 80,
-    "originalPrice": 16000
-  },
-  {
-    "id": "gr5",
-    "name": "혼합 15곡",
-    "unit": "2kg",
-    "badge": "건강",
-    "emoji": "🥣",
-    "price": 11900,
-    "stock": 35,
-    "origin": "국내산",
-    "rating": 5,
-    "details": [
-      "산지 직송",
-      "신선 포장 배송"
-    ],
-    "options": [
-      {
-        "id": "gr5-o1",
-        "label": "2kg",
-        "price": 11900,
-        "originalPrice": 15000
-      }
-    ],
-    "organic": true,
-    "reviews": 3,
-    "category": "grain",
-    "gradient": "linear-gradient(135deg, #8ce99a, #2b8a3e)",
-    "couponNote": "",
-    "adminImages": [
-      {
-        "id": "gr5-a1",
-        "url": "/images/products/gr5.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "잡곡 밥용 15곡 믹스. 영양 균형 식사.",
-    "localDirect": false,
-    "optionLabel": "용량",
-    "categoryPath": [
-      "식품",
-      "곡물·쌀",
-      "혼합 15곡"
-    ],
-    "freeShipping": false,
-    "recentBuyers": 80,
-    "originalPrice": 15000
   },
   {
     "id": "pr1",
@@ -1019,6 +838,7 @@
     "category": "processed",
     "gradient": "linear-gradient(135deg, #a68a64, #6f4e37)",
     "couponNote": "",
+    "timeAttack": false,
     "adminImages": [
       {
         "id": "pr1-a1",
@@ -1039,64 +859,145 @@
     "originalPrice": 24000
   },
   {
-    "id": "fr1",
-    "name": "제주 감귤",
-    "unit": "5kg 박스",
-    "badge": "베스트",
-    "emoji": "🍊",
-    "price": 28900,
+    "id": "gr4",
+    "name": "보리쌀",
+    "unit": "5kg",
+    "badge": "신선",
+    "emoji": "🌾",
+    "price": 12900,
     "stock": 35,
-    "origin": "제주 서귀포",
-    "rating": 4.7,
+    "origin": "전남",
+    "rating": 4.3,
     "details": [
-      "당도 12브릭스 이상",
-      "무농약 인증",
-      "당일 수확·포장",
-      "산지 직송"
+      "산지 직송",
+      "신선 포장 배송"
     ],
     "options": [
       {
-        "id": "fr1-o1",
-        "label": "3kg",
-        "price": 19900,
-        "originalPrice": 24000
-      },
-      {
-        "id": "fr1-o2",
+        "id": "gr4-o1",
         "label": "5kg",
-        "price": 28900,
-        "originalPrice": 35000
-      },
-      {
-        "id": "fr1-o3",
-        "label": "10kg",
-        "price": 49900,
-        "originalPrice": 59000
+        "price": 12900,
+        "originalPrice": 16000
       }
     ],
     "organic": false,
     "reviews": 3,
-    "category": "fruit",
-    "gradient": "linear-gradient(135deg, #ff9a56, #ff6b35)",
-    "couponNote": "첫구매 -1,000원 적용",
+    "category": "grain",
+    "gradient": "linear-gradient(135deg, #e9ecef, #868e96)",
+    "couponNote": "",
+    "timeAttack": false,
     "adminImages": [
       {
-        "id": "fr1-a1",
-        "url": "/images/products/fr1.png",
+        "id": "gr4-a1",
+        "url": "/images/products/gr4.png",
         "label": "대표 상품컷"
       }
     ],
-    "description": "제주 청정 해풍 감귤. 당도 높고 껍질이 얇아 가족과 함께 즐기기 좋습니다.",
-    "localDirect": true,
+    "description": "고소한 보리밥용 쌀. 건강 식단에 추천.",
+    "localDirect": false,
     "optionLabel": "용량",
     "categoryPath": [
       "식품",
-      "제철과일",
-      "제주 감귤"
+      "곡물·쌀",
+      "보리쌀"
     ],
     "freeShipping": false,
-    "recentBuyers": 142,
-    "originalPrice": 35000
+    "recentBuyers": 80,
+    "originalPrice": 16000
+  },
+  {
+    "id": "mt5",
+    "name": "오리 훈제 슬라이스",
+    "unit": "200g",
+    "badge": "신선",
+    "emoji": "🦆",
+    "price": 12900,
+    "stock": 35,
+    "origin": "충남",
+    "rating": 4.3,
+    "details": [
+      "산지 직송",
+      "신선 포장 배송"
+    ],
+    "options": [
+      {
+        "id": "mt5-o1",
+        "label": "200g",
+        "price": 12900,
+        "originalPrice": 16500
+      }
+    ],
+    "organic": false,
+    "reviews": 3,
+    "category": "meat",
+    "gradient": "linear-gradient(135deg, #b197fc, #7048e8)",
+    "couponNote": "",
+    "timeAttack": false,
+    "adminImages": [
+      {
+        "id": "mt5-a1",
+        "url": "/images/products/mt5.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "향긋한 훈제 오리. 샐러드·안주로 좋습니다.",
+    "localDirect": false,
+    "optionLabel": "용량",
+    "categoryPath": [
+      "식품",
+      "정육·계란",
+      "오리 훈제 슬라이스"
+    ],
+    "freeShipping": false,
+    "recentBuyers": 80,
+    "originalPrice": 16500
+  },
+  {
+    "id": "gr5",
+    "name": "혼합 15곡",
+    "unit": "2kg",
+    "badge": "건강",
+    "emoji": "🥣",
+    "price": 11900,
+    "stock": 35,
+    "origin": "국내산",
+    "rating": 5,
+    "details": [
+      "산지 직송",
+      "신선 포장 배송"
+    ],
+    "options": [
+      {
+        "id": "gr5-o1",
+        "label": "2kg",
+        "price": 11900,
+        "originalPrice": 15000
+      }
+    ],
+    "organic": true,
+    "reviews": 3,
+    "category": "grain",
+    "gradient": "linear-gradient(135deg, #8ce99a, #2b8a3e)",
+    "couponNote": "",
+    "timeAttack": false,
+    "adminImages": [
+      {
+        "id": "gr5-a1",
+        "url": "/images/products/gr5.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "잡곡 밥용 15곡 믹스. 영양 균형 식사.",
+    "localDirect": false,
+    "optionLabel": "용량",
+    "categoryPath": [
+      "식품",
+      "곡물·쌀",
+      "혼합 15곡"
+    ],
+    "freeShipping": false,
+    "recentBuyers": 80,
+    "originalPrice": 15000
   },
   {
     "id": "vg3",
@@ -1125,6 +1026,7 @@
     "category": "veg",
     "gradient": "linear-gradient(135deg, #ffa94d, #fd7e14)",
     "couponNote": "",
+    "timeAttack": false,
     "adminImages": [
       {
         "id": "vg3-a1",
@@ -1143,112 +1045,6 @@
     "freeShipping": false,
     "recentBuyers": 80,
     "originalPrice": 12000
-  },
-  {
-    "id": "sf1",
-    "name": "국내산 광어회",
-    "unit": "500g",
-    "badge": "신선",
-    "emoji": "🐟",
-    "price": 45000,
-    "stock": 35,
-    "origin": "전남 완도",
-    "rating": 4.7,
-    "details": [
-      "당일 손질·출하",
-      "HACCP 인증",
-      "냉장 배송",
-      "산지 직송"
-    ],
-    "options": [
-      {
-        "id": "sf1-o1",
-        "label": "300g",
-        "price": 28000,
-        "originalPrice": 33000
-      },
-      {
-        "id": "sf1-o2",
-        "label": "500g",
-        "price": 45000,
-        "originalPrice": 52000
-      },
-      {
-        "id": "sf1-o3",
-        "label": "1kg",
-        "price": 85000,
-        "originalPrice": 98000
-      }
-    ],
-    "organic": false,
-    "reviews": 3,
-    "category": "seafood",
-    "gradient": "linear-gradient(135deg, #4facfe, #00c6fb)",
-    "couponNote": "카드즉시할인 -2,000원",
-    "adminImages": [
-      {
-        "id": "sf1-a1",
-        "url": "/images/products/sf1.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "당일 손질 광어회. 아이스팩 포장으로 신선도 유지.",
-    "localDirect": true,
-    "optionLabel": "용량",
-    "categoryPath": [
-      "식품",
-      "수산물",
-      "국내산 광어회"
-    ],
-    "freeShipping": false,
-    "recentBuyers": 89,
-    "originalPrice": 52000
-  },
-  {
-    "id": "pr3",
-    "name": "포기김치",
-    "unit": "3kg",
-    "badge": "신선",
-    "emoji": "🥬",
-    "price": 22900,
-    "stock": 35,
-    "origin": "경북",
-    "rating": 4.3,
-    "details": [
-      "산지 직송",
-      "신선 포장 배송"
-    ],
-    "options": [
-      {
-        "id": "pr3-o1",
-        "label": "3kg",
-        "price": 22900,
-        "originalPrice": 28000
-      }
-    ],
-    "organic": false,
-    "reviews": 3,
-    "category": "processed",
-    "gradient": "linear-gradient(135deg, #ff8787, #fa5252)",
-    "couponNote": "",
-    "adminImages": [
-      {
-        "id": "pr3-a1",
-        "url": "/images/products/pr3.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "아삭한 포기김치. 숙성 맛이 깊습니다.",
-    "localDirect": true,
-    "optionLabel": "용량",
-    "categoryPath": [
-      "식품",
-      "가공식품",
-      "포기김치"
-    ],
-    "freeShipping": false,
-    "recentBuyers": 80,
-    "originalPrice": 28000
   },
   {
     "id": "pr5",
@@ -1277,6 +1073,7 @@
     "category": "processed",
     "gradient": "linear-gradient(135deg, #ffc9c9, #f06595)",
     "couponNote": "",
+    "timeAttack": false,
     "adminImages": [
       {
         "id": "pr5-a1",
@@ -1295,6 +1092,101 @@
     "freeShipping": false,
     "recentBuyers": 80,
     "originalPrice": 11500
+  },
+  {
+    "id": "pr3",
+    "name": "포기김치",
+    "unit": "3kg",
+    "badge": "신선",
+    "emoji": "🥬",
+    "price": 22900,
+    "stock": 35,
+    "origin": "경북",
+    "rating": 4.3,
+    "details": [
+      "산지 직송",
+      "신선 포장 배송"
+    ],
+    "options": [
+      {
+        "id": "pr3-o1",
+        "label": "3kg",
+        "price": 22900,
+        "originalPrice": 28000
+      }
+    ],
+    "organic": false,
+    "reviews": 3,
+    "category": "processed",
+    "gradient": "linear-gradient(135deg, #ff8787, #fa5252)",
+    "couponNote": "",
+    "timeAttack": true,
+    "adminImages": [
+      {
+        "id": "pr3-a1",
+        "url": "/images/products/pr3.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "아삭한 포기김치. 숙성 맛이 깊습니다.",
+    "localDirect": true,
+    "optionLabel": "용량",
+    "categoryPath": [
+      "식품",
+      "가공식품",
+      "포기김치"
+    ],
+    "freeShipping": false,
+    "recentBuyers": 80,
+    "originalPrice": 28000,
+    "timeAttackOrder": 3
+  },
+  {
+    "id": "pr4",
+    "name": "국산 들기름",
+    "unit": "300ml",
+    "badge": "신선",
+    "emoji": "🫒",
+    "price": 17900,
+    "stock": 35,
+    "origin": "경남",
+    "rating": 5,
+    "details": [
+      "유기농 원료",
+      "저온 압착"
+    ],
+    "options": [
+      {
+        "id": "pr4-o1",
+        "label": "300ml",
+        "price": 17900,
+        "originalPrice": 22000
+      }
+    ],
+    "organic": true,
+    "reviews": 3,
+    "category": "processed",
+    "gradient": "linear-gradient(135deg, #94d82d, #5c940d)",
+    "couponNote": "",
+    "timeAttack": false,
+    "adminImages": [
+      {
+        "id": "pr4-a1",
+        "url": "/images/products/pr4.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "고소한 국산 들기름. 나물·비빔밥용.",
+    "localDirect": false,
+    "optionLabel": "용량",
+    "categoryPath": [
+      "식품",
+      "가공식품",
+      "국산 들기름"
+    ],
+    "freeShipping": false,
+    "recentBuyers": 80,
+    "originalPrice": 22000
   },
   {
     "id": "dr1",
@@ -1323,6 +1215,7 @@
     "category": "dried",
     "gradient": "linear-gradient(135deg, #ffd8a8, #e67700)",
     "couponNote": "",
+    "timeAttack": false,
     "adminImages": [
       {
         "id": "dr1-a1",
@@ -1369,6 +1262,7 @@
     "category": "meat",
     "gradient": "linear-gradient(135deg, #fff3bf, #fcc419)",
     "couponNote": "",
+    "timeAttack": false,
     "adminImages": [
       {
         "id": "mt4-a1",
@@ -1387,6 +1281,53 @@
     "freeShipping": false,
     "recentBuyers": 80,
     "originalPrice": 11000
+  },
+  {
+    "id": "pr2",
+    "name": "순창 고추장",
+    "unit": "1.2kg",
+    "badge": "명품",
+    "emoji": "🌶️",
+    "price": 15900,
+    "stock": 35,
+    "origin": "전북 순창",
+    "rating": 5,
+    "details": [
+      "산지 직송",
+      "신선 포장 배송"
+    ],
+    "options": [
+      {
+        "id": "pr2-o1",
+        "label": "1.2kg",
+        "price": 15900,
+        "originalPrice": 19500
+      }
+    ],
+    "organic": false,
+    "reviews": 3,
+    "category": "processed",
+    "gradient": "linear-gradient(135deg, #ff6b6b, #c92a2a)",
+    "couponNote": "",
+    "timeAttack": false,
+    "adminImages": [
+      {
+        "id": "pr2-a1",
+        "url": "/images/products/pr2.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "순창 전통 고추장. 매콤달콤 양념의 기본.",
+    "localDirect": true,
+    "optionLabel": "용량",
+    "categoryPath": [
+      "식품",
+      "가공식품",
+      "순창 고추장"
+    ],
+    "freeShipping": false,
+    "recentBuyers": 80,
+    "originalPrice": 19500
   },
   {
     "id": "gr1",
@@ -1447,17 +1388,18 @@
     ],
     "freeShipping": true,
     "recentBuyers": 256,
-    "originalPrice": 42000
+    "originalPrice": 42000,
+    "timeAttack": false
   },
   {
-    "id": "pr2",
-    "name": "순창 고추장",
-    "unit": "1.2kg",
-    "badge": "명품",
-    "emoji": "🌶️",
-    "price": 15900,
+    "id": "fr4",
+    "name": "국산 딸기",
+    "unit": "750g",
+    "badge": "신선",
+    "emoji": "🍓",
+    "price": 12900,
     "stock": 35,
-    "origin": "전북 순창",
+    "origin": "충남 논산",
     "rating": 5,
     "details": [
       "산지 직송",
@@ -1465,81 +1407,118 @@
     ],
     "options": [
       {
-        "id": "pr2-o1",
-        "label": "1.2kg",
-        "price": 15900,
-        "originalPrice": 19500
+        "id": "fr4-o1",
+        "label": "750g",
+        "price": 0,
+        "originalPrice": 0
+      },
+      {
+        "id": "fr4-o2",
+        "label": "1.5kg",
+        "price": 11000,
+        "originalPrice": 30000
       }
     ],
     "organic": false,
     "reviews": 3,
-    "category": "processed",
-    "gradient": "linear-gradient(135deg, #ff6b6b, #c92a2a)",
+    "category": "fruit",
+    "gradient": "linear-gradient(135deg, #ff8787, #fa5252)",
     "couponNote": "",
+    "timeAttack": false,
+    "useOptions": true,
     "adminImages": [
       {
-        "id": "pr2-a1",
-        "url": "/images/products/pr2.png",
+        "id": "fr4-a1",
+        "url": "/images/products/fr4.png",
         "label": "대표 상품컷"
       }
     ],
-    "description": "순창 전통 고추장. 매콤달콤 양념의 기본.",
+    "description": "당일 수확 딸기. 비타민 가득한 제철 과일입니다.",
     "localDirect": true,
     "optionLabel": "용량",
+    "returnGuide": "【 교환·반품 안내 (신선 농·수산물) 】\n· 본 몰의 농수산물·신선·냉장·냉동 식품은 신선도 유지 및 재판매 불가 특성상, 단순 변심에 의한 교환·반품(청약철회)이 불가합니다.\n· 「전자상거래 등에서의 소비자보호에 관한 법률」에 따라 포장 개봉·시간 경과 등으로 재판매가 곤란한 신선식품은 청약철회가 제한될 수 있습니다.\n· 아래 사유에 해당하는 경우에만 교환·환불을 접수합니다.\n  - 상품 파손·누수·변질·부패 등 품질 이상\n  - 주문과 다른 상품 오배송·누락·수량 불일\n  - 배송 중 파손으로 섭취가 어려운 경우\n· 위 사유는 상품 수령 후 24시간 이내, 상품·포장·송장 사진과 함께 고객센터 또는 마이페이지로 접수해 주세요.\n· 회사 확인 후 재발송·환불 처리하며, 고객 과실이 없는 경우 배송비는 회사 부담입니다.\n· 냉장·냉동 미보관, 개봉 후 방치 등 고객 보관 부주의로 인한 변질은 교환·환불 대상에서 제외됩니다.\n· 환불 승인 후 3~7영업일 내 원결제수단으로 환불됩니다.",
     "categoryPath": [
       "식품",
-      "가공식품",
-      "순창 고추장"
+      "제철과일",
+      "국산 딸기"
+    ],
+    "detailBlocks": [
+      {
+        "text": "산지 직송",
+        "type": "text"
+      },
+      {
+        "text": "신선 포장 배송",
+        "type": "text"
+      }
     ],
     "freeShipping": false,
     "recentBuyers": 80,
-    "originalPrice": 19500
+    "originalPrice": 16500,
+    "shippingGuide": ""
   },
   {
-    "id": "pr4",
-    "name": "국산 들기름",
-    "unit": "300ml",
+    "id": "fr5",
+    "name": "필리핀 망고",
+    "unit": "2입",
     "badge": "신선",
-    "emoji": "🫒",
-    "price": 17900,
+    "emoji": "🥭",
+    "price": 18900,
     "stock": 35,
-    "origin": "경남",
-    "rating": 5,
+    "origin": "수입 필리핀",
+    "rating": 4.3,
     "details": [
-      "유기농 원료",
-      "저온 압착"
+      "<br>"
     ],
     "options": [
       {
-        "id": "pr4-o1",
-        "label": "300ml",
-        "price": 17900,
-        "originalPrice": 22000
+        "id": "fr5-o1",
+        "label": "0",
+        "price": 5100,
+        "originalPrice": 24000
+      },
+      {
+        "id": "fr5-o2",
+        "label": "12000",
+        "price": 28100,
+        "originalPrice": 47000
       }
     ],
-    "organic": true,
+    "organic": false,
     "reviews": 3,
-    "category": "processed",
-    "gradient": "linear-gradient(135deg, #94d82d, #5c940d)",
+    "category": "fruit",
+    "gradient": "linear-gradient(135deg, #ffd43b, #fab005)",
     "couponNote": "",
+    "detailHtml": "<p><br></p>",
+    "timeAttack": false,
+    "useOptions": true,
     "adminImages": [
       {
-        "id": "pr4-a1",
-        "url": "/images/products/pr4.png",
+        "id": "fr5-a1",
+        "url": "/images/products/fr5.png",
         "label": "대표 상품컷"
       }
     ],
-    "description": "고소한 국산 들기름. 나물·비빔밥용.",
+    "description": "부드럽고 달콤한 노란 망고. 아이 간식으로 좋아요.",
     "localDirect": false,
     "optionLabel": "용량",
+    "returnGuide": "",
     "categoryPath": [
       "식품",
-      "가공식품",
-      "국산 들기름"
+      "제철과일",
+      "필리핀 망고"
     ],
-    "freeShipping": false,
+    "deliveryDays": 3,
+    "detailBlocks": [
+      {
+        "text": "<br>",
+        "type": "text"
+      }
+    ],
+    "freeShipping": true,
     "recentBuyers": 80,
-    "originalPrice": 22000
+    "originalPrice": 24000,
+    "shippingGuide": ""
   },
   {
     "id": "fr2",
@@ -1611,7 +1590,8 @@
     "freeShipping": false,
     "recentBuyers": 80,
     "originalPrice": 9900,
-    "shippingGuide": ""
+    "shippingGuide": "",
+    "timeAttack": false
   },
   {
     "id": "vg2",
@@ -1633,6 +1613,7 @@
     "category": "veg",
     "gradient": "linear-gradient(135deg, #69db7c, #2f9e44)",
     "couponNote": "",
+    "timeAttack": false,
     "useOptions": false,
     "adminImages": [
       {
@@ -1666,68 +1647,127 @@
     "shippingGuide": ""
   },
   {
-    "id": "fr4",
-    "name": "국산 딸기",
-    "unit": "750g",
-    "badge": "신선",
-    "emoji": "🍓",
-    "price": 12900,
+    "id": "fr1",
+    "name": "제주 감귤",
+    "unit": "5kg 박스",
+    "badge": "베스트",
+    "emoji": "🍊",
+    "price": 28900,
     "stock": 35,
-    "origin": "충남 논산",
-    "rating": 5,
+    "origin": "제주 서귀포",
+    "rating": 4.7,
     "details": [
-      "산지 직송",
-      "신선 포장 배송"
+      "당도 12브릭스 이상",
+      "무농약 인증",
+      "당일 수확·포장",
+      "산지 직송"
     ],
     "options": [
       {
-        "id": "fr4-o1",
-        "label": "750g",
-        "price": 0,
-        "originalPrice": 0
+        "id": "fr1-o1",
+        "label": "3kg",
+        "price": 19900,
+        "originalPrice": 24000
       },
       {
-        "id": "fr4-o2",
-        "label": "1.5kg",
-        "price": 11000,
-        "originalPrice": 30000
+        "id": "fr1-o2",
+        "label": "5kg",
+        "price": 28900,
+        "originalPrice": 35000
+      },
+      {
+        "id": "fr1-o3",
+        "label": "10kg",
+        "price": 49900,
+        "originalPrice": 59000
       }
     ],
     "organic": false,
     "reviews": 3,
     "category": "fruit",
-    "gradient": "linear-gradient(135deg, #ff8787, #fa5252)",
-    "couponNote": "",
-    "useOptions": true,
+    "gradient": "linear-gradient(135deg, #ff9a56, #ff6b35)",
+    "couponNote": "첫구매 -1,000원 적용",
+    "timeAttack": true,
     "adminImages": [
       {
-        "id": "fr4-a1",
-        "url": "/images/products/fr4.png",
+        "id": "fr1-a1",
+        "url": "/images/products/fr1.png",
         "label": "대표 상품컷"
       }
     ],
-    "description": "당일 수확 딸기. 비타민 가득한 제철 과일입니다.",
+    "description": "제주 청정 해풍 감귤. 당도 높고 껍질이 얇아 가족과 함께 즐기기 좋습니다.",
     "localDirect": true,
     "optionLabel": "용량",
-    "returnGuide": "【 교환·반품 안내 (신선 농·수산물) 】\n· 본 몰의 농수산물·신선·냉장·냉동 식품은 신선도 유지 및 재판매 불가 특성상, 단순 변심에 의한 교환·반품(청약철회)이 불가합니다.\n· 「전자상거래 등에서의 소비자보호에 관한 법률」에 따라 포장 개봉·시간 경과 등으로 재판매가 곤란한 신선식품은 청약철회가 제한될 수 있습니다.\n· 아래 사유에 해당하는 경우에만 교환·환불을 접수합니다.\n  - 상품 파손·누수·변질·부패 등 품질 이상\n  - 주문과 다른 상품 오배송·누락·수량 불일\n  - 배송 중 파손으로 섭취가 어려운 경우\n· 위 사유는 상품 수령 후 24시간 이내, 상품·포장·송장 사진과 함께 고객센터 또는 마이페이지로 접수해 주세요.\n· 회사 확인 후 재발송·환불 처리하며, 고객 과실이 없는 경우 배송비는 회사 부담입니다.\n· 냉장·냉동 미보관, 개봉 후 방치 등 고객 보관 부주의로 인한 변질은 교환·환불 대상에서 제외됩니다.\n· 환불 승인 후 3~7영업일 내 원결제수단으로 환불됩니다.",
     "categoryPath": [
       "식품",
       "제철과일",
-      "국산 딸기"
-    ],
-    "detailBlocks": [
-      {
-        "text": "산지 직송",
-        "type": "text"
-      },
-      {
-        "text": "신선 포장 배송",
-        "type": "text"
-      }
+      "제주 감귤"
     ],
     "freeShipping": false,
-    "recentBuyers": 80,
-    "originalPrice": 16500,
-    "shippingGuide": ""
+    "recentBuyers": 142,
+    "originalPrice": 35000,
+    "timeAttackOrder": 0
+  },
+  {
+    "id": "sf1",
+    "name": "국내산 광어회",
+    "unit": "500g",
+    "badge": "신선",
+    "emoji": "🐟",
+    "price": 45000,
+    "stock": 35,
+    "origin": "전남 완도",
+    "rating": 4.7,
+    "details": [
+      "당일 손질·출하",
+      "HACCP 인증",
+      "냉장 배송",
+      "산지 직송"
+    ],
+    "options": [
+      {
+        "id": "sf1-o1",
+        "label": "300g",
+        "price": 28000,
+        "originalPrice": 33000
+      },
+      {
+        "id": "sf1-o2",
+        "label": "500g",
+        "price": 45000,
+        "originalPrice": 52000
+      },
+      {
+        "id": "sf1-o3",
+        "label": "1kg",
+        "price": 85000,
+        "originalPrice": 98000
+      }
+    ],
+    "organic": false,
+    "reviews": 3,
+    "category": "seafood",
+    "gradient": "linear-gradient(135deg, #4facfe, #00c6fb)",
+    "couponNote": "카드즉시할인 -2,000원",
+    "timeAttack": true,
+    "adminImages": [
+      {
+        "id": "sf1-a1",
+        "url": "/images/products/sf1.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "당일 손질 광어회. 아이스팩 포장으로 신선도 유지.",
+    "localDirect": true,
+    "optionLabel": "용량",
+    "categoryPath": [
+      "식품",
+      "수산물",
+      "국내산 광어회"
+    ],
+    "freeShipping": false,
+    "recentBuyers": 89,
+    "originalPrice": 52000,
+    "timeAttackOrder": 1
   }
 ]

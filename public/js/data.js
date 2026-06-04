@@ -9,7 +9,7 @@ const HOME_CATEGORIES = [
   { id: 'grain', name: '곡물·쌀', icon: '🌾' },
   { id: 'organic', name: '유기농', icon: '🌱' },
   { id: 'local', name: '산지직송', icon: '🚚' },
-  { id: 'sale', name: '특가할인', icon: '🔥' },
+  { id: 'sale', name: '타임어택', icon: '⚡' },
 ];
 
 const CATEGORIES = HOME_CATEGORIES;
@@ -674,7 +674,7 @@ function filterProductsByCategory(categoryId, searchQuery = '') {
       list = list.filter((p) => p.localDirect);
       break;
     case 'sale':
-      list = list.filter((p) => 1 - p.price / p.originalPrice >= 0.12);
+      list = list.filter((p) => p.timeAttack === true);
       break;
     case 'all':
     default:

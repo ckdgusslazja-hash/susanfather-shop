@@ -31,12 +31,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://susanfather.com/p/fr5</loc>
-    <lastmod>2026-06-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://susanfather.com/p/vg1</loc>
     <lastmod>2026-06-04</lastmod>
     <changefreq>weekly</changefreq>
@@ -49,19 +43,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://susanfather.com/p/vg4</loc>
-    <lastmod>2026-06-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://susanfather.com/p/vg5</loc>
-    <lastmod>2026-06-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://susanfather.com/p/sf2</loc>
     <lastmod>2026-06-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -79,7 +61,31 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://susanfather.com/p/sf2</loc>
+    <lastmod>2026-06-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://susanfather.com/p/sf5</loc>
+    <lastmod>2026-06-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://susanfather.com/p/vg4</loc>
+    <lastmod>2026-06-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://susanfather.com/p/dr3</loc>
+    <lastmod>2026-06-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://susanfather.com/p/mt1</loc>
     <lastmod>2026-06-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -91,19 +97,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://susanfather.com/p/dr4</loc>
-    <lastmod>2026-06-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://susanfather.com/p/dr5</loc>
     <lastmod>2026-06-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://susanfather.com/p/mt1</loc>
+    <loc>https://susanfather.com/p/dr4</loc>
     <lastmod>2026-06-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -121,18 +121,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://susanfather.com/p/dr3</loc>
-    <lastmod>2026-06-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://susanfather.com/p/mt5</loc>
-    <lastmod>2026-06-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://susanfather.com/p/gr2</loc>
     <lastmod>2026-06-04</lastmod>
     <changefreq>weekly</changefreq>
@@ -145,7 +133,19 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://susanfather.com/p/pr1</loc>
+    <lastmod>2026-06-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://susanfather.com/p/gr4</loc>
+    <lastmod>2026-06-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://susanfather.com/p/mt5</loc>
     <lastmod>2026-06-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -157,25 +157,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://susanfather.com/p/pr1</loc>
-    <lastmod>2026-06-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://susanfather.com/p/fr1</loc>
-    <lastmod>2026-06-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://susanfather.com/p/vg3</loc>
     <lastmod>2026-06-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://susanfather.com/p/sf1</loc>
+    <loc>https://susanfather.com/p/pr5</loc>
     <lastmod>2026-06-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -187,7 +175,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://susanfather.com/p/pr5</loc>
+    <loc>https://susanfather.com/p/pr4</loc>
     <lastmod>2026-06-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -205,19 +193,25 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://susanfather.com/p/gr1</loc>
-    <lastmod>2026-06-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://susanfather.com/p/pr2</loc>
     <lastmod>2026-06-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://susanfather.com/p/pr4</loc>
+    <loc>https://susanfather.com/p/gr1</loc>
+    <lastmod>2026-06-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://susanfather.com/p/fr4</loc>
+    <lastmod>2026-06-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://susanfather.com/p/fr5</loc>
     <lastmod>2026-06-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -235,7 +229,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://susanfather.com/p/fr4</loc>
+    <loc>https://susanfather.com/p/fr1</loc>
+    <lastmod>2026-06-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://susanfather.com/p/sf1</loc>
     <lastmod>2026-06-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
