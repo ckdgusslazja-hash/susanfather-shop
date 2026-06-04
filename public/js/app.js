@@ -602,19 +602,23 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
-/** 로고·홈 탭 — 메인(전체 상품) 화면으로 초기화 */
+/** 로고·홈 탭 — 메인 기본 화면(전체 상품·배너·타임어택)으로 초기화 */
 function goHome() {
+  const wasCategoryFilter = state.page === 'home' && state.category !== 'all';
+  state.page = 'home';
   state.category = 'all';
   state.searchQuery = '';
   state.searchDraft = '';
   state.categoryMenuOpen = false;
-  if (state.page === 'home') {
-    syncHashFromState(true);
-    render();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    return Promise.resolve();
+  syncHashFromState(true);
+  render();
+  renderHeader();
+  renderBottomNav();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (wasCategoryFilter) {
+    showToast('전체 상품을 보여드립니다');
   }
-  return navigate('home');
+  return Promise.resolve();
 }
 
 window.goHome = goHome;
