@@ -10,22 +10,27 @@ const prisma = new PrismaClient();
 const root = process.cwd();
 const PRODUCT_ID = 'sf1';
 
-function buildSf1Reset(existing: Record<string, unknown>) {
-  const next = { ...existing, id: PRODUCT_ID };
-  delete next.detailHtml;
-  delete next.detailBlocks;
-  delete next.shippingGuide;
-  delete next.returnGuide;
-  next.description = '당일 손질 광어회. 아이스팩 포장으로 신선도 유지.';
-  next.details = ['당일 손질·출하', 'HACCP 인증', '냉장 배송', '산지 직송'];
-  next.adminImages = [
-    {
-      id: 'sf1-a1',
-      url: '/images/products/sf1.png',
-      label: '대표 상품컷',
-    },
-  ];
-  return next;
+function buildSf1Reset(existing: Record<string, unknown>): Record<string, unknown> {
+  const {
+    detailHtml: _dh,
+    detailBlocks: _db,
+    shippingGuide: _sg,
+    returnGuide: _rg,
+    ...rest
+  } = existing;
+  return {
+    ...rest,
+    id: PRODUCT_ID,
+    description: '당일 손질 광어회. 아이스팩 포장으로 신선도 유지.',
+    details: ['당일 손질·출하', 'HACCP 인증', '냉장 배송', '산지 직송'],
+    adminImages: [
+      {
+        id: 'sf1-a1',
+        url: '/images/products/sf1.png',
+        label: '대표 상품컷',
+      },
+    ],
+  };
 }
 
 async function syncJson(list: Record<string, unknown>[]) {
