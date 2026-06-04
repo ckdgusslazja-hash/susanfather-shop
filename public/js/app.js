@@ -1384,12 +1384,21 @@ function hashProductSeed(id) {
   return Math.abs(h);
 }
 
+/** 메인 타임어택·TOP5 「N명이 보는 중」 기준 인원 (쇼핑몰 체감용) */
+const LIVE_VIEWER_MIN = 72;
+const LIVE_VIEWER_MAX = 420;
+
 function getLiveViewerBase(product) {
   const seed = hashProductSeed(product.id);
   const buyers = Number(product.recentBuyers) || 0;
-  const fromBuyers = buyers > 0 ? Math.floor(buyers * 0.12) + 8 : 0;
-  const base = fromBuyers || 14 + (seed % 52);
-  return Math.min(132, Math.max(9, base));
+  let base =
+    buyers > 0
+      ? Math.floor(buyers * 0.55) + 58
+      : 92 + (seed % 118);
+  if (product.timeAttack || product.weeklyTop) {
+    base += 42 + (seed % 48);
+  }
+  return Math.min(LIVE_VIEWER_MAX, Math.max(LIVE_VIEWER_MIN, base));
 }
 
 function initLiveViewerForProducts(products) {
@@ -1397,14 +1406,14 @@ function initLiveViewerForProducts(products) {
     if (!liveViewerBases.has(p.id)) {
       const base = getLiveViewerBase(p);
       liveViewerBases.set(p.id, base);
-      const jitter = Math.floor((Math.random() - 0.5) * 8);
-      liveViewerCounts.set(p.id, Math.max(6, base + jitter));
+      const jitter = Math.floor((Math.random() - 0.5) * 22);
+      liveViewerCounts.set(p.id, Math.max(LIVE_VIEWER_MIN, base + jitter));
     }
   });
 }
 
 function getLiveViewerDisplayCount(productId) {
-  return liveViewerCounts.get(productId) ?? liveViewerBases.get(productId) ?? 12;
+  return liveViewerCounts.get(productId) ?? liveViewerBases.get(productId) ?? 128;
 }
 
 function syncLiveViewerDom() {
@@ -1420,17 +1429,18 @@ function tickLiveViewers() {
   const bumps = 2 + Math.floor(Math.random() * 2);
   for (let i = 0; i < bumps; i++) {
     const id = ids[Math.floor(Math.random() * ids.length)];
-    const base = liveViewerBases.get(id) || 20;
+    const base = liveViewerBases.get(id) || 140;
     const cur = liveViewerCounts.get(id) || base;
     const r = Math.random();
     let delta = 0;
-    if (r < 0.38) delta = -1;
-    else if (r < 0.76) delta = 1;
-    else if (r < 0.9) delta = 2;
-    else delta = -2;
+    if (r < 0.32) delta = -2;
+    else if (r < 0.58) delta = -1;
+    else if (r < 0.82) delta = 1;
+    else if (r < 0.94) delta = 2;
+    else delta = 3;
     const next = Math.max(
-      Math.floor(base * 0.62),
-      Math.min(Math.ceil(base * 1.48), cur + delta)
+      Math.floor(base * 0.78),
+      Math.min(Math.ceil(base * 1.22), cur + delta)
     );
     liveViewerCounts.set(id, next);
   }
