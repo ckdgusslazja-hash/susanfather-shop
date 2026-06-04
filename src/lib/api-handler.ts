@@ -549,7 +549,7 @@ async function loadAdminProducts(): Promise<Record<string, unknown>[]> {
   try {
     const rows = await prisma.product.findMany();
     if (rows.length) {
-      let products = rows.map((r) => {
+      let products: Record<string, unknown>[] = rows.map((r) => {
         const data = r.data as Record<string, unknown>;
         return { ...data, useOptions: data.useOptions === true };
       });
