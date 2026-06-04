@@ -486,30 +486,51 @@ function normalizeProductForClient(product: Record<string, unknown>): Record<str
   return next;
 }
 
+function sortProductsStable(products: Record<string, unknown>[]) {
+  return [...products].sort((a, b) => {
+    const sa = Number(a.sortIndex);
+    const sb = Number(b.sortIndex);
+    if (Number.isFinite(sa) && Number.isFinite(sb) && sa !== sb) return sa - sb;
+    if (Number.isFinite(sa) && !Number.isFinite(sb)) return -1;
+    if (!Number.isFinite(sa) && Number.isFinite(sb)) return 1;
+    return String(a.id).localeCompare(String(b.id));
+  });
+}
+
+async function applyProductSortIndexBackfill(products: Record<string, unknown>[]) {
+  const json = (await loadProductsFallback()) as Record<string, unknown>[];
+  const jsonOrder = new Map(json.map((p, i) => [String(p.id), i]));
+  return products.map((p) => {
+    if (Number.isFinite(Number(p.sortIndex))) return p;
+    const ji = jsonOrder.get(String(p.id));
+    if (ji !== undefined) return { ...p, sortIndex: ji };
+    return p;
+  });
+}
+
 async function loadAdminProducts(): Promise<Record<string, unknown>[]> {
   try {
     const rows = await prisma.product.findMany();
     if (rows.length) {
-      return rows.map((r) => {
+      let products = rows.map((r) => {
         const data = r.data as Record<string, unknown>;
         return { ...data, useOptions: data.useOptions === true };
       });
+      products = await applyProductSortIndexBackfill(products);
+      return sortProductsStable(products);
     }
   } catch {
     /* fallback */
   }
   const fallback = (await loadProductsFallback()) as Record<string, unknown>[];
-  return fallback.map((p) => ({ ...p, useOptions: p.useOptions === true }));
+  return sortProductsStable(
+    fallback.map((p, i) => ({ ...p, useOptions: p.useOptions === true, sortIndex: p.sortIndex ?? i }))
+  );
 }
 
 async function loadAllProducts(): Promise<Record<string, unknown>[]> {
-  try {
-    const rows = await prisma.product.findMany();
-    if (rows.length) return rows.map((r) => normalizeProductForClient(r.data as Record<string, unknown>));
-  } catch {
-    /* fallback */
-  }
-  return ((await loadProductsFallback()) as Record<string, unknown>[]).map(normalizeProductForClient);
+  const list = await loadAdminProducts();
+  return list.map((p) => normalizeProductForClient(p));
 }
 
 async function syncProductsJson(list: Record<string, unknown>[]) {
@@ -629,6 +650,12 @@ function buildProductRecord(body: Record<string, unknown>, id: string, existing?
     detailBlocks,
     shippingGuide: String(body.shippingGuide ?? existing?.shippingGuide ?? defaultProductPolicies().shippingGuide),
     returnGuide: String(body.returnGuide ?? existing?.returnGuide ?? defaultProductPolicies().returnGuide),
+    sortIndex:
+      existing?.sortIndex !== undefined && existing?.sortIndex !== null
+        ? Number(existing.sortIndex)
+        : body.sortIndex !== undefined && body.sortIndex !== null
+          ? Number(body.sortIndex)
+          : undefined,
   };
 }
 
@@ -1521,7 +1548,12 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
         if (!name) return json({ error: '상품명은 필수입니다.' }, 400);
 
         const id = String(body.id || '').trim() || uuidv4();
+        const existingList = await loadAdminProducts();
+        const maxSort = existingList.reduce((m, p) => Math.max(m, Number(p.sortIndex) || 0), -1);
         const product = buildProductRecord(body, id);
+        if (product.sortIndex == null || !Number.isFinite(Number(product.sortIndex))) {
+          (product as Record<string, unknown>).sortIndex = maxSort + 1;
+        }
 
         await prisma.product.upsert({
           where: { id },
@@ -1529,12 +1561,8 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
           update: { data: product as Prisma.InputJsonValue },
         });
 
-        const list = await loadAllProducts();
-        const idx = list.findIndex((p) => p.id === id);
-        if (idx >= 0) list[idx] = product;
-        else list.push(product);
         try {
-          await syncProductsJson(list);
+          await syncProductsJson(await loadAllProducts());
         } catch {
           /* read-only fs on serverless */
         }
@@ -1553,11 +1581,8 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
           update: { data: product as Prisma.InputJsonValue },
         });
 
-        const list = await loadAllProducts();
-        const idx = list.findIndex((p) => p.id === c);
-        if (idx >= 0) list[idx] = product;
         try {
-          await syncProductsJson(list);
+          await syncProductsJson(await loadAllProducts());
         } catch {
           /* */
         }
@@ -1565,9 +1590,8 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
       }
       if (method === 'DELETE' && c) {
         await prisma.product.delete({ where: { id: c } }).catch(() => null);
-        const list = (await loadAllProducts()).filter((p) => p.id !== c);
         try {
-          await syncProductsJson(list);
+          await syncProductsJson((await loadAllProducts()).filter((p) => p.id !== c));
         } catch {
           /* */
         }
