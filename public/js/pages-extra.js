@@ -243,8 +243,11 @@ function renderMypage() {
   return `
     <div class="mypage-wrap">
       <div class="mypage-profile">
-        <p class="mypage-profile__name"><strong>${escapeHtml(u.name)}</strong>님</p>
-        <p class="mypage-profile__email">${escapeHtml(u.email)}</p>
+        <div class="mypage-profile__main">
+          <p class="mypage-profile__name"><strong>${escapeHtml(u.name)}</strong>님</p>
+          <p class="mypage-profile__email">${escapeHtml(u.email)}</p>
+        </div>
+        <button type="button" class="btn btn--outline btn--sm mypage-profile__logout" onclick="doLogout()">로그아웃</button>
       </div>
       ${renderMypageQuickNav(tab)}
       <div class="mypage-panel">
@@ -1427,7 +1430,9 @@ async function handleWriteReview(e) {
 
 function doLogout() {
   API.logout();
+  state.myOrders = [];
   state.reviewEligibility = {};
+  if (typeof updateNavAuth === 'function') updateNavAuth();
   if (typeof loadNotifications === 'function') loadNotifications().then(() => render());
   showToast('로그아웃되었습니다');
   navigate('home');

@@ -3073,9 +3073,23 @@ body.is-mypage .header {
 }
 
 .mypage-profile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   background: #fff;
   padding: 20px 16px 12px;
   border-bottom: 8px solid #eef2f5;
+}
+
+.mypage-profile__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.mypage-profile__logout {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .mypage-profile__name {
