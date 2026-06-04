@@ -61,11 +61,11 @@
 
     <header class="header">
       <div class="header__inner">
-        <a class="logo" href="#" onclick="navigate('home'); return false">
+        <a class="logo" href="/" onclick="goHome(); return false" aria-label="수산아빠 홈">
           <img class="logo__img" src="images/logo.png" alt="수산아빠" width="120" height="48" />
         </a>
         <nav class="nav">
-          <a class="nav__link active" href="#" data-page="home" onclick="navigate('home'); return false">홈</a>
+          <a class="nav__link active" href="#" data-page="home" onclick="goHome(); return false">홈</a>
           <a class="nav__link" href="#" data-page="cart" onclick="navigate('cart'); return false">장바구니</a>
           <a class="nav__link" href="#" data-page="login" onclick="goMypage(); return false" id="nav-auth">로그인</a>
         </nav>
@@ -137,7 +137,7 @@
     <script src="js/data.js?v=7"></script>
     <script src="js/seo.js?v=1"></script>
     <script src="js/api.js?v=3"></script>
-    <script src="js/app.js?v=19"></script>
+    <script src="js/app.js?v=20"></script>
     <script src="js/pages-extra.js?v=6"></script>
   </body>
 </html>

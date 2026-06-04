@@ -601,6 +601,23 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
+/** 로고·홈 탭 — 메인(전체 상품) 화면으로 초기화 */
+function goHome() {
+  state.category = 'all';
+  state.searchQuery = '';
+  state.searchDraft = '';
+  state.categoryMenuOpen = false;
+  if (state.page === 'home') {
+    syncHashFromState(true);
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return Promise.resolve();
+  }
+  return navigate('home');
+}
+
+window.goHome = goHome;
+
 function navigate(page, params = {}) {
   state.page = page;
   if (page !== 'home') state.categoryMenuOpen = false;
@@ -1534,7 +1551,7 @@ function renderHome() {
   return `
     <div class="home">
       <header class="home-header">
-        <a class="home-header__logo" href="#" onclick="navigate('home');return false">
+        <a class="home-header__logo" href="/" onclick="goHome();return false" aria-label="수산아빠 홈">
           <img class="home-header__logo-img" src="images/logo.png" alt="" width="44" height="44" />
           <span class="home-header__logo-text">수산아빠</span>
         </a>
