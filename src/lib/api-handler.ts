@@ -202,14 +202,14 @@ function defaultSettingsBundle() {
     customerCenter: {
       faq: [
         { q: '배송은 며칠 걸리나요?', a: '산지 직송 상품은 1~2일, 일부 지역은 2~3일 소요됩니다.' },
-        { q: '반품은 어떻게 하나요?', a: '수령 후 7일 이내 고객센터로 문의해 주세요.' },
+        { q: '반품·교환은 어떻게 하나요?', a: '신선·냉장·냉동 농수산물은 단순 변심 교환·반품이 불가합니다. 파손·변질·오배송 등 품질 이상은 수령 후 24시간 이내 사진과 함께 고객센터로 접수해 주세요.' },
       ],
     },
     order: {
       shippingFee: 3000,
       freeShippingThreshold: 50000,
       autoConfirmDays: 7,
-      returnDays: 7,
+      returnDays: 1,
     },
     productPolicies: defaultProductPolicies(),
     announcements: getDefaultAnnouncements(),
@@ -224,12 +224,17 @@ function defaultProductPolicies() {
 · 제주·도서·산간 지역은 1~2일 추가 소요될 수 있습니다.
 · 기상 악화, 산지 수급 등으로 출고일이 변경될 수 있으며 개별 안내드립니다.
 · 배송 조회는 마이페이지 또는 주문·배송 조회에서 확인할 수 있습니다.`,
-    returnGuide: `【 교환·반품 안내 】
-· 상품 수령 후 7일 이내 교환·반품 신청이 가능합니다.
-· 신선·냉장·냉동 식품은 수령 후 24시간 이내, 상품 사진과 함께 고객센터로 접수해 주세요.
-· 고객님의 책임 있는 사유로 변질·파손된 경우 교환·반품이 제한됩니다.
-· 단순 변심 반품 시 왕복 배송비는 고객 부담입니다.
-· 반품 승인 후 3~7영업일 내 결제 수단으로 환불 처리됩니다.`,
+    returnGuide: `【 교환·반품 안내 (신선 농·수산물) 】
+· 본 몰의 농수산물·신선·냉장·냉동 식품은 신선도 유지 및 재판매 불가 특성상, 단순 변심에 의한 교환·반품(청약철회)이 불가합니다.
+· 「전자상거래 등에서의 소비자보호에 관한 법률」에 따라 포장 개봉·시간 경과 등으로 재판매가 곤란한 신선식품은 청약철회가 제한될 수 있습니다.
+· 아래 사유에 해당하는 경우에만 교환·환불을 접수합니다.
+  - 상품 파손·누수·변질·부패 등 품질 이상
+  - 주문과 다른 상품 오배송·누락·수량 불일
+  - 배송 중 파손으로 섭취가 어려운 경우
+· 위 사유는 상품 수령 후 24시간 이내, 상품·포장·송장 사진과 함께 고객센터 또는 마이페이지로 접수해 주세요.
+· 회사 확인 후 재발송·환불 처리하며, 고객 과실이 없는 경우 배송비는 회사 부담입니다.
+· 냉장·냉동 미보관, 개봉 후 방치 등 고객 보관 부주의로 인한 변질은 교환·환불 대상에서 제외됩니다.
+· 환불 승인 후 3~7영업일 내 원결제수단으로 환불됩니다.`,
   };
 }
 
@@ -401,10 +406,61 @@ async function loadProductsFallback(): Promise<unknown[]> {
   }
 }
 
+function isLegacyReturnGuide(text: string) {
+  const rg = text.trim();
+  return (
+    !rg ||
+    rg.includes('7일 이내 교환·반품 신청이 가능') ||
+    rg.includes('단순 변심 반품 시 왕복 배송비')
+  );
+}
+
+function normalizeProductPolicies(policies: unknown) {
+  const pol =
+    policies && typeof policies === 'object'
+      ? { ...(policies as Record<string, unknown>) }
+      : ({} as Record<string, unknown>);
+  if (isLegacyReturnGuide(String(pol.returnGuide || ''))) {
+    pol.returnGuide = defaultProductPolicies().returnGuide;
+  }
+  if (!String(pol.shippingGuide || '').trim()) {
+    pol.shippingGuide = defaultProductPolicies().shippingGuide;
+  }
+  return pol;
+}
+
+function normalizeCustomerCenter(cc: unknown) {
+  const center =
+    cc && typeof cc === 'object'
+      ? { ...(cc as Record<string, unknown>) }
+      : ({} as Record<string, unknown>);
+  const faq = Array.isArray(center.faq) ? [...center.faq] : [];
+  const idx = faq.findIndex(
+    (f) => typeof f === 'object' && f && String((f as Record<string, unknown>).q || '').includes('반품')
+  );
+  if (idx >= 0) {
+    const item = faq[idx] as Record<string, unknown>;
+    if (String(item.a || '').includes('7일 이내')) {
+      faq[idx] = {
+        q: '반품·교환은 어떻게 하나요?',
+        a: '신선·냉장·냉동 농수산물은 단순 변심 교환·반품이 불가합니다. 파손·변질·오배송 등 품질 이상은 수령 후 24시간 이내 사진과 함께 고객센터로 접수해 주세요.',
+      };
+    }
+  }
+  return { ...center, faq };
+}
+
+function normalizeProductReturnGuide(product: Record<string, unknown>): Record<string, unknown> {
+  if (isLegacyReturnGuide(String(product.returnGuide || ''))) {
+    return { ...product, returnGuide: defaultProductPolicies().returnGuide };
+  }
+  return product;
+}
+
 async function loadAllProducts(): Promise<Record<string, unknown>[]> {
   try {
     const rows = await prisma.product.findMany();
-    if (rows.length) return rows.map((r) => r.data as Record<string, unknown>);
+    if (rows.length) return rows.map((r) => normalizeProductReturnGuide(r.data as Record<string, unknown>));
   } catch {
     /* fallback */
   }
@@ -521,7 +577,7 @@ function buildProductRecord(body: Record<string, unknown>, id: string, existing?
     details,
     detailBlocks,
     shippingGuide: String(body.shippingGuide ?? existing?.shippingGuide ?? ''),
-    returnGuide: String(body.returnGuide ?? existing?.returnGuide ?? ''),
+    returnGuide: String(body.returnGuide ?? existing?.returnGuide ?? defaultProductPolicies().returnGuide),
   };
 }
 
@@ -761,9 +817,13 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
     if (method === 'GET' && b === 'shop') {
       const defaults = defaultSettingsBundle();
       const shop = (await getSetting('shop')) ?? defaults.shop;
-      const customerCenter = (await getSetting('customerCenter')) ?? defaults.customerCenter;
+      const customerCenter = normalizeCustomerCenter(
+        (await getSetting('customerCenter')) ?? defaults.customerCenter
+      );
       const order = (await getSetting('order')) ?? defaults.order;
-      const productPolicies = (await getSetting('productPolicies')) ?? defaults.productPolicies;
+      const productPolicies = normalizeProductPolicies(
+        (await getSetting('productPolicies')) ?? defaults.productPolicies
+      );
       return json({ shop, customerCenter, order, productPolicies });
     }
     if (method === 'GET' && b === 'payment-public') {
@@ -955,7 +1015,7 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
     try {
       const rows = await prisma.product.findMany();
       if (rows.length) {
-        return json(rows.map((r) => r.data));
+        return json(rows.map((r) => normalizeProductReturnGuide(r.data as Record<string, unknown>)));
       }
     } catch {
       /* DB 미연결 시 JSON 폴백 */
@@ -1466,8 +1526,10 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
         shop: await getSetting('shop'),
         payment: await getSetting('payment'),
         order: await getSetting('order'),
-        customerCenter: await getSetting('customerCenter'),
-        productPolicies: (await getSetting('productPolicies')) ?? defaultProductPolicies(),
+        customerCenter: normalizeCustomerCenter(await getSetting('customerCenter')),
+        productPolicies: normalizeProductPolicies(
+          (await getSetting('productPolicies')) ?? defaultProductPolicies()
+        ),
       });
     }
 

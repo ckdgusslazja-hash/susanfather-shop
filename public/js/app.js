@@ -1257,7 +1257,7 @@ function renderDetail() {
           </div>
           <div class="pdp-shipping__row pdp-shipping__row--sub">
             <span>🚚 ${freeShip ? '무료배송' : `배송비 ${formatPrice(SHIPPING_FEE)}`}</span>
-            <span>↩ 7일 이내 무료 반품</span>
+            <span class="pdp-shipping__fresh-notice">⚠ 신선식품 · 단순변심 교환·반품 불가</span>
           </div>
         </div>
 
@@ -1267,7 +1267,7 @@ function renderDetail() {
         <div class="pdp-options">
           <p class="pdp-options__label">${escapeHtml(product.optionLabel || '옵션')}: <strong>${escapeHtml(option?.label || '')}</strong></p>
           <div class="pdp-option-pills">${optionsHtml}</div>
-          <p class="pdp-options__note">이 상품은 <strong>무료 교환</strong>이 가능한 상품입니다.</p>
+          <p class="pdp-options__note">신선 농·수산물은 <strong>품질 이상(파손·변질·오배송)</strong> 시에만 교환·환불이 가능합니다.</p>
         </div>
         <hr class="pdp-divider" />
         ` : ''}

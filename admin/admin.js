@@ -1022,7 +1022,8 @@ const Admin = {
         <div class="form-row full"><label>배송 안내</label>
           <textarea name="shippingGuide" rows="8">${this.esc(pol.shippingGuide || '')}</textarea>
         </div>
-        <h2 style="margin-top:24px">교환·반품 안내 (기본 템플릿)</h2>
+        <h2 style="margin-top:24px">교환·반품 안내 (신선식품 기본 템플릿)</h2>
+        <p class="admin-hint">신선·냉장·냉동 농수산물은 단순 변심 교환·반품이 불가합니다. 품질 이상 시에만 접수합니다.</p>
         <div class="form-row full"><label>교환·반품 안내</label>
           <textarea name="returnGuide" rows="8">${this.esc(pol.returnGuide || '')}</textarea>
         </div>
