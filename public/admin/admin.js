@@ -19,6 +19,7 @@ const Admin = {
   productDraft: null,
   policyTemplatesDraft: null,
   detailQuill: null,
+  _policyPickerTemplates: null,
   PRODUCT_DRAFT_KEY: 'gh_admin_product_draft',
 
   BADGES: ['신선', '베스트', '특가', 'NEW', '한정', '산지직송', '유기농', '할인'],
@@ -560,17 +561,89 @@ const Admin = {
   },
 
   renderPolicyTemplatePicker(field) {
-    const templates = field === 'shipping' ? this.getShippingTemplates() : this.getReturnTemplates();
-    const selectId = field === 'shipping' ? 'policy-pick-shipping' : 'policy-pick-return';
-    if (!templates.length) {
-      return `<span class="admin-hint">등록된 템플릿 없음 · [배송·반품 안내]에서 추가</span>`;
+    return `<button type="button" class="btn btn--sm btn--ghost" onclick="Admin.openPolicyPicker('${field}')">기본안내 불러오기</button>`;
+  },
+
+  applyPolicyBody(field, body) {
+    if (!this.productDraft) this.initProductDraft(this.editingProduct || {});
+    const fieldName = field === 'shipping' ? 'shippingGuide' : 'returnGuide';
+    const text = String(body || '');
+    this.productDraft[fieldName] = text;
+    const form = document.getElementById('product-form');
+    const ta = form?.querySelector(`[name="${fieldName}"]`);
+    if (ta) ta.value = text;
+  },
+
+  closePolicyPicker() {
+    this._policyPickerTemplates = null;
+    document.getElementById('policy-picker-overlay')?.remove();
+  },
+
+  pickPolicyTemplate(field, index) {
+    const tpl = this._policyPickerTemplates?.[index];
+    if (!tpl) return;
+    this.applyPolicyBody(field, tpl.body);
+    this.closePolicyPicker();
+  },
+
+  showPolicyPickerModal(field, templates) {
+    this.closePolicyPicker();
+    this._policyPickerTemplates = templates;
+    const title = field === 'shipping' ? '배송 안내' : '교환·반품 안내';
+    const overlay = document.createElement('div');
+    overlay.id = 'policy-picker-overlay';
+    overlay.className = 'policy-picker-overlay';
+    overlay.innerHTML = `
+      <div class="policy-picker-modal" role="dialog" aria-label="${title} 선택">
+        <div class="policy-picker-modal__head">
+          <strong>${title} — 불러올 문구 선택</strong>
+          <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.closePolicyPicker()">닫기</button>
+        </div>
+        <ul class="policy-picker-list">
+          ${templates
+            .map(
+              (t, i) => `
+            <li>
+              <button type="button" class="policy-picker-item" onclick="Admin.pickPolicyTemplate('${field}', ${i})">
+                <strong>${this.esc(t.name)}</strong>
+                <span>${this.esc(String(t.body || '').replace(/\s+/g, ' ').slice(0, 100))}${String(t.body || '').length > 100 ? '…' : ''}</span>
+              </button>
+            </li>`
+            )
+            .join('')}
+        </ul>
+      </div>`;
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) this.closePolicyPicker();
+    });
+    document.body.appendChild(overlay);
+  },
+
+  async openPolicyPicker(field) {
+    this.syncDetailEditorToDraft();
+    this.syncProductFormState();
+    if (!this.productDraft) this.initProductDraft(this.editingProduct || {});
+    try {
+      await this.ensurePolicies(true);
+    } catch (err) {
+      alert(err.message || '안내 문구를 불러오지 못했습니다.');
+      return;
     }
-    return `<span class="policy-template-picker">
-      <select id="${selectId}" class="policy-template-select">
-        ${templates.map((t) => `<option value="${this.esc(t.id)}">${this.esc(t.name)}</option>`).join('')}
-      </select>
-      <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.applyPolicyTemplate('${field}')">안내 불러오기</button>
-    </span>`;
+    const templates = field === 'shipping' ? this.getShippingTemplates() : this.getReturnTemplates();
+    if (!templates.length) {
+      alert('등록된 안내 문구가 없습니다. [배송·반품 안내] 메뉴에서 템플릿을 추가해 주세요.');
+      return;
+    }
+    if (templates.length === 1) {
+      this.applyPolicyBody(field, templates[0].body);
+      return;
+    }
+    this.showPolicyPickerModal(field, templates);
+  },
+
+  /** @deprecated openPolicyPicker 사용 */
+  async applyPolicyTemplate(field) {
+    await this.openPolicyPicker(field);
   },
 
   renderPolicyTemplateCards(type) {
@@ -719,33 +792,6 @@ const Admin = {
     this.syncProductFormState();
     if (this.productDraft.detailBlocks.length <= 1) return;
     this.productDraft.detailBlocks.splice(i, 1);
-    this.render();
-  },
-
-  async applyPolicyTemplate(field) {
-    this.syncProductFormState();
-    if (!this.productDraft) this.initProductDraft(this.editingProduct || {});
-    await this.ensurePolicies(true);
-
-    const selectId = field === 'shipping' ? 'policy-pick-shipping' : 'policy-pick-return';
-    const templateId = document.getElementById(selectId)?.value;
-    const templates = field === 'shipping' ? this.getShippingTemplates() : this.getReturnTemplates();
-
-    if (!templates.length) {
-      alert('등록된 안내 문구가 없습니다. [배송·반품 안내] 메뉴에서 템플릿을 추가해 주세요.');
-      return;
-    }
-
-    const tpl = templates.find((t) => t.id === templateId) || templates[0];
-    const fieldName = field === 'shipping' ? 'shippingGuide' : 'returnGuide';
-    this.productDraft[fieldName] = tpl.body;
-
-    const form = document.getElementById('product-form');
-    const ta = form?.querySelector(`[name="${fieldName}"]`);
-    if (ta) {
-      ta.value = tpl.body;
-      return;
-    }
     this.render();
   },
 
