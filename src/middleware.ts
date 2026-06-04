@@ -8,6 +8,10 @@ import type { NextRequest } from 'next/server';
 
 function isStaticAsset(pathname: string) {
 
+  if (/^\/naver[a-z0-9]+\.html$/i.test(pathname)) return true;
+
+  if (/^\/google[a-z0-9]+\.html$/i.test(pathname)) return true;
+
   return /\.[a-z0-9]{2,8}$/i.test(pathname) && !pathname.endsWith('.html');
 
 }
