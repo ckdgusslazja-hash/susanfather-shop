@@ -3011,6 +3011,20 @@ body.is-reviews {
   line-height: 1.35;
 }
 
+.pdp-detail-html .mall-detail__ref-note {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  color: #495057;
+  background: #f1f3f5;
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+.pdp-detail-html .mall-detail__gallery--refs img {
+  opacity: 0.92;
+}
+
 .pdp-detail-html .mall-detail__title--center {
   text-align: center;
   border-left: none;
