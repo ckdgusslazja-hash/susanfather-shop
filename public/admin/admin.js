@@ -240,7 +240,7 @@ const Admin = {
     return `
       <div class="panel time-attack-panel">
         <div class="panel__head"><h2>⚡ 메인 타임어택 상품</h2></div>
-        <p class="admin-hint">쇼핑몰 메인 「타임어택」에 노출할 상품입니다. 아래 순서대로 <strong>최대 4개</strong>까지 표시됩니다. 아래 목록에서 「타임어택」 버튼으로 추가·제거할 수 있습니다.</p>
+        <p class="admin-hint">쇼핑몰 메인 「타임어택」에 노출할 상품입니다. 아래 순서대로 표시되며, 개수 제한 없이 등록할 수 있습니다. 상품 목록에서 「타임어택」 버튼으로 추가·제거하세요.</p>
         ${
           list.length
             ? `<ol class="time-attack-list">${items}</ol>`
@@ -1663,7 +1663,7 @@ const Admin = {
             <div class="form-row">
               <label>타임어택 순서</label>
               <input name="timeAttackOrder" type="number" min="0" step="1" value="${p.timeAttack && p.timeAttackOrder != null && p.timeAttackOrder !== '' ? Number(p.timeAttackOrder) : ''}" placeholder="체크 시 비우면 자동" />
-              <p class="admin-hint">타임어택 체크 시 사용 · 숫자가 작을수록 앞에 노출 (메인 최대 4개)</p>
+              <p class="admin-hint">타임어택 체크 시 사용 · 숫자가 작을수록 앞에 노출</p>
             </div>
 
             <div class="form-row full">

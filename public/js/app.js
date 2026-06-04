@@ -1428,8 +1428,8 @@ function startTimeAttackTimer() {
   timeAttackTimerId = setInterval(tickTimeAttackTimer, 1000);
 }
 
-function getTimeAttackProducts(limit = 4) {
-  const picked = getAllProducts()
+function getTimeAttackProducts() {
+  return getAllProducts()
     .filter((p) => p.timeAttack === true)
     .sort((a, b) => {
       const oa = Number(a.timeAttackOrder);
@@ -1439,17 +1439,10 @@ function getTimeAttackProducts(limit = 4) {
       if (!Number.isFinite(oa) && Number.isFinite(ob)) return 1;
       return String(a.id).localeCompare(String(b.id));
     });
-  if (picked.length) return picked.slice(0, limit);
-
-  let list = filterProductsByCategory('sale');
-  if (!list.length) list = getAllProducts();
-  return [...list]
-    .sort((a, b) => 1 - b.price / b.originalPrice - (1 - a.price / a.originalPrice))
-    .slice(0, limit);
 }
 
 function renderTimeAttackSection() {
-  const products = getTimeAttackProducts(4);
+  const products = getTimeAttackProducts();
   if (!products.length) return '';
   const countdown = formatTimeAttackCountdown(getTimeAttackRemainingMs());
   return `
