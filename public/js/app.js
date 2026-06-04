@@ -1371,7 +1371,7 @@ function renderTimeAttackSection() {
         </h2>
         <button type="button" class="home-row-section__more" onclick="selectCategory('sale')">더보기 ›</button>
       </div>
-      <p class="home-time-attack__sub">오늘 자정(KST)까지 · 선착순 특가</p>
+      <p class="home-time-attack__sub">오늘 자정까지 · 선착순 특가</p>
       <div class="home-scroll">${products.map(renderHomeScrollCard).join('')}</div>
     </section>
   `;
