@@ -4,6 +4,14 @@
   "regions": [
     "icn1"
   ],
+  "headers": [
+    {
+      "source": "/admin/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    }
+  ],
   "buildCommand": "prisma generate && next build",
   "redirects": [
     {

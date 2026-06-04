@@ -39,5 +39,17 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host ""
-Write-Host "GitHub push 완료 → Vercel 자동 배포 시작 (1~3분)"
-Write-Host "사이트: https://susanfather.com"
+Write-Host "Vercel 프로덕션 배포 중 (2~5분)..."
+$env:Path = "${env:ProgramFiles}\Git\bin;${env:ProgramFiles}\nodejs;" + $env:Path
+$prevEAP = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+npx vercel@latest deploy --prod --yes 2>&1 | ForEach-Object { Write-Host "  $_" }
+$deployOk = ($LASTEXITCODE -eq 0)
+$ErrorActionPreference = $prevEAP
+if (-not $deployOk) {
+  Write-Host "Vercel 배포 실패 — npm run deploy 로 재시도하세요."
+  exit 1
+}
+
+Write-Host ""
+Write-Host "배포 완료: https://susanfather.com"
