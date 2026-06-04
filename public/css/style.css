@@ -342,7 +342,7 @@ body.is-home {
 /* 알림 패널 */
 .notif-panel {
   position: fixed;
-  top: 56px;
+  top: calc(56px + env(safe-area-inset-top, 0px));
   right: 12px;
   width: min(360px, calc(100vw - 24px));
   max-height: min(70vh, 480px);
