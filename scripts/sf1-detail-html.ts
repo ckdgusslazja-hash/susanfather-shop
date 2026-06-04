@@ -1,0 +1,146 @@
+/** 광어회(sf1) 상세페이지 HTML — scripts/set-sf1-detail-page.ts 에서 import */
+const D = '/images/products/detail/sf1';
+
+export const SF1_DETAIL_HTML = `
+<div class="mall-detail">
+  <figure class="mall-detail__hero">
+    <img src="${D}/01-hero.jpg" alt="신선한 광어회 플레이팅" loading="lazy" />
+    <figcaption class="mall-detail__hero-cap">완도 산지 국내산 광어 · 당일 손질 회</figcaption>
+  </figure>
+
+  <div class="mall-detail__intro">
+    <p class="mall-detail__eyebrow">전남 완도 · 산지직송</p>
+    <h2 class="mall-detail__headline">집에서 즐기는<br>프리미엄 광어회 코스</h2>
+    <p class="mall-detail__lead">수산아빠는 주문 확인 후 <b>당일 손질</b>한 광어회만 발송합니다. 마트 진열대 회가 아닌, <b>주문→가공→냉장 출고</b> 흐름으로 신선도와 식감을 지킵니다.</p>
+  </div>
+
+  <ul class="mall-detail__points">
+    <li><strong>당일 손질</strong><span>주문·재고 기준 가공</span></li>
+    <li><strong>완도 산지</strong><span>국내산 광어</span></li>
+    <li><strong>냉장 배송</strong><span>아이스팩·보냉제</span></li>
+    <li><strong>용량 3종</strong><span>300g·500g·1kg</span></li>
+  </ul>
+
+  <div class="mall-detail__band">
+    <p class="mall-detail__band-label">WHY 수산아빠</p>
+    <p class="mall-detail__band-text">광어회는 <b>신선도가 맛의 90%</b>입니다.<br>손질 시점·보관·배송까지 한 번에 관리합니다.</p>
+  </div>
+
+  <div class="mall-detail__split">
+    <div class="mall-detail__split-text">
+      <h3 class="mall-detail__title">① 산지에서 선별한 국내산 광어</h3>
+      <p>완도·남해안 권역에서 들어온 국내산 광어 중 식감·육질이 좋은 개체만 선별합니다. 냉장 상태를 유지하며 가공 시설로 이동해 위생 기준에 맞춰 처리합니다.</p>
+      <ul>
+        <li>국내산 원물 사용 (수입 필렛 혼용 없음)</li>
+        <li>눈·비늘·내장 제거 후 회용 가공</li>
+      </ul>
+    </div>
+    <figure class="mall-detail__split-media">
+      <img src="${D}/02-fresh.jpg" alt="신선한 생선 원물" loading="lazy" />
+      <figcaption>산지 입고 직후 신선도 점검</figcaption>
+    </figure>
+  </div>
+
+  <figure class="mall-detail__figure mall-detail__figure--lg">
+    <img src="${D}/03-slice.jpg" alt="광어회 슬라이스 클로즈업" loading="lazy" />
+    <figcaption>회에 맞는 두께로 슬라이스 · 쫄깃한 식감과 담백한 맛을 살린 컷팅</figcaption>
+  </figure>
+
+  <section class="mall-detail__section">
+    <h3 class="mall-detail__title">② 마트 회와 무엇이 다른가요?</h3>
+    <table class="mall-detail__compare">
+      <thead>
+        <tr><th>구분</th><th>대형마트 회</th><th>수산아빠 광어회</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>손질 시점</td><td>전일·당일 오전 일괄</td><td><b>주문 후 당일 손질</b></td></tr>
+        <tr><td>용량</td><td>고정 중량 위주</td><td>300g / 500g / 1kg 선택</td></tr>
+        <tr><td>배송</td><td>매장 픽업·일반 택배</td><td>냉장·아이스팩 포장</td></tr>
+        <tr><td>신선도</td><td>진열 시간에 따라 편차</td><td>출고 직후 냉장 유통</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="mall-detail__split mall-detail__split--reverse">
+    <div class="mall-detail__split-text">
+      <h3 class="mall-detail__title">③ 완도 산지와 직거래 네트워크</h3>
+      <p>전남 완도는 국내 대표적인 어업·양식 거점입니다. 수산아빠는 산지 출하 네트워크와 연계해 물량이 안정적일 때 신선한 광어를 확보하고, 기상·어획 상황에 따라 솔직히 안내드립니다.</p>
+    </div>
+    <figure class="mall-detail__split-media">
+      <img src="${D}/06-market.jpg" alt="수산 시장·산지 풍경" loading="lazy" />
+      <figcaption>산지·도매 시장 연계로 신선 원물 확보</figcaption>
+    </figure>
+  </div>
+
+  <section class="mall-detail__section mall-detail__section--process">
+    <h3 class="mall-detail__title">④ 주문부터 식탁까지 4단계</h3>
+    <ol class="mall-detail__steps">
+      <li><span class="mall-detail__step-no">01</span><strong>주문·결제</strong><p>용량(300g/500g/1kg) 선택</p></li>
+      <li><span class="mall-detail__step-no">02</span><strong>당일 손질</strong><p>HACCP 시설에서 회 가공</p></li>
+      <li><span class="mall-detail__step-no">03</span><strong>냉장 포장</strong><p>스티로폼·아이스팩·비닐 이중 포장</p></li>
+      <li><span class="mall-detail__step-no">04</span><strong>신선 배송</strong><p>수령 후 즉시 냉장 보관</p></li>
+    </ol>
+  </section>
+
+  <h3 class="mall-detail__title mall-detail__title--center">상세 이미지</h3>
+  <div class="mall-detail__gallery">
+    <figure><img src="${D}/04-pack.jpg" alt="냉장 포장·배송 준비" loading="lazy" /><figcaption>냉장 포장·보냉제 동봉</figcaption></figure>
+    <figure><img src="${D}/07-process.jpg" alt="손질·가공 과정" loading="lazy" /><figcaption>위생 장갑·도구로 손질</figcaption></figure>
+    <figure><img src="${D}/05-serve.jpg" alt="회 플레이팅·식탁 세팅" loading="lazy" /><figcaption>집에서 즐기는 회 코스</figcaption></figure>
+    <figure><img src="${D}/02-fresh.jpg" alt="신선 원물 클로즈업" loading="lazy" /><figcaption>육질·신선도 확인</figcaption></figure>
+  </div>
+
+  <figure class="mall-detail__figure">
+    <img src="/images/products/sf1.png" alt="수산아빠 국내산 광어회 대표 이미지" loading="lazy" />
+    <figcaption>※ 상단 대표 이미지는 발송 상품 구성·품질을 이해하기 위한 참고 컷입니다.</figcaption>
+  </figure>
+
+  <section class="mall-detail__section">
+    <h3 class="mall-detail__title">상품 정보</h3>
+    <table class="mall-detail__table">
+      <tbody>
+        <tr><th>상품명</th><td>국내산 광어회</td></tr>
+        <tr><th>원산지</th><td>전남 완도 (국내산)</td></tr>
+        <tr><th>용량 옵션</th><td>300g / 500g(기본) / 1kg</td></tr>
+        <tr><th>가공</th><td>회용 슬라이스 (가시·비늘 제거)</td></tr>
+        <tr><th>보관</th><td>수령 즉시 냉장(0~5℃), 당일~익일 섭취 권장</td></tr>
+        <tr><th>배송</th><td>냉장 택배 · 산지직송</td></tr>
+        <tr><th>인증</th><td>HACCP 인증 가공 시설</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="mall-detail__section">
+    <h3 class="mall-detail__title">맛있게 드시는 법</h3>
+    <ul>
+      <li>택배 수령 후 <b>30분 이내 냉장</b> 보관해 주세요.</li>
+      <li>드시기 10~15분 전에 꺼내면 식감이 살아납니다.</li>
+      <li>초장·와사비·깻잎·양파·마늘을 곁들이면 외식 못지않은 풍미를 느낄 수 있습니다.</li>
+      <li>2인 기준 500g, 가족·모임은 1kg을 추천드립니다.</li>
+    </ul>
+  </section>
+
+  <dl class="mall-detail__qa">
+    <dt>냉동으로 오나요?</dt>
+    <dd>아닙니다. <b>냉장 상태</b>로 발송하며, 아이스팩이 함께 동봉됩니다.</dd>
+    <dt>가시는 없나요?</dt>
+    <dd>손질 시 대부분 제거하지만, 회 특성상 <b>잔가시가 남을 수 있습니다</b>. 드실 때 유의해 주세요.</dd>
+    <dt>언제 먹는 것이 가장 좋나요?</dt>
+    <dd>수령 당일~익일 섭취를 권장합니다. 장기 냉장·냉동은 식감 저하가 있을 수 있습니다.</dd>
+  </dl>
+
+  <div class="mall-detail__notice">
+    <strong>신선 수산물 안내</strong>
+    <p>신선 회는 단순 변심 반품이 어렵습니다. 변질·파손·오배송은 수령 후 24시간 이내 사진과 함께 고객센터로 연락해 주세요.</p>
+  </div>
+</div>
+`.trim();
+
+export const SF1_ADMIN_IMAGES = [
+  { id: 'sf1-a1', url: '/images/products/sf1.png', label: '대표 상품컷' },
+  { id: 'sf1-a2', url: `${D}/01-hero.jpg`, label: '회 플레이팅' },
+  { id: 'sf1-a3', url: `${D}/03-slice.jpg`, label: '슬라이스 클로즈업' },
+  { id: 'sf1-a4', url: `${D}/02-fresh.jpg`, label: '신선 원물' },
+  { id: 'sf1-a5', url: `${D}/06-market.jpg`, label: '산지·시장' },
+  { id: 'sf1-a6', url: `${D}/04-pack.jpg`, label: '포장·배송' },
+];

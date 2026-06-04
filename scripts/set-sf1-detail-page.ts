@@ -5,6 +5,7 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
+import { SF1_ADMIN_IMAGES, SF1_DETAIL_HTML } from './sf1-detail-html';
 
 const prisma = new PrismaClient();
 const root = process.cwd();
@@ -27,80 +28,6 @@ const SF1_RETURN_GUIDE = `【 교환·반품 안내 (신선 회·수산물) 】
 · 확인 후 재발송·환불 처리하며, 회사 귀책 시 배송비는 수산아빠가 부담합니다.
 · 개봉 후 상온 방치, 냉장 보관 지연으로 인한 변질은 교환·환불 대상에서 제외됩니다.`;
 
-const SF1_DETAIL_HTML = `
-<div class="mall-detail">
-  <p class="mall-detail__eyebrow">전남 완도 · 당일 손질</p>
-  <h2 class="mall-detail__headline">산지에서 바로, 식탁까지<br>국내산 광어회</h2>
-  <p class="mall-detail__lead">완도 항에서 선별한 국내산 광어를 주문 후 당일 손질해 회로 보내드립니다. 쫄깃한 식감과 담백한 맛을 집에서 회 코스처럼 즐겨 보세요.</p>
-
-  <figure class="mall-detail__figure">
-    <img src="/images/products/sf1.png" alt="국내산 광어회 상품 이미지" loading="lazy" />
-    <figcaption>수산아빠 대표 상품컷 · 실제 발송 상품과 유사한 품질 기준으로 손질합니다.</figcaption>
-  </figure>
-
-  <ul class="mall-detail__points">
-    <li><strong>당일 손질</strong><span>주문·재고 기준 당일 가공</span></li>
-    <li><strong>완도 산지</strong><span>국내산 광어 직거래</span></li>
-    <li><strong>냉장 배송</strong><span>아이스팩·보냉 포장</span></li>
-    <li><strong>용량 선택</strong><span>300g · 500g · 1kg</span></li>
-  </ul>
-
-  <section class="mall-detail__section">
-    <h3 class="mall-detail__title">왜 수산아빠 광어회인가요?</h3>
-    <p>대형 마트 회와 달리 <b>주문 후 손질</b>해 보내기 때문에 신선도와 식감의 차이를 체감하실 수 있습니다. 광어 특유의 담백함과 쫄깃한 식감을 살리기 위해 불필요한 잔가시·비늘을 제거하고, 회에 적합한 두께로 썰어 드립니다.</p>
-    <ul>
-      <li>HACCP 인증 가공 시설에서 위생 관리</li>
-      <li>가정·소규모 모임에 맞는 300g~1kg 용량 구성</li>
-      <li>초장·김·야채만 준비하면 바로 회식 가능</li>
-    </ul>
-  </section>
-
-  <section class="mall-detail__section mall-detail__section--process">
-    <h3 class="mall-detail__title">주문부터 식탁까지</h3>
-    <ol class="mall-detail__steps">
-      <li><span class="mall-detail__step-no">01</span><strong>주문·결제</strong><p>용량(300g/500g/1kg) 선택 후 결제</p></li>
-      <li><span class="mall-detail__step-no">02</span><strong>당일 손질</strong><p>완도 산지 연계 시설에서 회 가공</p></li>
-      <li><span class="mall-detail__step-no">03</span><strong>냉장 포장</strong><p>아이스팩·보냉제 동봉 후 출고</p></li>
-      <li><span class="mall-detail__step-no">04</span><strong>신선 배송</strong><p>수령 후 즉시 냉장 보관</p></li>
-    </ol>
-  </section>
-
-  <figure class="mall-detail__figure">
-    <img src="/images/products/sf1.png" alt="광어회 신선 포장 예시" loading="lazy" />
-    <figcaption>냉장 유통을 전제로 한 포장·배송으로 신선도를 지킵니다.</figcaption>
-  </figure>
-
-  <section class="mall-detail__section">
-    <h3 class="mall-detail__title">상품 정보</h3>
-    <table class="mall-detail__table">
-      <tbody>
-        <tr><th>상품명</th><td>국내산 광어회</td></tr>
-        <tr><th>원산지</th><td>전남 완도 (국내산)</td></tr>
-        <tr><th>용량</th><td>300g / 500g(기본) / 1kg — 옵션 선택</td></tr>
-        <tr><th>보관 방법</th><td>수령 즉시 냉장(0~5℃), 당일~익일 섭취 권장</td></tr>
-        <tr><th>손질</th><td>회용 슬라이스 (가시·비늘 제거)</td></tr>
-        <tr><th>배송</th><td>냉장 택배 · 산지직송</td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="mall-detail__section">
-    <h3 class="mall-detail__title">맛있게 드시는 법</h3>
-    <ul>
-      <li>수령 후 <b>30분 이내 냉장 보관</b>해 주세요.</li>
-      <li>드시기 10분 전에 꺼내 식감이 살아납니다.</li>
-      <li>초장·와사비·깻잎·양파와 함께 곁들이면 고급 회 코스 분위기를 낼 수 있습니다.</li>
-      <li>남은 회는 밀폐 후 당일 섭취를 권장합니다.</li>
-    </ul>
-  </section>
-
-  <div class="mall-detail__notice">
-    <strong>신선 식품 안내</strong>
-    <p>신선 수산물 특성상 단순 변심 반품은 어렵습니다. 품질 이상 시 수령 후 24시간 이내 고객센터로 연락해 주세요.</p>
-  </div>
-</div>
-`.trim();
-
 function buildSf1Patch(existing: Record<string, unknown>) {
   return {
     ...existing,
@@ -120,18 +47,7 @@ function buildSf1Patch(existing: Record<string, unknown>) {
       '완도 산지 직송',
       '300g / 500g / 1kg 선택',
     ],
-    adminImages: [
-      {
-        id: 'sf1-a1',
-        url: '/images/products/sf1.png',
-        label: '대표 상품컷',
-      },
-      {
-        id: 'sf1-a2',
-        url: '/images/products/sf1.png',
-        label: '손질 회 슬라이스',
-      },
-    ],
+    adminImages: SF1_ADMIN_IMAGES,
   };
 }
 
