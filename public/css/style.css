@@ -760,6 +760,53 @@ body.is-home {
   padding: 4px 0;
 }
 
+.home-time-attack {
+  background: linear-gradient(180deg, #fff8f6 0%, #fff 72%);
+}
+
+.home-time-attack__head {
+  padding-bottom: 6px;
+}
+
+.home-time-attack__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.home-time-attack__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #111;
+}
+
+.home-time-attack__label::before {
+  content: '⚡';
+  font-size: 1rem;
+}
+
+.time-attack-timer {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: linear-gradient(135deg, #e53935, #ff7043);
+  padding: 5px 11px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(229, 57, 53, 0.28);
+}
+
+.home-time-attack__sub {
+  margin: -4px 16px 10px;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
 .home-scroll {
   display: flex;
   gap: 10px;

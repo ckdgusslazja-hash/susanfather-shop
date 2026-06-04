@@ -1297,6 +1297,86 @@ function renderHomeScrollCard(product) {
   `;
 }
 
+function getKstDayEndMs() {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+      .formatToParts(new Date())
+      .filter((p) => p.type !== 'literal')
+      .map((p) => [p.type, p.value])
+  );
+  const y = Number(parts.year);
+  const mo = Number(parts.month);
+  const da = Number(parts.day);
+  return Date.UTC(y, mo - 1, da + 1, 0, 0, 0) - 9 * 60 * 60 * 1000;
+}
+
+function getTimeAttackRemainingMs() {
+  return Math.max(0, getKstDayEndMs() - Date.now());
+}
+
+function formatTimeAttackCountdown(ms) {
+  const total = Math.floor(ms / 1000);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+let timeAttackTimerId = null;
+
+function stopTimeAttackTimer() {
+  if (timeAttackTimerId) {
+    clearInterval(timeAttackTimerId);
+    timeAttackTimerId = null;
+  }
+}
+
+function tickTimeAttackTimer() {
+  const el = document.getElementById('time-attack-timer');
+  if (!el) return;
+  const ms = getTimeAttackRemainingMs();
+  el.textContent = formatTimeAttackCountdown(ms);
+  if (ms <= 0) stopTimeAttackTimer();
+}
+
+function startTimeAttackTimer() {
+  stopTimeAttackTimer();
+  tickTimeAttackTimer();
+  timeAttackTimerId = setInterval(tickTimeAttackTimer, 1000);
+}
+
+function getTimeAttackProducts(limit = 4) {
+  let list = filterProductsByCategory('sale');
+  if (!list.length) list = getAllProducts();
+  return [...list]
+    .sort((a, b) => 1 - b.price / b.originalPrice - (1 - a.price / a.originalPrice))
+    .slice(0, limit);
+}
+
+function renderTimeAttackSection() {
+  const products = getTimeAttackProducts(4);
+  if (!products.length) return '';
+  const countdown = formatTimeAttackCountdown(getTimeAttackRemainingMs());
+  return `
+    <section class="home-row-section home-time-attack" aria-label="타임어택 특가">
+      <div class="home-row-section__head home-time-attack__head">
+        <h2 class="home-row-section__title home-time-attack__title">
+          <span class="home-time-attack__label">타임어택</span>
+          <span class="time-attack-timer" id="time-attack-timer" aria-live="polite">${countdown}</span>
+        </h2>
+        <button type="button" class="home-row-section__more" onclick="selectCategory('sale')">더보기 ›</button>
+      </div>
+      <p class="home-time-attack__sub">오늘 자정(KST)까지 · 선착순 특가</p>
+      <div class="home-scroll">${products.map(renderHomeScrollCard).join('')}</div>
+    </section>
+  `;
+}
+
 function renderHomeScrollSection(title, products, moreOnClick) {
   if (!products.length) return '';
   return `
@@ -1426,6 +1506,7 @@ function renderHome() {
         recentAll,
         recentAll.length ? "document.getElementById('home-product-list')?.scrollIntoView({behavior:'smooth'})" : null
       )}
+      ${renderTimeAttackSection()}
       ${renderHomeScrollSection('🛍️ 이 상품 놓치지 마세요!', getAllProducts(), "selectCategory('all')")}
       ${renderHomeScrollSection(
         '🔥 고민하는 사이 품절! 산지 마감특가',
@@ -2125,6 +2206,8 @@ function render() {
   if (typeof renderSiteFooter === 'function') renderSiteFooter();
   if (state.page === 'checkout' && typeof bindCheckoutAddress === 'function') bindCheckoutAddress();
   updateNotificationPanel();
+  if (state.page === 'home' && state.category === 'all') startTimeAttackTimer();
+  else stopTimeAttackTimer();
 }
 
 function bindPaymentOptions() {
