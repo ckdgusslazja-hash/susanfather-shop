@@ -53,6 +53,7 @@ let state = {
   passwordMessage: '',
   notifications: [],
   notificationsOpen: false,
+  categoryMenuOpen: false,
 };
 
 const NOTIF_READ_KEY = 'greenharvest_notif_read';
@@ -473,6 +474,7 @@ function showToast(message) {
 
 function navigate(page, params = {}) {
   state.page = page;
+  if (page !== 'home') state.categoryMenuOpen = false;
   if (params.category) state.category = params.category;
   if (params.q || params.searchQuery) {
     const query = String(params.q || params.searchQuery).trim();
@@ -1058,18 +1060,68 @@ function renderBottomNav() {
   const show = state.page === 'home';
   nav.classList.toggle('is-visible', show);
   nav.querySelectorAll('.bottom-nav__item').forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.nav === 'home' && state.page === 'home');
+    const navId = btn.dataset.nav;
+    const active =
+      (navId === 'home' && state.page === 'home' && !state.categoryMenuOpen) ||
+      (navId === 'categories' && state.categoryMenuOpen);
+    btn.classList.toggle('active', active);
   });
+  syncCategoryMenuPanel();
+}
+
+function renderCategoryMenuItems() {
+  return HOME_CATEGORIES.map(
+    (cat) => `
+    <button type="button" class="category-menu__item ${state.category === cat.id ? 'is-active' : ''}"
+      onclick="selectCategoryFromMenu('${cat.id}')">
+      <span class="category-menu__icon">${cat.icon}</span>
+      <span class="category-menu__name">${escapeHtml(cat.name)}</span>
+    </button>`
+  ).join('');
+}
+
+function syncCategoryMenuPanel() {
+  const menu = document.getElementById('category-menu');
+  const grid = document.getElementById('category-menu-grid');
+  if (!menu) return;
+  menu.classList.toggle('is-open', !!state.categoryMenuOpen);
+  menu.hidden = !state.categoryMenuOpen;
+  menu.setAttribute('aria-hidden', state.categoryMenuOpen ? 'false' : 'true');
+  document.body.classList.toggle('is-category-menu-open', !!state.categoryMenuOpen);
+  const catBtn = document.getElementById('bottom-nav-categories');
+  if (catBtn) catBtn.setAttribute('aria-expanded', state.categoryMenuOpen ? 'true' : 'false');
+  if (grid) grid.innerHTML = renderCategoryMenuItems();
+}
+
+function toggleCategoryMenu() {
+  if (state.page !== 'home') {
+    state.categoryMenuOpen = true;
+    navigate('home');
+    return;
+  }
+  state.categoryMenuOpen = !state.categoryMenuOpen;
+  syncCategoryMenuPanel();
+}
+
+function closeCategoryMenu() {
+  if (!state.categoryMenuOpen) return;
+  state.categoryMenuOpen = false;
+  syncCategoryMenuPanel();
+}
+
+function selectCategoryFromMenu(id) {
+  closeCategoryMenu();
+  selectCategory(id);
 }
 
 function focusHomeSearch() {
+  closeCategoryMenu();
   navigate('home');
   setTimeout(() => document.getElementById('home-search')?.focus(), 100);
 }
 
 function scrollToHomeCategories() {
-  navigate('home');
-  setTimeout(() => document.getElementById('home-categories')?.scrollIntoView({ behavior: 'smooth' }), 100);
+  toggleCategoryMenu();
 }
 
 /** 입력만 저장 — 검색은 버튼·돋보기·Enter 시 실행 */
@@ -1914,6 +1966,7 @@ function selectCategory(id) {
   state.category = id;
   state.searchQuery = '';
   state.searchDraft = '';
+  state.categoryMenuOpen = false;
   if (state.page !== 'home') {
     navigate('home', { category: id });
     return;

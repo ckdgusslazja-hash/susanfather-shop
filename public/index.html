@@ -12,7 +12,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
     />
-    <link rel="stylesheet" href="css/style.css?v=8" />
+    <link rel="stylesheet" href="css/style.css?v=9" />
   </head>
   <body class="is-app-loading">
     <div id="app-loader" class="app-loader" role="status" aria-live="polite" aria-busy="true">
@@ -54,7 +54,7 @@
         <span class="bottom-nav__icon">🏠</span>
         <span>홈</span>
       </button>
-      <button type="button" class="bottom-nav__item" data-nav="categories" onclick="scrollToHomeCategories()">
+      <button type="button" class="bottom-nav__item" data-nav="categories" onclick="toggleCategoryMenu()" aria-expanded="false" id="bottom-nav-categories">
         <span class="bottom-nav__icon">▦</span>
         <span>카테고리</span>
       </button>
@@ -73,6 +73,17 @@
       </button>
     </nav>
 
+    <div id="category-menu" class="category-menu" hidden aria-hidden="true">
+      <button type="button" class="category-menu__backdrop" onclick="closeCategoryMenu()" aria-label="카테고리 닫기"></button>
+      <div class="category-menu__panel" role="dialog" aria-labelledby="category-menu-title">
+        <div class="category-menu__head">
+          <h2 id="category-menu-title">카테고리</h2>
+          <button type="button" class="category-menu__close" onclick="closeCategoryMenu()" aria-label="닫기">✕</button>
+        </div>
+        <div class="category-menu__grid" id="category-menu-grid"></div>
+      </div>
+    </div>
+
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <div class="lightbox" id="lightbox" hidden aria-hidden="true" onclick="if(event.target===this)closeLightbox()">
@@ -87,7 +98,7 @@
     <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
     <script src="js/data.js?v=4"></script>
     <script src="js/api.js?v=3"></script>
-    <script src="js/app.js?v=4"></script>
+    <script src="js/app.js?v=5"></script>
     <script src="js/pages-extra.js?v=4"></script>
   </body>
 </html>
