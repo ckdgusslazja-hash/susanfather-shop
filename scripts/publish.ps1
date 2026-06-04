@@ -24,6 +24,11 @@ if (-not $env:GIT_AUTHOR_NAME) {
 
 Write-Host "=== publish: $Message ==="
 
+if (Test-Path "scripts/generate-sitemap.mjs") {
+  Write-Host "sitemap.xml 생성 중..."
+  node scripts/generate-sitemap.mjs
+}
+
 & git add -A
 $status = & git status --porcelain
 if (-not $status) {

@@ -330,6 +330,35 @@ function readRouteSession() {
   }
 }
 
+const SEO_PATH_PAGES = {
+  '/terms': 'terms',
+  '/privacy': 'privacy',
+  '/shop-info': 'shop-info',
+  '/customer-center': 'customer-center',
+  '/inquiry': 'inquiry',
+};
+
+function parsePathRoute() {
+  const path = window.location.pathname.replace(/\/$/, '') || '/';
+  const search = new URLSearchParams(window.location.search);
+  if (path === '/') {
+    const params = {};
+    if (search.get('category')) params.category = search.get('category');
+    if (search.get('q')) params.q = search.get('q');
+    return { page: 'home', params };
+  }
+  const productMatch = path.match(/^\/p\/([^/]+)$/i);
+  if (productMatch) {
+    const params = { productId: productMatch[1] };
+    if (search.get('optionId')) params.optionId = search.get('optionId');
+    if (search.get('qty')) params.qty = search.get('qty');
+    return { page: 'detail', params };
+  }
+  const page = SEO_PATH_PAGES[path];
+  if (page) return { page, params: {} };
+  return null;
+}
+
 function serializeRoute() {
   const q = new URLSearchParams();
   switch (state.page) {
@@ -338,7 +367,6 @@ function serializeRoute() {
       if (state.searchQuery?.trim()) q.set('q', state.searchQuery.trim());
       break;
     case 'detail':
-      if (state.selectedProductId) q.set('productId', state.selectedProductId);
       if (state.selectedOptionId) q.set('optionId', state.selectedOptionId);
       if (state.quantity > 1) q.set('qty', String(state.quantity));
       break;
@@ -358,11 +386,23 @@ function serializeRoute() {
       break;
   }
   const qs = q.toString();
+
+  if (state.page === 'detail' && state.selectedProductId) {
+    return `/p/${state.selectedProductId}${qs ? `?${qs}` : ''}`;
+  }
+  if (state.page === 'home') {
+    return `/${qs ? `?${qs}` : ''}`;
+  }
+  const staticPath = Object.entries(SEO_PATH_PAGES).find(([, p]) => p === state.page)?.[0];
+  if (staticPath) return staticPath;
+
   return `#/${state.page}${qs ? `?${qs}` : ''}`;
 }
 
 function getCurrentRouteUrl() {
-  return `${window.location.pathname}${window.location.search}${serializeRoute()}`;
+  const route = serializeRoute();
+  if (route.startsWith('#')) return `/${route}`;
+  return route;
 }
 
 function syncHashFromState(replace = false) {
@@ -382,7 +422,10 @@ function syncHashFromState(replace = false) {
   }
 }
 
-function parseRouteHash() {
+function parseRoute() {
+  const pathRoute = parsePathRoute();
+  if (pathRoute) return pathRoute;
+
   const hash = window.location.hash.replace(/^#/, '').trim();
   if (hash) {
     const raw = hash.replace(/^\/?/, '');
@@ -435,7 +478,7 @@ function buildNavigateParams(page, routeParams = {}) {
 }
 
 async function restoreFromHash() {
-  const { page, params } = parseRouteHash();
+  const { page, params } = parseRoute();
   if (!APP_PAGES.has(page)) {
     navigate('home', { skipScroll: true, replaceHash: true });
     return;
@@ -1946,6 +1989,7 @@ function render() {
   document.body.classList.toggle('is-mypage', state.page === 'mypage');
   renderHeader();
   renderBottomNav();
+  if (typeof updatePageSeo === 'function') updatePageSeo();
   bindPaymentOptions();
   if (typeof renderSiteFooter === 'function') renderSiteFooter();
   if (state.page === 'checkout' && typeof bindCheckoutAddress === 'function') bindCheckoutAddress();
@@ -2207,8 +2251,9 @@ async function initApp() {
     const hadPaymentReturn = window.location.search.includes('payment=');
     await handlePaymentReturn();
     if (!hadPaymentReturn) {
-      const hasRoute = window.location.hash || readRouteSession()?.page;
-      if (hasRoute && (hasRoute !== 'home' || window.location.hash)) {
+      const pathRoute = parsePathRoute();
+      const hasRoute = pathRoute || window.location.hash || readRouteSession()?.page;
+      if (hasRoute && (pathRoute || hasRoute !== 'home' || window.location.hash)) {
         await restoreFromHash();
       } else {
         syncHashFromState(true);
