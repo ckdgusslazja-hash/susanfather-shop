@@ -1,16 +1,23 @@
 ---
-description: susanfather-shop 수정 후 GitHub push 및 Vercel 자동 배포
+description: susanfather-shop 수정 후 GitHub push 및 Vercel 자동 배포 (무조건 실행)
 alwaysApply: true
 ---
 
-# Susan Father — 수정 후 자동 반영
+# Susan Father — 수정 후 자동 반영 (필수)
 
 프로젝트 경로: `C:\Users\User\Desktop\이커머스 쇼핑몰`
 배포: GitHub `ckdgusslazja-hash/susanfather-shop` → Vercel `susanfather-shop` → https://susanfather.com
 
-## 필수: 코드 수정 작업 완료 후
+## 절대 규칙
 
-사용자가 수정을 요청했고 **코드/설정을 변경했다면**, 작업 마무리 전에 반드시 publish 실행:
+코드·설정·CSS·HTML·JS·API를 **한 줄이라도** 바꿨으면, 작업 끝나기 **전에 무조건** publish 실행한다.
+
+- 사용자에게 "배포가 필요하면 말씀해 주세요" **절대 금지**
+- `배포하기.bat` 실행을 사용자에게 요청 **절대 금지**
+- publish 없이 "완료했습니다"로 끝내기 **절대 금지**
+- 질문만 답하고 파일을 건드리지 않았을 때만 publish 생략
+
+## 실행 방법
 
 ```powershell
 cd "C:\Users\User\Desktop\이커머스 쇼핑몰"
@@ -19,15 +26,14 @@ npm run publish -- "한 줄 요약: 무엇을 바꿨는지"
 
 또는: `powershell -ExecutionPolicy Bypass -File scripts/publish.ps1 -Message "요약"`
 
-- Git commit + GitHub push → Vercel GitHub 연동으로 **자동 프로덕션 배포**
-- 사용자에게 `배포하기.bat` 실행을 요청하지 말 것 (에이전트가 직접 publish)
-- 질문만 답하거나 코드를 건드리지 않았으면 publish 생략
+Git commit + GitHub push → Vercel GitHub 연동으로 **자동 프로덕션 배포**
 
-## 예외
+## 예외 처리
 
 - `prisma/schema.prisma` 변경 시: publish 전후로 `npm run db:setup` 시도 (로컬 DB 실패해도 publish는 진행)
-- publish 실패 시 원인 보고 후 재시도
+- publish 실패 시 원인 보고 후 **즉시 재시도**
+- 정적 파일(`public/admin/*.js` 등) 수정 시 `index.html`의 `?v=` 버전 bump 확인
 
-## 사용자에게 보고
+## 사용자 보고
 
 publish 성공 시: "https://susanfather.com 에 1~3분 내 반영됩니다" 한 줄 안내.
