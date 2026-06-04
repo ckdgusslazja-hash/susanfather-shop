@@ -17,6 +17,7 @@ const Admin = {
   editingProduct: null,
   selectedOrderId: null,
   productDraft: null,
+  policyTemplatesDraft: null,
   PRODUCT_DRAFT_KEY: 'gh_admin_product_draft',
 
   BADGES: ['신선', '베스트', '특가', 'NEW', '한정', '산지직송', '유기농', '할인'],
@@ -304,7 +305,13 @@ const Admin = {
 
   async ensurePolicies(force = false) {
     try {
-      if (force || !String(this.settings?.productPolicies?.shippingGuide || '').trim()) {
+      const pol = this.settings?.productPolicies;
+      const hasTemplates =
+        Array.isArray(pol?.shippingTemplates) &&
+        pol.shippingTemplates.length &&
+        Array.isArray(pol?.returnTemplates) &&
+        pol.returnTemplates.length;
+      if (force || !hasTemplates) {
         const data = await this.request('/api/admin/settings');
         this.settings = { ...(this.settings || {}), ...data };
       }
@@ -312,25 +319,140 @@ const Admin = {
       /* API 실패 시 아래 기본값 사용 */
     }
     if (!this.settings) this.settings = {};
-    this.settings.productPolicies = {
-      ...this.DEFAULT_PRODUCT_POLICIES,
-      ...(this.settings.productPolicies || {}),
+    this.settings.productPolicies = this.normalizePolicyTemplates(this.settings.productPolicies || {});
+  },
+
+  normalizePolicyTemplates(pol) {
+    const src = pol || {};
+    const defaults = this.DEFAULT_PRODUCT_POLICIES;
+    let shippingTemplates = Array.isArray(src.shippingTemplates)
+      ? src.shippingTemplates
+          .map((t, i) => ({
+            id: String(t.id || `ship-${i}`),
+            name: String(t.name || `배송 안내 ${i + 1}`).trim() || `배송 안내 ${i + 1}`,
+            body: String(t.body || t.text || '').trim(),
+          }))
+          .filter((t) => t.body)
+      : [];
+    let returnTemplates = Array.isArray(src.returnTemplates)
+      ? src.returnTemplates
+          .map((t, i) => ({
+            id: String(t.id || `ret-${i}`),
+            name: String(t.name || `교환·반품 안내 ${i + 1}`).trim() || `교환·반품 안내 ${i + 1}`,
+            body: String(t.body || t.text || '').trim(),
+          }))
+          .filter((t) => t.body)
+      : [];
+
+    if (!shippingTemplates.length) {
+      const legacy = String(src.shippingGuide || '').trim() || defaults.shippingGuide;
+      shippingTemplates = [{ id: 'ship-default', name: '기본 배송 안내', body: legacy }];
+    }
+    if (!returnTemplates.length) {
+      const legacy = String(src.returnGuide || '').trim() || defaults.returnGuide;
+      returnTemplates = [{ id: 'ret-default', name: '신선식품 교환·반품', body: legacy }];
+    }
+
+    return {
+      shippingTemplates,
+      returnTemplates,
+      shippingGuide: shippingTemplates[0].body,
+      returnGuide: returnTemplates[0].body,
     };
-    if (!String(this.settings.productPolicies.shippingGuide || '').trim()) {
-      this.settings.productPolicies.shippingGuide = this.DEFAULT_PRODUCT_POLICIES.shippingGuide;
-    }
-    if (!String(this.settings.productPolicies.returnGuide || '').trim()) {
-      this.settings.productPolicies.returnGuide = this.DEFAULT_PRODUCT_POLICIES.returnGuide;
-    }
+  },
+
+  getShippingTemplates() {
+    return this.normalizePolicyTemplates(this.settings?.productPolicies).shippingTemplates;
+  },
+
+  getReturnTemplates() {
+    return this.normalizePolicyTemplates(this.settings?.productPolicies).returnTemplates;
   },
 
   getProductPolicies() {
-    const pol = this.settings?.productPolicies || this.DEFAULT_PRODUCT_POLICIES;
-    return {
-      shippingGuide:
-        String(pol.shippingGuide || '').trim() || this.DEFAULT_PRODUCT_POLICIES.shippingGuide,
-      returnGuide: String(pol.returnGuide || '').trim() || this.DEFAULT_PRODUCT_POLICIES.returnGuide,
+    return this.normalizePolicyTemplates(this.settings?.productPolicies || this.DEFAULT_PRODUCT_POLICIES);
+  },
+
+  newPolicyTemplateId(prefix) {
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  },
+
+  initPolicyTemplatesDraft(pol) {
+    const norm = this.normalizePolicyTemplates(pol);
+    this.policyTemplatesDraft = {
+      shipping: norm.shippingTemplates.map((t) => ({ ...t })),
+      return: norm.returnTemplates.map((t) => ({ ...t })),
     };
+  },
+
+  syncPolicyTemplatesFromForm() {
+    if (this.view !== 'settings-guides' || !this.policyTemplatesDraft) return;
+    const form = document.getElementById('form-productPolicies');
+    if (!form) return;
+    ['shipping', 'return'].forEach((type) => {
+      const list = type === 'shipping' ? this.policyTemplatesDraft.shipping : this.policyTemplatesDraft.return;
+      list.forEach((t, i) => {
+        const nameEl = form.querySelector(`[name="${type}TemplateName_${i}"]`);
+        const bodyEl = form.querySelector(`[name="${type}TemplateBody_${i}"]`);
+        if (nameEl) t.name = nameEl.value;
+        if (bodyEl) t.body = bodyEl.value;
+      });
+    });
+  },
+
+  addPolicyTemplate(type) {
+    this.syncPolicyTemplatesFromForm();
+    const list = type === 'shipping' ? this.policyTemplatesDraft.shipping : this.policyTemplatesDraft.return;
+    list.push({
+      id: this.newPolicyTemplateId(type === 'shipping' ? 'ship' : 'ret'),
+      name: type === 'shipping' ? '새 배송 안내' : '새 교환·반품 안내',
+      body: '',
+    });
+    this.render();
+  },
+
+  removePolicyTemplate(type, i) {
+    this.syncPolicyTemplatesFromForm();
+    const list = type === 'shipping' ? this.policyTemplatesDraft.shipping : this.policyTemplatesDraft.return;
+    if (list.length <= 1) {
+      alert('최소 1개는 유지해야 합니다.');
+      return;
+    }
+    if (!confirm('이 템플릿을 삭제할까요?')) return;
+    list.splice(i, 1);
+    this.render();
+  },
+
+  renderPolicyTemplatePicker(field) {
+    const templates = field === 'shipping' ? this.getShippingTemplates() : this.getReturnTemplates();
+    const selectId = field === 'shipping' ? 'policy-pick-shipping' : 'policy-pick-return';
+    if (!templates.length) {
+      return `<span class="admin-hint">등록된 템플릿 없음 · [배송·반품 안내]에서 추가</span>`;
+    }
+    return `<span class="policy-template-picker">
+      <select id="${selectId}" class="policy-template-select">
+        ${templates.map((t) => `<option value="${this.esc(t.id)}">${this.esc(t.name)}</option>`).join('')}
+      </select>
+      <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.applyPolicyTemplate('${field}')">안내 불러오기</button>
+    </span>`;
+  },
+
+  renderPolicyTemplateCards(type) {
+    const list =
+      type === 'shipping' ? this.policyTemplatesDraft?.shipping || [] : this.policyTemplatesDraft?.return || [];
+    const title = type === 'shipping' ? '배송 안내' : '교환·반품 안내';
+    return list
+      .map(
+        (t, i) => `
+      <div class="policy-template-card">
+        <div class="policy-template-card__head">
+          <input name="${type}TemplateName_${i}" value="${this.esc(t.name)}" placeholder="${title} 이름 (예: 기본 배송, 냉동 전용)" />
+          <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.removePolicyTemplate('${type}', ${i})">삭제</button>
+        </div>
+        <textarea name="${type}TemplateBody_${i}" rows="8" placeholder="${title} 내용">${this.esc(t.body)}</textarea>
+      </div>`
+      )
+      .join('');
   },
 
   syncProductOptionsFromForm() {
@@ -456,9 +578,26 @@ const Admin = {
     this.syncProductFormState();
     if (!this.productDraft) this.initProductDraft(this.editingProduct || {});
     await this.ensurePolicies(true);
-    const pol = this.getProductPolicies();
-    if (field === 'shipping') this.productDraft.shippingGuide = pol.shippingGuide;
-    if (field === 'return') this.productDraft.returnGuide = pol.returnGuide;
+
+    const selectId = field === 'shipping' ? 'policy-pick-shipping' : 'policy-pick-return';
+    const templateId = document.getElementById(selectId)?.value;
+    const templates = field === 'shipping' ? this.getShippingTemplates() : this.getReturnTemplates();
+
+    if (!templates.length) {
+      alert('등록된 안내 문구가 없습니다. [배송·반품 안내] 메뉴에서 템플릿을 추가해 주세요.');
+      return;
+    }
+
+    const tpl = templates.find((t) => t.id === templateId) || templates[0];
+    const fieldName = field === 'shipping' ? 'shippingGuide' : 'returnGuide';
+    this.productDraft[fieldName] = tpl.body;
+
+    const form = document.getElementById('product-form');
+    const ta = form?.querySelector(`[name="${fieldName}"]`);
+    if (ta) {
+      ta.value = tpl.body;
+      return;
+    }
     this.render();
   },
 
@@ -803,6 +942,7 @@ const Admin = {
   async loadSettingsGuides() {
     this.settings = await this.request('/api/admin/settings');
     await this.ensurePolicies();
+    this.initPolicyTemplatesDraft(this.settings.productPolicies);
     this.view = 'settings-guides';
     this.render();
   },
@@ -879,11 +1019,19 @@ const Admin = {
           }),
         });
       } else if (key === 'productPolicies') {
+        this.syncPolicyTemplatesFromForm();
+        const empty = [...this.policyTemplatesDraft.shipping, ...this.policyTemplatesDraft.return].some(
+          (t) => !String(t.body || '').trim()
+        );
+        if (empty) {
+          alert('내용이 비어 있는 템플릿이 있습니다. 내용을 입력하거나 삭제해 주세요.');
+          return;
+        }
         await this.request('/api/admin/settings/productPolicies', {
           method: 'PUT',
           body: JSON.stringify({
-            shippingGuide: fd.get('shippingGuide'),
-            returnGuide: fd.get('returnGuide'),
+            shippingTemplates: this.policyTemplatesDraft.shipping,
+            returnTemplates: this.policyTemplatesDraft.return,
           }),
         });
       }
@@ -1125,11 +1273,11 @@ const Admin = {
             </div>
 
             <div class="form-row full">
-              <label>배송 안내 <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.applyPolicyTemplate('shipping')">기본안내 불러오기</button></label>
+              <label class="policy-field-label">배송 안내 ${this.renderPolicyTemplatePicker('shipping')}</label>
               <textarea name="shippingGuide" rows="5">${this.esc(d.shippingGuide)}</textarea>
             </div>
             <div class="form-row full">
-              <label>교환·반품 안내 <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.applyPolicyTemplate('return')">기본안내 불러오기</button></label>
+              <label class="policy-field-label">교환·반품 안내 ${this.renderPolicyTemplatePicker('return')}</label>
               <textarea name="returnGuide" rows="5">${this.esc(d.returnGuide)}</textarea>
             </div>
           </div>
@@ -1353,20 +1501,20 @@ const Admin = {
   },
 
   renderSettingsGuides() {
-    const pol = this.getProductPolicies();
+    if (!this.policyTemplatesDraft) this.initPolicyTemplatesDraft(this.getProductPolicies());
     return `
       <form id="form-productPolicies" class="panel" onsubmit="event.preventDefault();Admin.saveSetting('productPolicies')">
-        <h2>상품 배송 안내 (기본 템플릿)</h2>
-        <p class="admin-hint">여기에 작성한 내용은 상품 등록 시 「기본안내 불러오기」로 불러올 수 있습니다.</p>
-        <div class="form-row full"><label>배송 안내</label>
-          <textarea name="shippingGuide" rows="8">${this.esc(pol.shippingGuide)}</textarea>
-        </div>
-        <h2 style="margin-top:24px">교환·반품 안내 (신선식품 기본 템플릿)</h2>
-        <p class="admin-hint">신선·냉장·냉동 농수산물은 단순 변심 교환·반품이 불가합니다. 품질 이상 시에만 접수합니다.</p>
-        <div class="form-row full"><label>교환·반품 안내</label>
-          <textarea name="returnGuide" rows="8">${this.esc(pol.returnGuide)}</textarea>
-        </div>
-        <button class="btn" type="submit" style="margin-top:12px">저장</button>
+        <h2>배송 안내 템플릿</h2>
+        <p class="admin-hint">여러 문구를 저장해 두고, 상품 등록·수정 시 「안내 불러오기」에서 선택해 불러올 수 있습니다.</p>
+        <div class="policy-template-list">${this.renderPolicyTemplateCards('shipping')}</div>
+        <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.addPolicyTemplate('shipping')">+ 배송 안내 추가</button>
+
+        <h2 style="margin-top:28px">교환·반품 안내 템플릿</h2>
+        <p class="admin-hint">신선·냉장·냉동 등 상품 유형별로 다른 안내 문구를 등록할 수 있습니다.</p>
+        <div class="policy-template-list">${this.renderPolicyTemplateCards('return')}</div>
+        <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.addPolicyTemplate('return')">+ 교환·반품 안내 추가</button>
+
+        <button class="btn" type="submit" style="margin-top:20px">전체 저장</button>
       </form>`;
   },
 
@@ -1436,6 +1584,7 @@ const Admin = {
 const _adminRender = Admin.render.bind(Admin);
 Admin.render = function () {
   if (Admin.view === 'product-form') Admin.syncProductFormState();
+  if (Admin.view === 'settings-guides') Admin.syncPolicyTemplatesFromForm();
   _adminRender();
 };
 

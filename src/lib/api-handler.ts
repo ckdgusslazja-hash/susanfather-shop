@@ -217,14 +217,13 @@ function defaultSettingsBundle() {
 }
 
 function defaultProductPolicies() {
-  return {
-    shippingGuide: `【 배송 안내 】
+  const shippingBody = `【 배송 안내 】
 · 산지에서 직접 포장·발송하는 신선 농수산물입니다.
 · 결제 완료(또는 입금 확인) 후 1~2일 내 출고되며, 수령까지 1~3일 소요됩니다.
 · 제주·도서·산간 지역은 1~2일 추가 소요될 수 있습니다.
 · 기상 악화, 산지 수급 등으로 출고일이 변경될 수 있으며 개별 안내드립니다.
-· 배송 조회는 마이페이지 또는 주문·배송 조회에서 확인할 수 있습니다.`,
-    returnGuide: `【 교환·반품 안내 (신선 농·수산물) 】
+· 배송 조회는 마이페이지 또는 주문·배송 조회에서 확인할 수 있습니다.`;
+  const returnBody = `【 교환·반품 안내 (신선 농·수산물) 】
 · 본 몰의 농수산물·신선·냉장·냉동 식품은 신선도 유지 및 재판매 불가 특성상, 단순 변심에 의한 교환·반품(청약철회)이 불가합니다.
 · 「전자상거래 등에서의 소비자보호에 관한 법률」에 따라 포장 개봉·시간 경과 등으로 재판매가 곤란한 신선식품은 청약철회가 제한될 수 있습니다.
 · 아래 사유에 해당하는 경우에만 교환·환불을 접수합니다.
@@ -234,7 +233,12 @@ function defaultProductPolicies() {
 · 위 사유는 상품 수령 후 24시간 이내, 상품·포장·송장 사진과 함께 고객센터 또는 마이페이지로 접수해 주세요.
 · 회사 확인 후 재발송·환불 처리하며, 고객 과실이 없는 경우 배송비는 회사 부담입니다.
 · 냉장·냉동 미보관, 개봉 후 방치 등 고객 보관 부주의로 인한 변질은 교환·환불 대상에서 제외됩니다.
-· 환불 승인 후 3~7영업일 내 원결제수단으로 환불됩니다.`,
+· 환불 승인 후 3~7영업일 내 원결제수단으로 환불됩니다.`;
+  return {
+    shippingTemplates: [{ id: 'ship-default', name: '기본 배송 안내', body: shippingBody }],
+    returnTemplates: [{ id: 'ret-default', name: '신선식품 교환·반품', body: returnBody }],
+    shippingGuide: shippingBody,
+    returnGuide: returnBody,
   };
 }
 
@@ -415,18 +419,51 @@ function isLegacyReturnGuide(text: string) {
   );
 }
 
+function normalizePolicyTemplateItem(item: unknown, fallbackName: string) {
+  if (!item || typeof item !== 'object') return null;
+  const o = item as Record<string, unknown>;
+  const body = String(o.body ?? o.text ?? '').trim();
+  const name = String(o.name ?? o.title ?? fallbackName).trim() || fallbackName;
+  const id = String(o.id || '').trim() || uuidv4();
+  if (!body) return null;
+  return { id, name, body };
+}
+
 function normalizeProductPolicies(policies: unknown) {
   const pol =
     policies && typeof policies === 'object'
       ? { ...(policies as Record<string, unknown>) }
       : ({} as Record<string, unknown>);
-  if (isLegacyReturnGuide(String(pol.returnGuide || ''))) {
-    pol.returnGuide = defaultProductPolicies().returnGuide;
+  const defaults = defaultProductPolicies();
+
+  let shippingTemplates = Array.isArray(pol.shippingTemplates)
+    ? (pol.shippingTemplates
+        .map((t, i) => normalizePolicyTemplateItem(t, `배송 안내 ${i + 1}`))
+        .filter(Boolean) as Array<{ id: string; name: string; body: string }>)
+    : [];
+  let returnTemplates = Array.isArray(pol.returnTemplates)
+    ? (pol.returnTemplates
+        .map((t, i) => normalizePolicyTemplateItem(t, `교환·반품 안내 ${i + 1}`))
+        .filter(Boolean) as Array<{ id: string; name: string; body: string }>)
+    : [];
+
+  if (!shippingTemplates.length) {
+    const legacy = String(pol.shippingGuide || '').trim() || defaults.shippingTemplates[0].body;
+    shippingTemplates = [{ id: 'ship-default', name: '기본 배송 안내', body: legacy }];
   }
-  if (!String(pol.shippingGuide || '').trim()) {
-    pol.shippingGuide = defaultProductPolicies().shippingGuide;
+  if (!returnTemplates.length) {
+    let legacy = String(pol.returnGuide || '').trim();
+    if (isLegacyReturnGuide(legacy)) legacy = defaults.returnTemplates[0].body;
+    if (!legacy) legacy = defaults.returnTemplates[0].body;
+    returnTemplates = [{ id: 'ret-default', name: '신선식품 교환·반품', body: legacy }];
   }
-  return pol;
+
+  return {
+    shippingTemplates,
+    returnTemplates,
+    shippingGuide: shippingTemplates[0].body,
+    returnGuide: returnTemplates[0].body,
+  };
 }
 
 function normalizeCustomerCenter(cc: unknown) {

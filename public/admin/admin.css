@@ -164,6 +164,62 @@ a { color: #2d6a4f; }
   align-items: center;
 }
 
+.policy-template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 12px 0;
+}
+.policy-template-card {
+  border: 1px solid #c5d4c8;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fafcf9;
+}
+.policy-template-card__head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.policy-template-card__head input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #c5d4c8;
+  border-radius: 8px;
+  font: inherit;
+}
+.policy-template-card textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #c5d4c8;
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+.policy-field-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+.policy-template-picker {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.policy-template-select {
+  min-width: 160px;
+  max-width: 240px;
+  padding: 6px 10px;
+  border: 1px solid #c5d4c8;
+  border-radius: 8px;
+  font: inherit;
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;
