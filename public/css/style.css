@@ -2937,13 +2937,15 @@ body.is-reviews {
 
 .bank-copy-panel__btn {
   flex-shrink: 0;
-  padding: 10px 16px;
+  min-width: 96px;
+  padding: 12px 18px;
   border-radius: var(--radius-sm);
   background: var(--color-primary);
-  color: #fff;
-  font-size: 0.88rem;
+  color: #fff !important;
+  font-size: 0.92rem;
   font-weight: 700;
   transition: var(--transition);
+  box-shadow: 0 2px 8px rgba(26, 107, 74, 0.25);
 }
 
 .bank-copy-panel__btn:hover {

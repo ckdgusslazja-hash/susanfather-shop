@@ -568,6 +568,12 @@ function navigate(page, params = {}) {
       if (!params.skipScroll) window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   }
+  if (page === 'checkout' && typeof API !== 'undefined' && typeof API.loadPaymentSettings === 'function') {
+    return API.loadPaymentSettings().then(() => {
+      render();
+      if (!params.skipScroll) window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
   render();
   if (!params.skipScroll) window.scrollTo({ top: 0, behavior: 'smooth' });
   return Promise.resolve();
@@ -1867,15 +1873,30 @@ function getPaymentNotice() {
   return `무통장 입금으로 주문합니다. 입금 확인 후 배송됩니다.${bankLine ? ` 계좌: ${bankLine}` : ''}`;
 }
 
+function getPaymentBankAccount(fallback) {
+  const fromSettings = (typeof API !== 'undefined' && API.paymentSettings?.bankAccount) || {};
+  const fromOrder = fallback || {};
+  return {
+    bank: fromOrder.bank || fromSettings.bank || '',
+    number: fromOrder.number || fromSettings.number || '',
+    holder: fromOrder.holder || fromSettings.holder || '',
+  };
+}
+
 function getBankCopyText(bank) {
-  if (!bank) return '';
-  const num = String(bank.number || '').trim();
+  const b = getPaymentBankAccount(bank);
+  const num = String(b.number || '').trim();
   if (!num) return '';
-  return bank.bank ? `${bank.bank} ${num}` : num;
+  return b.bank ? `${b.bank} ${num}` : num;
 }
 
 function copyBankAccountFromEl(btn) {
-  const text = btn?.dataset?.copy || '';
+  let text = btn?.dataset?.copy || '';
+  try {
+    if (btn?.dataset?.copyEnc) text = decodeURIComponent(btn.dataset.copyEnc);
+  } catch {
+    /* use raw copy */
+  }
   if (!text) {
     showToast('복사할 계좌 정보가 없습니다.');
     return;
@@ -1905,12 +1926,14 @@ function copyBankAccountFromEl(btn) {
 }
 
 function renderBankAccountPanel(bank, opts = {}) {
-  const b = bank || {};
+  const b = getPaymentBankAccount(bank);
   const copyText = getBankCopyText(b);
   const guide = opts.guide || '';
   const title = opts.title || '입금 계좌';
   const extraClass = opts.className || '';
-  if (!copyText && !b.bank && !b.number) return '';
+  const hasAccount = !!(String(b.number || '').trim() || String(b.bank || '').trim());
+  if (!hasAccount) return '';
+  const copyEnc = copyText ? encodeURIComponent(copyText) : '';
   return `
     <div class="bank-copy-panel ${extraClass}">
       <p class="bank-copy-panel__title">${escapeHtml(title)}</p>
@@ -1919,11 +1942,7 @@ function renderBankAccountPanel(bank, opts = {}) {
           <span class="bank-copy-panel__bank">${escapeHtml(b.bank || '')}</span>
           <span class="bank-copy-panel__number">${escapeHtml(b.number || '')}</span>
         </div>
-        ${
-          copyText
-            ? `<button type="button" class="bank-copy-panel__btn" data-copy="${escapeHtml(copyText)}" onclick="copyBankAccountFromEl(this)">계좌 복사</button>`
-            : ''
-        }
+        <button type="button" class="bank-copy-panel__btn" data-copy="${escapeHtml(copyText)}" data-copy-enc="${copyEnc}" onclick="copyBankAccountFromEl(this)">계좌 복사</button>
       </div>
       ${b.holder ? `<p class="bank-copy-panel__holder">예금주: ${escapeHtml(b.holder)}</p>` : ''}
       ${guide ? `<p class="bank-copy-panel__guide">${escapeHtml(guide)}</p>` : ''}
@@ -1931,16 +1950,28 @@ function renderBankAccountPanel(bank, opts = {}) {
     </div>`;
 }
 
+function checkoutHasTransferMethod() {
+  return getCheckoutPaymentMethods().includes('transfer');
+}
+
 function renderCheckoutBankBox() {
+  if (!checkoutHasTransferMethod()) return '';
   const p = API.paymentSettings || {};
-  if (!isTransferOnlyCheckout()) return '';
-  const bank = p.bankAccount || {};
+  const bank = getPaymentBankAccount(p.bankAccount);
   const guide = p.transferGuide || '주문 후 24시간 이내 입금해 주세요.';
-  return renderBankAccountPanel(bank, {
+  return `<div id="checkout-bank-box" class="checkout-bank-box-wrap">${renderBankAccountPanel(bank, {
     className: 'bank-copy-panel--checkout',
     guide,
     footer: '입금자명은 주문자명과 동일하게 입력해 주세요.',
-  });
+  })}</div>`;
+}
+
+function syncCheckoutBankBoxVisibility() {
+  const wrap = document.getElementById('checkout-bank-box');
+  if (!wrap) return;
+  const selected = document.querySelector('input[name="payment"]:checked')?.value || 'transfer';
+  const show = selected === 'transfer' || isTransferOnlyCheckout();
+  wrap.style.display = show ? '' : 'none';
 }
 
 function renderPaymentMethodOptions() {
@@ -2015,12 +2046,14 @@ function renderComplete() {
   }
 
   const isTransfer = order.transfer || order.payment === 'transfer';
+  const bankPanel = renderBankAccountPanel(getPaymentBankAccount(order.bankAccount), {
+    className: 'bank-copy-panel--complete',
+    guide: (API.paymentSettings || {}).transferGuide || '주문 후 24시간 이내 입금해 주세요.',
+    footer: '입금 확인 후 배송이 시작됩니다.',
+  });
   const statusNote = isTransfer
-    ? renderBankAccountPanel(order.bankAccount, {
-        className: 'bank-copy-panel--complete',
-        guide: (API.paymentSettings || {}).transferGuide || '주문 후 24시간 이내 입금해 주세요.',
-        footer: '입금 확인 후 배송이 시작됩니다.',
-      })
+    ? bankPanel ||
+      `<div class="order-complete__bank"><p>입금 계좌 정보를 불러오는 중입니다. 관리자에게 문의해 주세요.</p></div>`
     : order.testMode
       ? '<p class="order-complete__desc-note">(테스트 결제 — 실제 청구 없음)</p>'
       : '';
@@ -2101,9 +2134,16 @@ function bindPaymentOptions() {
       opt.classList.add('selected');
       const radio = opt.querySelector('input[type="radio"]');
       if (radio) radio.checked = true;
+      syncCheckoutBankBoxVisibility();
     });
   });
+  document.querySelectorAll('input[name="payment"]').forEach((radio) => {
+    radio.addEventListener('change', syncCheckoutBankBoxVisibility);
+  });
+  syncCheckoutBankBoxVisibility();
 }
+
+window.copyBankAccountFromEl = copyBankAccountFromEl;
 
 function selectCategory(id) {
   state.category = id;

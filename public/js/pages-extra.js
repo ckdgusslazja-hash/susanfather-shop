@@ -457,7 +457,11 @@ function renderOrderDetailBody(order, { showBack = true, backLabel = '목록', b
         </dl>
         ${
           order.payment_method === 'transfer' && status === 'awaiting_deposit' && typeof renderBankAccountPanel === 'function'
-            ? renderBankAccountPanel((API.paymentSettings || {}).bankAccount || {}, {
+            ? renderBankAccountPanel(
+                typeof getPaymentBankAccount === 'function'
+                  ? getPaymentBankAccount((API.paymentSettings || {}).bankAccount)
+                  : (API.paymentSettings || {}).bankAccount || {},
+                {
                 className: 'bank-copy-panel--order',
                 guide: (API.paymentSettings || {}).transferGuide || '입금 후 관리자 확인 시 배송이 시작됩니다.',
               })
