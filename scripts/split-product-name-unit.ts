@@ -60,7 +60,7 @@ function normalizeProduct(p: ProductRow): { product: ProductRow; changed: boolea
 async function loadProducts(): Promise<ProductRow[]> {
   const rows = await prisma.product.findMany();
   if (rows.length) {
-    return rows.map((r) => ({ id: r.id, ...(r.data as ProductRow) }));
+    return rows.map((r) => ({ ...(r.data as ProductRow), id: r.id }));
   }
   const raw = fs.readFileSync(jsonPath, 'utf8');
   return JSON.parse(raw) as ProductRow[];
