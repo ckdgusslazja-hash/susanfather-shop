@@ -81,6 +81,33 @@ a { color: #2d6a4f; }
 }
 .admin-topbar h1 { margin: 0; font-size: 1.4rem; }
 .admin-topbar__meta { color: #666; font-size: 0.85rem; }
+.admin-topbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.admin-topbar__logout {
+  background: #fff;
+  color: #1b4332;
+  border: 1px solid #c5d4c8;
+  font-weight: 600;
+}
+.admin-topbar__logout:hover {
+  background: #f3faf6;
+  border-color: #2d6a4f;
+}
+.admin-sidebar__logout {
+  width: 100%;
+  margin-top: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  font-weight: 600;
+}
+.admin-sidebar__logout:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
 
 .stats-grid {
   display: grid;

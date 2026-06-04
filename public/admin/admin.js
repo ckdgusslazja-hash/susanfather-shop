@@ -153,6 +153,15 @@ const Admin = {
 
   logout() {
     this.setToken('');
+    this.view = 'dashboard';
+    this.stats = null;
+    this.sales = null;
+    this.settings = null;
+    this.products = [];
+    this.orders = [];
+    this.editingProduct = null;
+    this.productDraft = null;
+    this.detailQuill = null;
     this.render();
   },
 
@@ -1289,8 +1298,8 @@ const Admin = {
             .join('')}
         </nav>
         <div class="admin-sidebar__foot">
-          <a href="/" target="_blank">쇼핑몰 바로가기 →</a><br><br>
-          <button class="btn btn--ghost btn--sm" style="width:100%;color:#fff;border-color:rgba(255,255,255,0.3)" onclick="Admin.logout()">로그아웃</button>
+          <a href="/" target="_blank" rel="noopener">쇼핑몰 바로가기 →</a>
+          <button type="button" class="btn btn--sm admin-sidebar__logout" onclick="Admin.logout()">로그아웃</button>
         </div>
       </aside>`;
   },
@@ -1768,6 +1777,10 @@ const Admin = {
         <main class="admin-main">
           <div class="admin-topbar">
             <div><h1>${titles[this.view] || '관리자'}</h1><div class="admin-topbar__meta">${new Date().toLocaleDateString('ko-KR')} · 수산아빠 관리자</div></div>
+            <div class="admin-topbar__actions">
+              <a href="/" target="_blank" rel="noopener" class="btn btn--ghost btn--sm">쇼핑몰 보기</a>
+              <button type="button" class="btn btn--sm admin-topbar__logout" onclick="Admin.logout()">로그아웃</button>
+            </div>
           </div>
           ${this.renderBody()}
         </main>
