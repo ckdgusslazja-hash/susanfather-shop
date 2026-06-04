@@ -450,6 +450,30 @@ function normalizeCustomerCenter(cc: unknown) {
   return { ...center, faq };
 }
 
+function normalizeLegacyOptions(product: Record<string, unknown>): Record<string, unknown> {
+  if (!product.useOptions) return product;
+  const basePrice = Number(product.price) || 0;
+  const baseOrig = Number(product.originalPrice) || basePrice;
+  const opts = product.options;
+  if (!Array.isArray(opts) || !opts.length || basePrice <= 0) return product;
+
+  const looksLegacy = opts.some(
+    (o) => Number((o as Record<string, unknown>).price) >= basePrice && Number((o as Record<string, unknown>).price) > 0
+  );
+  if (!looksLegacy) return product;
+
+  return {
+    ...product,
+    options: opts.map((item) => {
+      const o = item as Record<string, unknown>;
+      let addPrice = Math.max(0, (Number(o.price) || 0) - basePrice);
+      let optOrig = Number(o.originalPrice) || 0;
+      if (optOrig > 0 && optOrig < baseOrig) optOrig = baseOrig + optOrig;
+      return { ...o, price: addPrice, originalPrice: optOrig };
+    }),
+  };
+}
+
 function normalizeProductForClient(product: Record<string, unknown>): Record<string, unknown> {
   let next = product;
   if (isLegacyReturnGuide(String(product.returnGuide || ''))) {
@@ -458,6 +482,7 @@ function normalizeProductForClient(product: Record<string, unknown>): Record<str
   if (next.useOptions === undefined) {
     next = { ...next, useOptions: false };
   }
+  next = normalizeLegacyOptions(next);
   return next;
 }
 
@@ -514,11 +539,12 @@ function parseDetailBlocks(raw: unknown, detailsText: string) {
     .map((text) => ({ type: 'text', text }));
 }
 
-function parseProductOptions(raw: unknown, productId: string, unit: string) {
+function parseProductOptions(raw: unknown, productId: string, unit: string, basePrice = 0) {
   if (!Array.isArray(raw) || !raw.length) return [];
   return raw.map((item, i) => {
     const o = item as Record<string, unknown>;
-    const addPrice = Number(o.price) || 0;
+    let addPrice = Number(o.price) || 0;
+    if (basePrice > 0 && addPrice >= basePrice) addPrice = Math.max(0, addPrice - basePrice);
     const optOrig = Number(o.originalPrice) || 0;
     return {
       id: `${productId}-o${i + 1}`,
@@ -549,7 +575,7 @@ function buildProductRecord(body: Record<string, unknown>, id: string, existing?
       : existing?.useOptions !== undefined
         ? !!existing.useOptions
         : false;
-  const options = useOptions ? parseProductOptions(body.options, id, unit) : [];
+  const options = useOptions ? parseProductOptions(body.options, id, unit, price) : [];
   const detailBlocks = parseDetailBlocks(body.detailBlocks, detailsText);
   const details = detailBlocks.filter((b) => b.type === 'text').map((b) => b.text || '');
 

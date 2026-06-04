@@ -50,8 +50,8 @@ const API = {
     try {
       const list = await this.request('/api/products');
       if (list?.length) {
-        window.PRODUCTS_FROM_API = list;
-        return list;
+        window.PRODUCTS_FROM_API = list.map((p) => normalizeLegacyProductOptions(p));
+        return window.PRODUCTS_FROM_API;
       }
     } catch {
       /* */

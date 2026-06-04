@@ -260,7 +260,8 @@ function formatPrice(n) {
 
 function getProduct(id) {
   const list = window.PRODUCTS_FROM_API || PRODUCTS;
-  return list.find((p) => p.id === id);
+  const p = list.find((p) => p.id === id);
+  return p ? normalizeLegacyProductOptions(p) : undefined;
 }
 
 function getCartCount() {

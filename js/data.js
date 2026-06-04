@@ -698,6 +698,29 @@ function productHasOptions(product) {
   return product.useOptions === true && (product.options || []).length > 0;
 }
 
+/** 예전 데이터: 옵션 price에 판매가 전체가 저장된 경우 → 추가금(차액)으로 변환 */
+function normalizeLegacyProductOptions(product) {
+  if (!product || !product.useOptions || !(product.options || []).length) return product;
+  const basePrice = Number(product.price) || 0;
+  const baseOrig = Number(product.originalPrice) || basePrice;
+  if (basePrice <= 0) return product;
+  const opts = product.options;
+  const looksLegacy = opts.some((o) => Number(o.price) >= basePrice && Number(o.price) > 0);
+  if (!looksLegacy) return product;
+  return {
+    ...product,
+    options: opts.map((o) => {
+      let optOrig = Number(o.originalPrice) || 0;
+      if (optOrig > 0 && optOrig < baseOrig) optOrig = baseOrig + optOrig;
+      return {
+        ...o,
+        price: Math.max(0, (Number(o.price) || 0) - basePrice),
+        originalPrice: optOrig,
+      };
+    }),
+  };
+}
+
 function getProductOption(product, optionId) {
   if (!productHasOptions(product)) return null;
   const opts = product.options || [];
