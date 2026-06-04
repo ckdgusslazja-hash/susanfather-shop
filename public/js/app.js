@@ -54,6 +54,7 @@ let state = {
   notifications: [],
   notificationsOpen: false,
   categoryMenuOpen: false,
+  inquiryOrderId: '',
 };
 
 const NOTIF_READ_KEY = 'greenharvest_notif_read';
@@ -1866,18 +1867,80 @@ function getPaymentNotice() {
   return `무통장 입금으로 주문합니다. 입금 확인 후 배송됩니다.${bankLine ? ` 계좌: ${bankLine}` : ''}`;
 }
 
+function getBankCopyText(bank) {
+  if (!bank) return '';
+  const num = String(bank.number || '').trim();
+  if (!num) return '';
+  return bank.bank ? `${bank.bank} ${num}` : num;
+}
+
+function copyBankAccountFromEl(btn) {
+  const text = btn?.dataset?.copy || '';
+  if (!text) {
+    showToast('복사할 계좌 정보가 없습니다.');
+    return;
+  }
+  const done = () => showToast('계좌 정보가 복사되었습니다.');
+  const fail = () => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      done();
+    } catch {
+      showToast('복사에 실패했습니다. 계좌번호를 직접 선택해 주세요.');
+    }
+    ta.remove();
+  };
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(fail);
+  } else {
+    fail();
+  }
+}
+
+function renderBankAccountPanel(bank, opts = {}) {
+  const b = bank || {};
+  const copyText = getBankCopyText(b);
+  const guide = opts.guide || '';
+  const title = opts.title || '입금 계좌';
+  const extraClass = opts.className || '';
+  if (!copyText && !b.bank && !b.number) return '';
+  return `
+    <div class="bank-copy-panel ${extraClass}">
+      <p class="bank-copy-panel__title">${escapeHtml(title)}</p>
+      <div class="bank-copy-panel__row">
+        <div class="bank-copy-panel__info">
+          <span class="bank-copy-panel__bank">${escapeHtml(b.bank || '')}</span>
+          <span class="bank-copy-panel__number">${escapeHtml(b.number || '')}</span>
+        </div>
+        ${
+          copyText
+            ? `<button type="button" class="bank-copy-panel__btn" data-copy="${escapeHtml(copyText)}" onclick="copyBankAccountFromEl(this)">계좌 복사</button>`
+            : ''
+        }
+      </div>
+      ${b.holder ? `<p class="bank-copy-panel__holder">예금주: ${escapeHtml(b.holder)}</p>` : ''}
+      ${guide ? `<p class="bank-copy-panel__guide">${escapeHtml(guide)}</p>` : ''}
+      ${opts.footer ? `<p class="bank-copy-panel__footer">${opts.footer}</p>` : ''}
+    </div>`;
+}
+
 function renderCheckoutBankBox() {
   const p = API.paymentSettings || {};
   if (!isTransferOnlyCheckout()) return '';
   const bank = p.bankAccount || {};
   const guide = p.transferGuide || '주문 후 24시간 이내 입금해 주세요.';
-  return `
-    <div class="checkout-bank-box">
-      <p class="checkout-bank-box__title">입금 계좌</p>
-      <p class="checkout-bank-box__account"><strong>${escapeHtml(bank.bank || '')}</strong> ${escapeHtml(bank.number || '')}</p>
-      <p class="checkout-bank-box__holder">예금주: ${escapeHtml(bank.holder || '')}</p>
-      <p class="checkout-bank-box__guide">${escapeHtml(guide)}</p>
-    </div>`;
+  return renderBankAccountPanel(bank, {
+    className: 'bank-copy-panel--checkout',
+    guide,
+    footer: '입금자명은 주문자명과 동일하게 입력해 주세요.',
+  });
 }
 
 function renderPaymentMethodOptions() {
@@ -1953,7 +2016,11 @@ function renderComplete() {
 
   const isTransfer = order.transfer || order.payment === 'transfer';
   const statusNote = isTransfer
-    ? `<p class="order-complete__bank">입금 계좌: ${escapeHtml(order.bankAccount?.bank || '')} ${escapeHtml(order.bankAccount?.number || '')}<br>예금주: ${escapeHtml(order.bankAccount?.holder || '')}<br><strong>입금 확인 후 배송이 시작됩니다.</strong></p>`
+    ? renderBankAccountPanel(order.bankAccount, {
+        className: 'bank-copy-panel--complete',
+        guide: (API.paymentSettings || {}).transferGuide || '주문 후 24시간 이내 입금해 주세요.',
+        footer: '입금 확인 후 배송이 시작됩니다.',
+      })
     : order.testMode
       ? '<p class="order-complete__desc-note">(테스트 결제 — 실제 청구 없음)</p>'
       : '';

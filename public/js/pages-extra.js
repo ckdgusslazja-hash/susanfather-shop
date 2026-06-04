@@ -311,7 +311,15 @@ function getPaymentLabel(method) {
 }
 
 function canCancelOrder(status) {
-  return ['awaiting_deposit', 'pending', 'paid', 'preparing'].includes(status);
+  return ['awaiting_deposit', 'pending'].includes(status);
+}
+
+function renderOrderCancelHint(status) {
+  if (canCancelOrder(status) || status === 'cancelled') return '';
+  if (['paid', 'preparing', 'shipping', 'done'].includes(status)) {
+    return `<p class="order-detail__cancel-hint">입금 확인·배송 준비 이후에는 직접 취소할 수 없습니다. 취소·환불이 필요하시면 아래 <strong>문의하기</strong>로 주문번호와 함께 접수해 주세요.</p>`;
+  }
+  return '';
 }
 
 function getTrackingUrl(company, number) {
@@ -447,7 +455,17 @@ function renderOrderDetailBody(order, { showBack = true, backLabel = '목록', b
           <dt>배송비</dt><dd>${order.shipping ? formatPrice(order.shipping) : '무료'}</dd>
           <dt>총 결제</dt><dd><strong>${formatPrice(order.total)}</strong></dd>
         </dl>
+        ${
+          order.payment_method === 'transfer' && status === 'awaiting_deposit' && typeof renderBankAccountPanel === 'function'
+            ? renderBankAccountPanel((API.paymentSettings || {}).bankAccount || {}, {
+                className: 'bank-copy-panel--order',
+                guide: (API.paymentSettings || {}).transferGuide || '입금 후 관리자 확인 시 배송이 시작됩니다.',
+              })
+            : ''
+        }
       </section>
+
+      ${renderOrderCancelHint(status)}
 
       <div class="order-detail__actions">
         ${showBack ? `<button type="button" class="btn btn--outline" onclick="${backAction}">${backLabel}</button>` : ''}
@@ -456,7 +474,7 @@ function renderOrderDetailBody(order, { showBack = true, backLabel = '목록', b
             ? `<button type="button" class="btn btn--ghost order-detail__cancel" onclick="handleCancelOrder('${order.id}')">주문 취소</button>`
             : ''
         }
-        <button type="button" class="btn btn--primary" onclick="navigate('inquiry')">문의하기</button>
+        <button type="button" class="btn btn--primary" onclick="goInquiryForOrder('${order.id}')">문의하기</button>
       </div>
     </div>`;
 }
@@ -554,12 +572,17 @@ async function handleOrderLookup(e) {
   }
 }
 
+function goInquiryForOrder(orderId) {
+  state.inquiryOrderId = orderId;
+  navigate('inquiry');
+}
+
 async function handleCancelOrder(orderId) {
   if (!API.user) {
     navigate('login');
     return;
   }
-  if (!confirm('주문을 취소하시겠습니까? 입금 완료 건은 환불 처리 후 취소됩니다.')) return;
+  if (!confirm('주문을 취소하시겠습니까? 입금 전에만 직접 취소할 수 있습니다.')) return;
   try {
     const res = await API.cancelOrder(orderId);
     const order = res.order;
@@ -976,9 +999,16 @@ function renderCustomerCenter() {
 
 function renderInquiry() {
   const u = API.user;
+  const oid = state.inquiryOrderId || '';
+  const title = oid ? `[주문 ${oid}] 취소·환불 문의` : '';
+  const content = oid
+    ? `주문번호: ${oid}\n\n취소(또는 환불) 사유:\n`
+    : '';
+  const categorySelected = oid ? '교환/반품' : '배송';
   return `
     <nav class="breadcrumb"><a href="#" onclick="navigate('customer-center');return false">고객센터</a> / 문의함</nav>
     <h2 class="section-title">1:1 문의</h2>
+    ${oid ? `<p class="inquiry-order-note">주문번호 <strong>${escapeHtml(oid)}</strong> — 입금 확인 후 취소·환불은 문의로 접수해 주세요.</p>` : ''}
     <form class="auth-form" onsubmit="handleInquiry(event)">
       <div class="form-grid">
         <div class="form-group"><label>이름</label><input name="name" required value="${u?.name || ''}" /></div>
@@ -986,11 +1016,13 @@ function renderInquiry() {
         <div class="form-group"><label>연락처</label><input name="phone" value="${u?.phone || ''}" /></div>
         <div class="form-group"><label>유형</label>
           <select name="category">
-            <option>배송</option><option>교환/반품</option><option>상품</option><option>결제</option><option>기타</option>
+            <option ${categorySelected === '배송' ? 'selected' : ''}>배송</option>
+            <option ${categorySelected === '교환/반품' ? 'selected' : ''}>교환/반품</option>
+            <option>상품</option><option>결제</option><option>기타</option>
           </select>
         </div>
-        <div class="form-group form-group--full"><label>제목</label><input name="title" required /></div>
-        <div class="form-group form-group--full"><label>내용</label><textarea name="content" required rows="6"></textarea></div>
+        <div class="form-group form-group--full"><label>제목</label><input name="title" required value="${escapeHtml(title)}" /></div>
+        <div class="form-group form-group--full"><label>내용</label><textarea name="content" required rows="6">${escapeHtml(content)}</textarea></div>
       </div>
       <button type="submit" class="btn btn--primary btn--lg">문의 접수</button>
     </form>
@@ -1406,6 +1438,7 @@ async function handleInquiry(e) {
       title: fd.get('title'),
       content: fd.get('content'),
     });
+    state.inquiryOrderId = '';
     showToast('문의가 접수되었습니다');
     navigate('customer-center');
   } catch (err) {

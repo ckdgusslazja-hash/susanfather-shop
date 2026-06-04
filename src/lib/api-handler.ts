@@ -129,7 +129,8 @@ function normalizePhone(phone: string | null | undefined): string {
   return (phone || '').replace(/\D/g, '');
 }
 
-const CANCELLABLE_ORDER_STATUSES = new Set(['awaiting_deposit', 'pending', 'paid', 'preparing']);
+/** 입금 대기·결제 대기만 고객 직접 취소 가능 (입금 확인 후는 문의) */
+const CANCELLABLE_ORDER_STATUSES = new Set(['awaiting_deposit', 'pending']);
 
 function mapInquiry(i: Inquiry) {
   return {
@@ -1470,7 +1471,13 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
       if (!row) return json({ error: '주문을 찾을 수 없습니다.' }, 404);
       if (row.userId !== auth.id) return json({ error: '접근 권한이 없습니다.' }, 403);
       if (!CANCELLABLE_ORDER_STATUSES.has(row.status)) {
-        return json({ error: '배송 준비가 시작된 주문은 취소할 수 없습니다. 고객센터로 문의해 주세요.' }, 400);
+        return json(
+          {
+            error:
+              '입금 확인 후에는 직접 취소할 수 없습니다. 취소·환불은 고객센터 문의로 접수해 주세요.',
+          },
+          400
+        );
       }
       await prisma.order.update({
         where: { id: b },
