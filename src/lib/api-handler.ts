@@ -450,21 +450,25 @@ function normalizeCustomerCenter(cc: unknown) {
   return { ...center, faq };
 }
 
-function normalizeProductReturnGuide(product: Record<string, unknown>): Record<string, unknown> {
+function normalizeProductForClient(product: Record<string, unknown>): Record<string, unknown> {
+  let next = product;
   if (isLegacyReturnGuide(String(product.returnGuide || ''))) {
-    return { ...product, returnGuide: defaultProductPolicies().returnGuide };
+    next = { ...next, returnGuide: defaultProductPolicies().returnGuide };
   }
-  return product;
+  if (next.useOptions === undefined) {
+    next = { ...next, useOptions: false };
+  }
+  return next;
 }
 
 async function loadAllProducts(): Promise<Record<string, unknown>[]> {
   try {
     const rows = await prisma.product.findMany();
-    if (rows.length) return rows.map((r) => normalizeProductReturnGuide(r.data as Record<string, unknown>));
+    if (rows.length) return rows.map((r) => normalizeProductForClient(r.data as Record<string, unknown>));
   } catch {
     /* fallback */
   }
-  return (await loadProductsFallback()) as Record<string, unknown>[];
+  return ((await loadProductsFallback()) as Record<string, unknown>[]).map(normalizeProductForClient);
 }
 
 async function syncProductsJson(list: Record<string, unknown>[]) {
@@ -544,9 +548,7 @@ function buildProductRecord(body: Record<string, unknown>, id: string, existing?
       ? !!body.useOptions
       : existing?.useOptions !== undefined
         ? !!existing.useOptions
-        : Array.isArray(body.options) && body.options.length > 0
-          ? body.options.length > 1
-          : Array.isArray(existing?.options) && (existing.options as unknown[]).length > 1;
+        : false;
   const options = useOptions ? parseProductOptions(body.options, id, unit) : [];
   const detailBlocks = parseDetailBlocks(body.detailBlocks, detailsText);
   const details = detailBlocks.filter((b) => b.type === 'text').map((b) => b.text || '');
@@ -1022,7 +1024,7 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
     try {
       const rows = await prisma.product.findMany();
       if (rows.length) {
-        return json(rows.map((r) => normalizeProductReturnGuide(r.data as Record<string, unknown>)));
+        return json(rows.map((r) => normalizeProductForClient(r.data as Record<string, unknown>)));
       }
     } catch {
       /* DB 미연결 시 JSON 폴백 */

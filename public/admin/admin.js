@@ -186,10 +186,7 @@ const Admin = {
     const baseOrig = Number(product.originalPrice) || basePrice;
     const rawOpts = product.options || [];
     const looksLegacy = rawOpts.some((o) => Number(o.price) >= basePrice && Number(o.price) > 0);
-    const useOptions =
-      product.useOptions !== undefined
-        ? !!product.useOptions
-        : rawOpts.length > 1 || rawOpts.some((o) => Number(o.price) > 0);
+    const useOptions = product.useOptions === true;
 
     let options = rawOpts.map((o) => {
       let addPrice = Number(o.price) || 0;

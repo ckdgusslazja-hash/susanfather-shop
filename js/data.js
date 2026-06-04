@@ -692,13 +692,10 @@ function filterProductsByCategory(categoryId, searchQuery = '') {
   return list;
 }
 
-/** 옵션 사용 여부 (레거시 상품은 options 개수로 추정) */
+/** 옵션 사용 여부 — useOptions가 true일 때만 옵션 UI 표시 */
 function productHasOptions(product) {
   if (!product) return false;
-  if (product.useOptions === false) return false;
-  if (product.useOptions === true) return (product.options || []).length > 0;
-  const opts = product.options || [];
-  return opts.length > 1 || opts.some((o) => Number(o.price) > 0 || (o.label && o.label !== product.unit));
+  return product.useOptions === true && (product.options || []).length > 0;
 }
 
 function getProductOption(product, optionId) {
