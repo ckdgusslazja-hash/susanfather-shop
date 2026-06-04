@@ -18,6 +18,7 @@ const Admin = {
   selectedOrderId: null,
   productDraft: null,
   policyTemplatesDraft: null,
+  detailQuill: null,
   PRODUCT_DRAFT_KEY: 'gh_admin_product_draft',
 
   BADGES: ['신선', '베스트', '특가', 'NEW', '한정', '산지직송', '유기농', '할인'],
@@ -298,9 +299,144 @@ const Admin = {
       options,
       optionLabel: product.optionLabel || '용량',
       detailBlocks,
+      detailHtml: product.detailHtml || this.detailBlocksToHtml(detailBlocks),
       shippingGuide: product.shippingGuide || '',
       returnGuide: product.returnGuide || '',
     };
+  },
+
+  detailBlocksToHtml(blocks) {
+    return (blocks || [])
+      .map((b) => {
+        if (b.type === 'image' && b.url) {
+          const cap = String(b.text || b.caption || '').trim();
+          return `<p><img src="${b.url}" alt="${this.esc(cap)}"></p>${cap ? `<p>${this.esc(cap)}</p>` : ''}`;
+        }
+        const text = String(b.text || '').trim();
+        if (!text) return '';
+        return `<p>${this.esc(text).replace(/\n/g, '<br>')}</p>`;
+      })
+      .join('');
+  },
+
+  detailHtmlToBlocks(html) {
+    const raw = String(html || '').trim();
+    if (!raw) return [];
+    const wrap = document.createElement('div');
+    wrap.innerHTML = raw;
+    const blocks = [];
+    wrap.querySelectorAll('img').forEach((img) => {
+      const url = String(img.getAttribute('src') || '').trim();
+      if (!url) return;
+      blocks.push({
+        type: 'image',
+        url,
+        text: String(img.getAttribute('alt') || '').trim(),
+      });
+    });
+    wrap.querySelectorAll('p, li, h1, h2, h3, blockquote').forEach((el) => {
+      if (el.querySelector('img')) return;
+      const text = el.innerHTML.trim();
+      if (text) blocks.push({ type: 'text', text });
+    });
+    if (!blocks.length && wrap.textContent.trim()) {
+      blocks.push({ type: 'text', text: wrap.textContent.trim() });
+    }
+    return blocks;
+  },
+
+  syncDetailEditorToDraft() {
+    if (this.detailQuill && this.productDraft) {
+      this.productDraft.detailHtml = this.detailQuill.root.innerHTML;
+    }
+  },
+
+  updateDetailEditorCount() {
+    const el = document.getElementById('detail-editor-count');
+    if (!el || !this.detailQuill) return;
+    const text = this.detailQuill.getText().replace(/\n$/, '');
+    el.textContent = `문자 : ${text.length}`;
+  },
+
+  initDetailEditor() {
+    if (typeof Quill === 'undefined') return;
+    const host = document.getElementById('detail-editor-host');
+    if (!host || !this.productDraft) return;
+
+    this.detailQuill = null;
+    host.innerHTML = '<div id="detail-editor"></div>';
+
+    this.detailQuill = new Quill('#detail-editor', {
+      theme: 'snow',
+      placeholder: '상품 상세 설명을 입력하세요. 이미지는 여러 장 한 번에 첨부할 수 있습니다.',
+      modules: {
+        toolbar: {
+          container: [
+            [{ header: [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            [{ align: [] }],
+            ['link', 'image'],
+            ['clean'],
+          ],
+          handlers: {
+            image: () => this.pickDetailEditorImages(),
+          },
+        },
+      },
+    });
+
+    const html = this.productDraft.detailHtml || this.detailBlocksToHtml(this.productDraft.detailBlocks);
+    if (html) this.detailQuill.root.innerHTML = html;
+
+    this.detailQuill.on('text-change', () => {
+      if (this.productDraft) this.productDraft.detailHtml = this.detailQuill.root.innerHTML;
+      this.updateDetailEditorCount();
+    });
+    this.updateDetailEditorCount();
+  },
+
+  pickDetailEditorImages() {
+    const input = document.getElementById('detail-editor-images');
+    if (!input) return;
+    input.value = '';
+    input.click();
+  },
+
+  onDetailEditorImagesPick(ev) {
+    const files = [...(ev.target.files || [])];
+    if (!files.length) return;
+    if (!this.detailQuill) this.initDetailEditor();
+    if (!this.detailQuill) return;
+
+    let skipped = 0;
+    const readNext = (idx) => {
+      if (idx >= files.length) {
+        if (skipped) alert(`${skipped}개 파일은 2MB 초과로 제외되었습니다.`);
+        this.syncDetailEditorToDraft();
+        this.updateDetailEditorCount();
+        ev.target.value = '';
+        return;
+      }
+      const file = files[idx];
+      if (file.size > 2 * 1024 * 1024) {
+        skipped += 1;
+        readNext(idx + 1);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const url = String(reader.result || '');
+        const range = this.detailQuill.getSelection(true);
+        const at = range ? range.index : this.detailQuill.getLength();
+        this.detailQuill.insertEmbed(at, 'image', url, 'user');
+        this.detailQuill.insertText(at + 1, '\n', 'user');
+        this.detailQuill.setSelection(at + 2, 0);
+        readNext(idx + 1);
+      };
+      reader.readAsDataURL(file);
+    };
+    readNext(0);
   },
 
   async ensurePolicies(force = false) {
@@ -527,6 +663,18 @@ const Admin = {
       this.productDraft.detailBlocks[index].type = 'image';
       this.render();
     });
+  },
+
+  renderDetailEditor() {
+    return `
+      <div class="detail-editor-wrap">
+        <div id="detail-editor-host"></div>
+        <input type="file" id="detail-editor-images" accept="image/*" multiple hidden onchange="Admin.onDetailEditorImagesPick(event)" />
+        <div class="detail-editor-foot">
+          <span id="detail-editor-count">문자 : 0</span>
+          <span class="admin-hint">이미지 버튼 · 여러 장 선택 가능 (각 2MB 이하)</span>
+        </div>
+      </div>`;
   },
 
   addProductOption() {
@@ -757,6 +905,7 @@ const Admin = {
   },
 
   saveProductClick() {
+    this.syncDetailEditorToDraft();
     const form = document.getElementById('product-form');
     if (!form || !form.reportValidity()) return;
     this.saveProduct({ preventDefault() {}, target: form });
@@ -764,6 +913,7 @@ const Admin = {
 
   async saveProduct(e) {
     e.preventDefault();
+    this.syncDetailEditorToDraft();
     this.syncProductFormState();
     const fd = new FormData(e.target);
     const d = this.productDraft || {};
@@ -794,7 +944,8 @@ const Admin = {
             originalPrice: o.originalPrice === '' || o.originalPrice == null ? 0 : Number(o.originalPrice),
           }))
         : [],
-      detailBlocks: d.detailBlocks || [],
+      detailHtml: d.detailHtml || '',
+      detailBlocks: this.detailHtmlToBlocks(d.detailHtml || ''),
       shippingGuide: d.shippingGuide || fd.get('shippingGuide') || '',
       returnGuide: d.returnGuide || fd.get('returnGuide') || '',
       organic: fd.get('organic') === 'on',
@@ -1258,12 +1409,9 @@ const Admin = {
             <div class="form-row full"><label>상품 설명</label><textarea name="description" rows="3">${this.esc(p.description)}</textarea></div>
 
             <div class="form-row full">
-              <label>상세 정보 (텍스트·이미지)</label>
-              <div class="detail-blocks">${this.renderDetailBlocks()}</div>
-              <div class="toolbar" style="margin-top:8px">
-                <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.addDetailTextBlock()">+ 텍스트</button>
-                <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.addDetailImageBlock()">+ 이미지·글</button>
-              </div>
+              <label>상품 상세설명</label>
+              <p class="admin-hint">직접 작성 · 텍스트 서식과 이미지 여러 장을 한 번에 첨부할 수 있습니다.</p>
+              ${this.renderDetailEditor()}
             </div>
 
             <div class="form-row full checkbox-row">
@@ -1583,9 +1731,15 @@ const Admin = {
 
 const _adminRender = Admin.render.bind(Admin);
 Admin.render = function () {
-  if (Admin.view === 'product-form') Admin.syncProductFormState();
+  if (Admin.view === 'product-form') {
+    Admin.syncDetailEditorToDraft();
+    Admin.syncProductFormState();
+  }
   if (Admin.view === 'settings-guides') Admin.syncPolicyTemplatesFromForm();
   _adminRender();
+  if (Admin.view === 'product-form') {
+    requestAnimationFrame(() => Admin.initDetailEditor());
+  }
 };
 
 Admin.render();

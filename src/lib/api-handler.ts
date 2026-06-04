@@ -650,6 +650,7 @@ function buildProductRecord(body: Record<string, unknown>, id: string, existing?
         ? !!existing.useOptions
         : false;
   const options = useOptions ? parseProductOptions(body.options, id, unit, price) : [];
+  const detailHtml = String(body.detailHtml ?? existing?.detailHtml ?? '').trim();
   const detailBlocks = parseDetailBlocks(body.detailBlocks, detailsText);
   const details = detailBlocks.filter((b) => b.type === 'text').map((b) => b.text || '');
 
@@ -684,6 +685,7 @@ function buildProductRecord(body: Record<string, unknown>, id: string, existing?
     optionLabel: String(body.optionLabel ?? existing?.optionLabel ?? '용량'),
     description: String(body.description ?? existing?.description ?? ''),
     details,
+    detailHtml,
     detailBlocks,
     shippingGuide: String(body.shippingGuide ?? existing?.shippingGuide ?? defaultProductPolicies().shippingGuide),
     returnGuide: String(body.returnGuide ?? existing?.returnGuide ?? defaultProductPolicies().returnGuide),

@@ -2270,6 +2270,32 @@ body.is-reviews {
 
 .pdp-detail-block--img figcaption {
   margin-top: 8px;
+}
+
+.pdp-detail-html {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--color-text);
+}
+.pdp-detail-html img {
+  width: 100%;
+  max-width: 100%;
+  border-radius: var(--radius-md);
+  display: block;
+  margin: 12px 0;
+}
+.pdp-detail-html p,
+.pdp-detail-html li {
+  margin: 0 0 10px;
+}
+.pdp-detail-html ul,
+.pdp-detail-html ol {
+  padding-left: 1.2em;
+  margin: 0 0 12px;
+}
+
+.pdp-detail-block--img figcaption,
+.pdp-detail-html figcaption {
   font-size: 0.85rem;
   color: var(--color-text-muted);
   line-height: 1.6;

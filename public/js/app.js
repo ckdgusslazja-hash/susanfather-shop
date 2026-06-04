@@ -1360,6 +1360,9 @@ function renderHome() {
 }
 
 function renderProductDetailBlocks(product) {
+  if (product.detailHtml && String(product.detailHtml).trim()) {
+    return `<div class="pdp-detail-blocks pdp-detail-html">${sanitizeDetailHtml(product.detailHtml)}</div>`;
+  }
   const blocks = product.detailBlocks?.length
     ? product.detailBlocks
     : (product.details || []).map((t) => ({ type: 'text', text: String(t) }));
@@ -1379,6 +1382,12 @@ function renderProductDetailBlocks(product) {
         })
         .join('')}
     </div>`;
+}
+
+function sanitizeDetailHtml(html) {
+  return String(html)
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
 }
 
 function renderProductPolicySections(product) {

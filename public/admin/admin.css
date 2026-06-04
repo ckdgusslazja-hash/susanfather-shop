@@ -320,6 +320,47 @@ a { color: #2d6a4f; }
 }
 
 .detail-blocks { display: flex; flex-direction: column; gap: 12px; }
+.detail-editor-wrap {
+  border: 1px solid #c5d4c8;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+.detail-editor-wrap .ql-toolbar {
+  border: none;
+  border-bottom: 1px solid #dde5df;
+  background: #f7faf8;
+  font-family: inherit;
+}
+.detail-editor-wrap .ql-container {
+  border: none;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+.detail-editor-wrap .ql-editor {
+  min-height: 280px;
+  max-height: 520px;
+  overflow-y: auto;
+  line-height: 1.65;
+}
+.detail-editor-wrap .ql-editor img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 8px 0;
+  border-radius: 6px;
+}
+.detail-editor-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid #dde5df;
+  background: #fafcfb;
+  font-size: 0.82rem;
+  color: #5c6b62;
+}
 .detail-block {
   border: 1px solid #dde5df;
   border-radius: 8px;
