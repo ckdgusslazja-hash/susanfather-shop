@@ -1815,16 +1815,33 @@ function renderHome() {
         </div>
       </div>
 
-      <section class="home-banner" style="background:${banner.bg}">
-        <button type="button" class="home-banner__arrow home-banner__arrow--prev" onclick="homeBannerPrev()">‹</button>
+      <section class="home-banner" aria-label="메인 프로모션">
+        ${
+          banner.image
+            ? `<img class="home-banner__photo" src="${escapeHtml(banner.image)}" alt="" loading="eager" decoding="async"
+                onerror="this.style.display='none'" />`
+            : ''
+        }
+        <div class="home-banner__overlay" aria-hidden="true"></div>
+        <button type="button" class="home-banner__arrow home-banner__arrow--prev" onclick="homeBannerPrev()" aria-label="이전 배너">‹</button>
         <button type="button" class="home-banner__content" onclick="navigate('detail',{productId:'${banner.productId}'})">
-          <span class="home-banner__emoji">${banner.emoji}</span>
-          <div>
+          <div class="home-banner__copy">
+            ${
+              banner.tag
+                ? `<span class="home-banner__tag">${escapeHtml(banner.tag)}</span>`
+                : ''
+            }
+            ${
+              banner.badge
+                ? `<span class="home-banner__badge">${escapeHtml(banner.badge)}</span>`
+                : ''
+            }
             <h2 class="home-banner__title">${escapeHtml(banner.title)}</h2>
             <p class="home-banner__sub">${escapeHtml(banner.subtitle)}</p>
+            <span class="home-banner__cta">지금 보러가기 <span aria-hidden="true">›</span></span>
           </div>
         </button>
-        <button type="button" class="home-banner__arrow home-banner__arrow--next" onclick="homeBannerNext()">›</button>
+        <button type="button" class="home-banner__arrow home-banner__arrow--next" onclick="homeBannerNext()" aria-label="다음 배너">›</button>
         <div class="home-banner__dots">${bannerDots}</div>
       </section>
 
