@@ -211,7 +211,25 @@ function defaultSettingsBundle() {
       autoConfirmDays: 7,
       returnDays: 7,
     },
+    productPolicies: defaultProductPolicies(),
     announcements: getDefaultAnnouncements(),
+  };
+}
+
+function defaultProductPolicies() {
+  return {
+    shippingGuide: `【 배송 안내 】
+· 산지에서 직접 포장·발송하는 신선 농수산물입니다.
+· 결제 완료(또는 입금 확인) 후 1~2일 내 출고되며, 수령까지 1~3일 소요됩니다.
+· 제주·도서·산간 지역은 1~2일 추가 소요될 수 있습니다.
+· 기상 악화, 산지 수급 등으로 출고일이 변경될 수 있으며 개별 안내드립니다.
+· 배송 조회는 마이페이지 또는 주문·배송 조회에서 확인할 수 있습니다.`,
+    returnGuide: `【 교환·반품 안내 】
+· 상품 수령 후 7일 이내 교환·반품 신청이 가능합니다.
+· 신선·냉장·냉동 식품은 수령 후 24시간 이내, 상품 사진과 함께 고객센터로 접수해 주세요.
+· 고객님의 책임 있는 사유로 변질·파손된 경우 교환·반품이 제한됩니다.
+· 단순 변심 반품 시 왕복 배송비는 고객 부담입니다.
+· 반품 승인 후 3~7영업일 내 결제 수단으로 환불 처리됩니다.`,
   };
 }
 
@@ -412,6 +430,105 @@ const PRODUCT_CAT_NAMES: Record<string, string> = {
   grain: '곡물·쌀',
   processed: '가공식품',
 };
+
+function parseDetailBlocks(raw: unknown, detailsText: string) {
+  if (Array.isArray(raw) && raw.length) {
+    return raw
+      .map((b) => {
+        const block = b as Record<string, unknown>;
+        if (block.type === 'image') {
+          const url = String(block.url || '').trim();
+          const text = String(block.text || block.caption || '').trim();
+          if (!url) return null;
+          return { type: 'image', url, text, caption: text };
+        }
+        const text = String(block.text || '').trim();
+        return text ? { type: 'text', text } : null;
+      })
+      .filter(Boolean) as Array<{ type: string; text?: string; url?: string; caption?: string }>;
+  }
+  return detailsText
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((text) => ({ type: 'text', text }));
+}
+
+function parseProductOptions(
+  raw: unknown,
+  productId: string,
+  unit: string,
+  price: number,
+  originalPrice: number
+) {
+  if (Array.isArray(raw) && raw.length) {
+    return raw.map((item, i) => {
+      const o = item as Record<string, unknown>;
+      const p = Number(o.price) || price;
+      return {
+        id: `${productId}-o${i + 1}`,
+        label: String(o.label || unit || `옵션${i + 1}`),
+        price: p,
+        originalPrice: Number(o.originalPrice) || p,
+      };
+    });
+  }
+  return [{ id: `${productId}-o1`, label: unit, price, originalPrice }];
+}
+
+function buildAdminImages(mainImage: string, productId: string) {
+  const url = mainImage || `/images/products/${productId}.png`;
+  return [{ id: `${productId}-a1`, url, label: '대표 상품컷' }];
+}
+
+function buildProductRecord(body: Record<string, unknown>, id: string, existing?: Record<string, unknown>) {
+  const name = String(body.name || existing?.name || '').trim();
+  const category = String(body.category || existing?.category || 'fruit');
+  const catName = PRODUCT_CAT_NAMES[category] || category;
+  const price = Number(body.price ?? existing?.price) || 0;
+  const originalPrice = Number(body.originalPrice ?? body.price ?? existing?.originalPrice) || price;
+  const unit = String(body.unit || existing?.unit || '1개');
+  const mainImage = String(body.mainImage || body.imageUrl || '').trim();
+  const detailsText = String(body.details || '');
+  const options = parseProductOptions(body.options, id, unit, price, originalPrice);
+  const detailBlocks = parseDetailBlocks(body.detailBlocks, detailsText);
+  const details = detailBlocks.filter((b) => b.type === 'text').map((b) => b.text || '');
+
+  return {
+    id,
+    name,
+    category,
+    categoryPath: ['식품', catName, name],
+    price: options[0]?.price ?? price,
+    originalPrice: options[0]?.originalPrice ?? originalPrice,
+    unit: options[0]?.label || unit,
+    origin: String(body.origin ?? existing?.origin ?? '국내산'),
+    badge: String(body.badge ?? existing?.badge ?? '신선'),
+    rating: Number(existing?.rating ?? body.rating) || 4.8,
+    reviews: Number(existing?.reviews) || 0,
+    stock: Number(body.stock ?? existing?.stock) ?? 50,
+    recentBuyers: Number(existing?.recentBuyers) || 0,
+    couponNote: String(body.couponNote ?? existing?.couponNote ?? ''),
+    emoji: String(body.emoji ?? existing?.emoji ?? '🛒'),
+    gradient: String(
+      body.gradient ?? existing?.gradient ?? 'linear-gradient(135deg, #69db7c, #2f9e44)'
+    ),
+    organic: body.organic !== undefined ? !!body.organic : !!existing?.organic,
+    localDirect:
+      body.localDirect !== undefined ? body.localDirect !== false : existing?.localDirect !== false,
+    freeShipping: body.freeShipping !== undefined ? !!body.freeShipping : !!existing?.freeShipping,
+    adminImages: mainImage
+      ? buildAdminImages(mainImage, id)
+      : ((existing?.adminImages as unknown[]) || buildAdminImages('', id)),
+    options,
+    optionLabel: String(body.optionLabel ?? existing?.optionLabel ?? '용량'),
+    description: String(body.description ?? existing?.description ?? ''),
+    details,
+    detailBlocks,
+    shippingGuide: String(body.shippingGuide ?? existing?.shippingGuide ?? ''),
+    returnGuide: String(body.returnGuide ?? existing?.returnGuide ?? ''),
+  };
+}
 
 const kakaoConfig = getKakaoConfig(siteUrl);
 
@@ -651,7 +768,8 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
       const shop = (await getSetting('shop')) ?? defaults.shop;
       const customerCenter = (await getSetting('customerCenter')) ?? defaults.customerCenter;
       const order = (await getSetting('order')) ?? defaults.order;
-      return json({ shop, customerCenter, order });
+      const productPolicies = (await getSetting('productPolicies')) ?? defaults.productPolicies;
+      return json({ shop, customerCenter, order, productPolicies });
     }
     if (method === 'GET' && b === 'payment-public') {
       const p = (await getSetting('payment')) as PaymentSetting | null;
@@ -1294,43 +1412,7 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
         if (!name) return json({ error: '상품명은 필수입니다.' }, 400);
 
         const id = String(body.id || '').trim() || uuidv4();
-
-        const category = String(body.category || 'fruit');
-        const catName = PRODUCT_CAT_NAMES[category] || category;
-        const price = Number(body.price) || 0;
-        const originalPrice = Number(body.originalPrice) || price;
-        const unit = String(body.unit || '1개');
-        const imageUrl = String(body.imageUrl || `/images/products/${id}.png`);
-
-        const product: Record<string, unknown> = {
-          id,
-          name,
-          category,
-          categoryPath: ['식품', catName, name],
-          price,
-          originalPrice,
-          unit,
-          origin: String(body.origin || '국내산'),
-          badge: String(body.badge || '신선'),
-          rating: Number(body.rating) || 4.8,
-          reviews: 0,
-          stock: Number(body.stock) ?? 50,
-          recentBuyers: 0,
-          couponNote: String(body.couponNote || ''),
-          emoji: String(body.emoji || '🛒'),
-          gradient: String(body.gradient || 'linear-gradient(135deg, #69db7c, #2f9e44)'),
-          organic: !!body.organic,
-          localDirect: body.localDirect !== false,
-          freeShipping: !!body.freeShipping,
-          adminImages: [{ id: `${id}-a1`, url: imageUrl, label: '대표 상품컷' }],
-          options: [{ id: `${id}-o1`, label: unit, price, originalPrice }],
-          optionLabel: '용량',
-          description: String(body.description || ''),
-          details: String(body.details || '')
-            .split('\n')
-            .map((s) => s.trim())
-            .filter(Boolean),
-        };
+        const product = buildProductRecord(body, id);
 
         await prisma.product.upsert({
           where: { id },
@@ -1354,33 +1436,23 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
         const body = await parseBody<Record<string, unknown>>(request);
         const existing = await prisma.product.findUnique({ where: { id: c } });
         const base = (existing?.data as Record<string, unknown>) || {};
-        const merged: Record<string, unknown> = { ...base, ...body, id: c };
-
-        if (body.imageUrl) {
-          merged.adminImages = [{ id: `${c}-a1`, url: body.imageUrl, label: '대표 상품컷' }];
-        }
-        if (body.price !== undefined) {
-          const price = Number(body.price);
-          const originalPrice = Number(body.originalPrice ?? body.price);
-          const unit = String(merged.unit || '1개');
-          merged.options = [{ id: `${c}-o1`, label: unit, price, originalPrice }];
-        }
+        const product = buildProductRecord(body, c, base);
 
         await prisma.product.upsert({
           where: { id: c },
-          create: { id: c, data: merged as Prisma.InputJsonValue },
-          update: { data: merged as Prisma.InputJsonValue },
+          create: { id: c, data: product as Prisma.InputJsonValue },
+          update: { data: product as Prisma.InputJsonValue },
         });
 
         const list = await loadAllProducts();
         const idx = list.findIndex((p) => p.id === c);
-        if (idx >= 0) list[idx] = merged;
+        if (idx >= 0) list[idx] = product;
         try {
           await syncProductsJson(list);
         } catch {
           /* */
         }
-        return json({ ok: true, product: merged });
+        return json({ ok: true, product });
       }
       if (method === 'DELETE' && c) {
         await prisma.product.delete({ where: { id: c } }).catch(() => null);
@@ -1400,12 +1472,13 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
         payment: await getSetting('payment'),
         order: await getSetting('order'),
         customerCenter: await getSetting('customerCenter'),
+        productPolicies: (await getSetting('productPolicies')) ?? defaultProductPolicies(),
       });
     }
 
     if (method === 'PUT' && b === 'settings' && c) {
       const key = c;
-      if (!['shop', 'payment', 'order', 'customerCenter'].includes(key)) {
+      if (!['shop', 'payment', 'order', 'customerCenter', 'productPolicies'].includes(key)) {
         return json({ error: '잘못된 설정 키' }, 400);
       }
       const body = await parseBody(request);

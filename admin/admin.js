@@ -14,6 +14,10 @@ const Admin = {
   orderFilter: '',
   editingProduct: null,
   selectedOrderId: null,
+  productDraft: null,
+
+  BADGES: ['신선', '베스트', '특가', 'NEW', '한정', '산지직송', '유기농', '할인'],
+  OPTION_LABELS: ['용량', '중량', '수량', '규격', '옵션'],
 
   CATEGORIES: {
     fruit: '제철과일',
@@ -92,6 +96,7 @@ const Admin = {
   },
 
   go(view) {
+    if (this.view === 'product-form') this.syncProductFormState();
     this.view = view;
     this.render();
   },
@@ -146,7 +151,6 @@ const Admin = {
       this.editingProduct = p ? { ...p } : null;
     } else {
       this.editingProduct = {
-        id: '',
         name: '',
         category: 'fruit',
         price: '',
@@ -157,35 +161,225 @@ const Admin = {
         badge: '신선',
         emoji: '🛒',
         description: '',
-        imageUrl: '',
         organic: false,
         localDirect: true,
         freeShipping: false,
+        optionLabel: '용량',
       };
     }
-    this.view = 'product-form';
+    this.initProductDraft(this.editingProduct);
+    this.ensurePolicies().then(() => {
+      this.view = 'product-form';
+      this.render();
+    });
+  },
+
+  initProductDraft(p) {
+    const product = p || {};
+    let detailBlocks = Array.isArray(product.detailBlocks) ? [...product.detailBlocks] : [];
+    if (!detailBlocks.length && Array.isArray(product.details)) {
+      detailBlocks = product.details.map((t) => ({ type: 'text', text: String(t) }));
+    }
+    if (!detailBlocks.length) detailBlocks = [{ type: 'text', text: '' }];
+
+    let options = (product.options || []).map((o) => ({
+      label: o.label || '',
+      price: o.price ?? '',
+      originalPrice: o.originalPrice ?? o.price ?? '',
+    }));
+    if (!options.length) {
+      options = [{ label: product.unit || '', price: product.price ?? '', originalPrice: product.originalPrice ?? '' }];
+    }
+
+    this.productDraft = {
+      mainImage: product.adminImages?.[0]?.url || '',
+      options,
+      optionLabel: product.optionLabel || '용량',
+      detailBlocks,
+      shippingGuide: product.shippingGuide || '',
+      returnGuide: product.returnGuide || '',
+    };
+  },
+
+  async ensurePolicies() {
+    try {
+      if (!this.settings?.productPolicies) {
+        this.settings = await this.request('/api/admin/settings');
+      }
+    } catch {
+      this.settings = this.settings || { productPolicies: {} };
+    }
+  },
+
+  syncProductFormState() {
+    if (this.view !== 'product-form') return;
+    const form = document.getElementById('product-form');
+    if (!form || !this.editingProduct) return;
+    const fd = new FormData(form);
+    this.editingProduct = {
+      ...this.editingProduct,
+      name: fd.get('name'),
+      category: fd.get('category'),
+      price: fd.get('price'),
+      originalPrice: fd.get('originalPrice'),
+      unit: fd.get('unit'),
+      origin: fd.get('origin'),
+      stock: fd.get('stock'),
+      badge: fd.get('badge'),
+      emoji: fd.get('emoji'),
+      description: fd.get('description'),
+      organic: fd.get('organic') === 'on',
+      localDirect: fd.get('localDirect') === 'on',
+      freeShipping: fd.get('freeShipping') === 'on',
+    };
+    if (this.productDraft) {
+      this.productDraft.optionLabel = fd.get('optionLabel') || '용량';
+      this.productDraft.shippingGuide = fd.get('shippingGuide') || '';
+      this.productDraft.returnGuide = fd.get('returnGuide') || '';
+    }
+  },
+
+  readImageFile(ev, cb) {
+    const file = ev.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert('2MB 이하 이미지만 등록할 수 있습니다.');
+      ev.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => cb(String(reader.result || ''));
+    reader.readAsDataURL(file);
+  },
+
+  onMainImagePick(ev) {
+    this.readImageFile(ev, (url) => {
+      this.syncProductFormState();
+      this.productDraft.mainImage = url;
+      this.render();
+    });
+  },
+
+  onDetailBlockImagePick(index, ev) {
+    this.readImageFile(ev, (url) => {
+      this.syncProductFormState();
+      this.productDraft.detailBlocks[index].url = url;
+      this.productDraft.detailBlocks[index].type = 'image';
+      this.render();
+    });
+  },
+
+  addProductOption() {
+    this.syncProductFormState();
+    this.productDraft.options.push({ label: '', price: '', originalPrice: '' });
     this.render();
+  },
+
+  removeProductOption(i) {
+    this.syncProductFormState();
+    if (this.productDraft.options.length <= 1) return;
+    this.productDraft.options.splice(i, 1);
+    this.render();
+  },
+
+  addDetailTextBlock() {
+    this.syncProductFormState();
+    this.productDraft.detailBlocks.push({ type: 'text', text: '' });
+    this.render();
+  },
+
+  addDetailImageBlock() {
+    this.syncProductFormState();
+    this.productDraft.detailBlocks.push({ type: 'image', url: '', text: '' });
+    this.render();
+  },
+
+  removeDetailBlock(i) {
+    this.syncProductFormState();
+    if (this.productDraft.detailBlocks.length <= 1) return;
+    this.productDraft.detailBlocks.splice(i, 1);
+    this.render();
+  },
+
+  applyPolicyTemplate(field) {
+    this.syncProductFormState();
+    const pol = this.settings?.productPolicies || {};
+    if (field === 'shipping') this.productDraft.shippingGuide = pol.shippingGuide || '';
+    if (field === 'return') this.productDraft.returnGuide = pol.returnGuide || '';
+    this.render();
+  },
+
+  renderProductOptions() {
+    const d = this.productDraft;
+    if (!d) return '';
+    return d.options
+      .map(
+        (o, i) => `
+      <div class="option-row" data-index="${i}">
+        <input placeholder="옵션명 (예: 1kg)" value="${this.esc(o.label)}" onchange="Admin.productDraft.options[${i}].label=this.value" />
+        <input type="number" placeholder="판매가" value="${o.price}" onchange="Admin.productDraft.options[${i}].price=this.value" />
+        <input type="number" placeholder="정가" value="${o.originalPrice}" onchange="Admin.productDraft.options[${i}].originalPrice=this.value" />
+        <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.removeProductOption(${i})">삭제</button>
+      </div>`
+      )
+      .join('');
+  },
+
+  renderDetailBlocks() {
+    const d = this.productDraft;
+    if (!d) return '';
+    return d.detailBlocks
+      .map((b, i) => {
+        if (b.type === 'image') {
+          return `
+        <div class="detail-block detail-block--image">
+          <div class="detail-block__head"><strong>이미지 + 설명</strong>
+            <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.removeDetailBlock(${i})">삭제</button></div>
+          ${b.url ? `<img class="img-preview" src="${b.url}" alt="" />` : ''}
+          <input type="file" accept="image/*" onchange="Admin.onDetailBlockImagePick(${i}, event)" />
+          <textarea rows="2" placeholder="이미지 설명 글" onchange="Admin.productDraft.detailBlocks[${i}].text=this.value">${this.esc(b.text || '')}</textarea>
+        </div>`;
+        }
+        return `
+        <div class="detail-block">
+          <div class="detail-block__head"><strong>텍스트</strong>
+            <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.removeDetailBlock(${i})">삭제</button></div>
+          <textarea rows="2" placeholder="상세 설명" onchange="Admin.productDraft.detailBlocks[${i}].text=this.value">${this.esc(b.text || '')}</textarea>
+        </div>`;
+      })
+      .join('');
   },
 
   async saveProduct(e) {
     e.preventDefault();
+    this.syncProductFormState();
     const fd = new FormData(e.target);
+    const d = this.productDraft || {};
+    const firstOpt = d.options?.[0] || {};
     const body = {
       name: fd.get('name'),
       category: fd.get('category'),
-      price: Number(fd.get('price')),
-      originalPrice: Number(fd.get('originalPrice') || fd.get('price')),
-      unit: fd.get('unit'),
+      price: Number(firstOpt.price || fd.get('price')),
+      originalPrice: Number(firstOpt.originalPrice || firstOpt.price || fd.get('originalPrice') || fd.get('price')),
+      unit: String(firstOpt.label || fd.get('unit') || '1개'),
       origin: fd.get('origin'),
       stock: Number(fd.get('stock')),
       badge: fd.get('badge'),
       emoji: fd.get('emoji'),
       description: fd.get('description'),
-      imageUrl: fd.get('imageUrl'),
+      mainImage: d.mainImage || '',
+      optionLabel: d.optionLabel || fd.get('optionLabel') || '용량',
+      options: (d.options || []).map((o) => ({
+        label: o.label,
+        price: Number(o.price),
+        originalPrice: Number(o.originalPrice || o.price),
+      })),
+      detailBlocks: d.detailBlocks || [],
+      shippingGuide: d.shippingGuide || fd.get('shippingGuide') || '',
+      returnGuide: d.returnGuide || fd.get('returnGuide') || '',
       organic: fd.get('organic') === 'on',
       localDirect: fd.get('localDirect') === 'on',
       freeShipping: fd.get('freeShipping') === 'on',
-      details: fd.get('details'),
     };
     try {
       if (this.editingProduct?.id && this.products.some((p) => p.id === this.editingProduct.id)) {
@@ -304,6 +498,12 @@ const Admin = {
     this.render();
   },
 
+  async loadSettingsGuides() {
+    this.settings = await this.request('/api/admin/settings');
+    this.view = 'settings-guides';
+    this.render();
+  },
+
   async loadSettings() {
     this.settings = await this.request('/api/admin/settings');
     this.view = 'settings';
@@ -375,9 +575,18 @@ const Admin = {
             email: fd.get('email'),
           }),
         });
+      } else if (key === 'productPolicies') {
+        await this.request('/api/admin/settings/productPolicies', {
+          method: 'PUT',
+          body: JSON.stringify({
+            shippingGuide: fd.get('shippingGuide'),
+            returnGuide: fd.get('returnGuide'),
+          }),
+        });
       }
       alert('저장되었습니다');
-      await this.loadSettings();
+      if (key === 'productPolicies') await this.loadSettingsGuides();
+      else await this.loadSettings();
     } catch (e) {
       alert(e.message);
     }
@@ -409,9 +618,14 @@ const Admin = {
       ['reviews', '⭐', '리뷰관리', () => 'Admin.loadReviews()'],
       ['inquiries', '💬', '문의함', () => 'Admin.loadInquiries()'],
       ['settings', '⚙️', '설정', () => 'Admin.loadSettings()'],
+      ['settings-guides', '📋', '배송·반품 안내', () => 'Admin.loadSettingsGuides()'],
     ];
     const activeView =
-      this.view === 'product-form' ? 'product-form' : this.view === 'order-detail' ? 'orders' : this.view;
+      this.view === 'product-form'
+        ? 'product-form'
+        : this.view === 'order-detail'
+          ? 'orders'
+          : this.view;
     return `
       <aside class="admin-sidebar">
         <div class="admin-sidebar__brand">
@@ -525,30 +739,65 @@ const Admin = {
 
   renderProductForm() {
     const p = this.editingProduct || {};
+    const d = this.productDraft || { options: [], detailBlocks: [], mainImage: '' };
     const isEdit = !!(p.id && this.products.some((x) => x.id === p.id));
-    const img = p.adminImages?.[0]?.url || p.imageUrl || '';
     return `
       <div class="panel">
         <div class="panel__head"><h2>${isEdit ? '상품 수정' : '상품 등록'}</h2>
-          <button class="btn btn--ghost btn--sm" onclick="Admin.loadProducts()">← 목록</button>
+          <button class="btn btn--ghost btn--sm" type="button" onclick="Admin.syncProductFormState();Admin.loadProducts()">← 목록</button>
         </div>
-        <form onsubmit="Admin.saveProduct(event)">
+        <form id="product-form" onsubmit="Admin.saveProduct(event)">
           <div class="form-grid">
             <div class="form-row"><label>카테고리 *</label><select name="category">${Object.entries(this.CATEGORIES).map(([k, v]) => `<option value="${k}" ${p.category === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+            <div class="form-row"><label>뱃지</label><select name="badge">${this.BADGES.map((b) => `<option value="${b}" ${(p.badge || '신선') === b ? 'selected' : ''}>${b}</option>`).join('')}</select></div>
             <div class="form-row full"><label>상품명 *</label><input name="name" required value="${this.esc(p.name)}" /></div>
-            <div class="form-row"><label>판매가 *</label><input name="price" type="number" required value="${p.price ?? ''}" /></div>
-            <div class="form-row"><label>정가</label><input name="originalPrice" type="number" value="${p.originalPrice ?? p.price ?? ''}" /></div>
-            <div class="form-row"><label>단위 *</label><input name="unit" required value="${this.esc(p.unit)}" placeholder="5kg, 1kg, 2입" /></div>
+            <div class="form-row"><label>기본 단위 (옵션 1개일 때)</label><input name="unit" value="${this.esc(p.unit)}" placeholder="5kg, 1kg, 2입" /></div>
+            <div class="form-row"><label>기본 판매가</label><input name="price" type="number" value="${p.price ?? ''}" /></div>
+            <div class="form-row"><label>기본 정가</label><input name="originalPrice" type="number" value="${p.originalPrice ?? p.price ?? ''}" /></div>
             <div class="form-row"><label>재고</label><input name="stock" type="number" value="${p.stock ?? 50}" /></div>
             <div class="form-row"><label>산지</label><input name="origin" value="${this.esc(p.origin)}" /></div>
-            <div class="form-row"><label>뱃지</label><input name="badge" value="${this.esc(p.badge || '신선')}" /></div>
             <div class="form-row"><label>이모지</label><input name="emoji" value="${this.esc(p.emoji || '🛒')}" /></div>
-            <div class="form-row full"><label>이미지 URL</label><input name="imageUrl" value="${this.esc(img)}" placeholder="https://... 또는 /images/products/파일명.png" /></div>
+
+            <div class="form-row full">
+              <label>메인 이미지</label>
+              ${d.mainImage ? `<img class="img-preview img-preview--main" src="${d.mainImage}" alt="" />` : '<p class="admin-hint">대표 상품 이미지를 등록하세요.</p>'}
+              <input type="file" accept="image/*" onchange="Admin.onMainImagePick(event)" />
+            </div>
+
+            <div class="form-row full">
+              <label>옵션</label>
+              <div class="form-row"><label>옵션 라벨</label>
+                <select name="optionLabel">${this.OPTION_LABELS.map((l) => `<option value="${l}" ${d.optionLabel === l ? 'selected' : ''}>${l}</option>`).join('')}</select>
+              </div>
+              <div class="option-list">${this.renderProductOptions()}</div>
+              <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.addProductOption()">+ 옵션 추가</button>
+            </div>
+
             <div class="form-row full"><label>상품 설명</label><textarea name="description" rows="3">${this.esc(p.description)}</textarea></div>
-            <div class="form-row full"><label>상세 항목 (줄바꿈 구분)</label><textarea name="details" rows="3">${this.esc((p.details || []).join('\n'))}</textarea></div>
-            <div class="form-row"><label><input type="checkbox" name="organic" ${p.organic ? 'checked' : ''} /> 유기농</label></div>
-            <div class="form-row"><label><input type="checkbox" name="localDirect" ${p.localDirect !== false ? 'checked' : ''} /> 산지직송</label></div>
-            <div class="form-row"><label><input type="checkbox" name="freeShipping" ${p.freeShipping ? 'checked' : ''} /> 무료배송</label></div>
+
+            <div class="form-row full">
+              <label>상세 정보 (텍스트·이미지)</label>
+              <div class="detail-blocks">${this.renderDetailBlocks()}</div>
+              <div class="toolbar" style="margin-top:8px">
+                <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.addDetailTextBlock()">+ 텍스트</button>
+                <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.addDetailImageBlock()">+ 이미지·글</button>
+              </div>
+            </div>
+
+            <div class="form-row full checkbox-row">
+              <label class="checkbox-inline"><input type="checkbox" name="organic" ${p.organic ? 'checked' : ''} /> 유기농</label>
+              <label class="checkbox-inline"><input type="checkbox" name="localDirect" ${p.localDirect !== false ? 'checked' : ''} /> 산지직송</label>
+              <label class="checkbox-inline"><input type="checkbox" name="freeShipping" ${p.freeShipping ? 'checked' : ''} /> 무료배송</label>
+            </div>
+
+            <div class="form-row full">
+              <label>배송 안내 <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.applyPolicyTemplate('shipping')">기본안내 불러오기</button></label>
+              <textarea name="shippingGuide" rows="5">${this.esc(d.shippingGuide)}</textarea>
+            </div>
+            <div class="form-row full">
+              <label>교환·반품 안내 <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.applyPolicyTemplate('return')">기본안내 불러오기</button></label>
+              <textarea name="returnGuide" rows="5">${this.esc(d.returnGuide)}</textarea>
+            </div>
           </div>
           <button class="btn" type="submit" style="margin-top:16px">${isEdit ? '수정 저장' : '상품 등록'}</button>
         </form>
@@ -755,6 +1004,23 @@ const Admin = {
       </form>`;
   },
 
+  renderSettingsGuides() {
+    const pol = this.settings?.productPolicies || {};
+    return `
+      <form id="form-productPolicies" class="panel" onsubmit="event.preventDefault();Admin.saveSetting('productPolicies')">
+        <h2>상품 배송 안내 (기본 템플릿)</h2>
+        <p class="admin-hint">여기에 작성한 내용은 상품 등록 시 「기본안내 불러오기」로 불러올 수 있습니다.</p>
+        <div class="form-row full"><label>배송 안내</label>
+          <textarea name="shippingGuide" rows="8">${this.esc(pol.shippingGuide || '')}</textarea>
+        </div>
+        <h2 style="margin-top:24px">교환·반품 안내 (기본 템플릿)</h2>
+        <div class="form-row full"><label>교환·반품 안내</label>
+          <textarea name="returnGuide" rows="8">${this.esc(pol.returnGuide || '')}</textarea>
+        </div>
+        <button class="btn" type="submit" style="margin-top:12px">저장</button>
+      </form>`;
+  },
+
   renderBody() {
     switch (this.view) {
       case 'dashboard':
@@ -777,6 +1043,8 @@ const Admin = {
         return this.renderInquiries();
       case 'settings':
         return this.renderSettings();
+      case 'settings-guides':
+        return this.renderSettingsGuides();
       default:
         return this.renderDashboard();
     }
@@ -800,6 +1068,7 @@ const Admin = {
       reviews: '리뷰 관리',
       inquiries: '문의함',
       settings: '설정',
+      'settings-guides': '배송·반품 안내',
     };
 
     root.innerHTML = `
@@ -813,6 +1082,12 @@ const Admin = {
         </main>
       </div>`;
   },
+};
+
+const _adminRender = Admin.render.bind(Admin);
+Admin.render = function () {
+  if (Admin.view === 'product-form') Admin.syncProductFormState();
+  _adminRender();
 };
 
 Admin.render();

@@ -2238,6 +2238,54 @@ body.is-reviews {
   color: var(--color-text-muted);
 }
 
+.pdp-detail-blocks {
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pdp-detail-block--text {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--color-text);
+}
+
+.pdp-detail-block--img img {
+  width: 100%;
+  border-radius: var(--radius-md);
+  display: block;
+}
+
+.pdp-detail-block--img figcaption {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.pdp-policies {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.pdp-policy {
+  margin-bottom: 20px;
+}
+
+.pdp-policy__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.pdp-policy__body {
+  font-size: 0.85rem;
+  line-height: 1.75;
+  color: var(--color-text-muted);
+}
+
 .pdp-sticky {
   position: fixed;
   bottom: 0;

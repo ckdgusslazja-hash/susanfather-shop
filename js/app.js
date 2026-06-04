@@ -1111,6 +1111,38 @@ function renderHome() {
   `;
 }
 
+function renderProductDetailBlocks(product) {
+  const blocks = product.detailBlocks?.length
+    ? product.detailBlocks
+    : (product.details || []).map((t) => ({ type: 'text', text: String(t) }));
+  if (!blocks.length) return '';
+  return `
+    <div class="pdp-detail-blocks">
+      ${blocks
+        .map((b) => {
+          if (b.type === 'image' && b.url) {
+            return `<figure class="pdp-detail-block pdp-detail-block--img">
+              <img src="${b.url}" alt="" loading="lazy" />
+              ${b.text ? `<figcaption>${escapeHtml(b.text)}</figcaption>` : ''}
+            </figure>`;
+          }
+          if (b.text) return `<p class="pdp-detail-block pdp-detail-block--text">${escapeHtml(b.text)}</p>`;
+          return '';
+        })
+        .join('')}
+    </div>`;
+}
+
+function renderProductPolicySections(product) {
+  if (!product.shippingGuide && !product.returnGuide) return '';
+  const nl = (s) => escapeHtml(String(s)).replace(/\n/g, '<br>');
+  return `
+    <section class="pdp-policies">
+      ${product.shippingGuide ? `<div class="pdp-policy"><h3 class="pdp-policy__title">배송 안내</h3><div class="pdp-policy__body">${nl(product.shippingGuide)}</div></div>` : ''}
+      ${product.returnGuide ? `<div class="pdp-policy"><h3 class="pdp-policy__title">교환·반품 안내</h3><div class="pdp-policy__body">${nl(product.returnGuide)}</div></div>` : ''}
+    </section>`;
+}
+
 function renderDetail() {
   const product = getProduct(state.selectedProductId);
   if (!product) return renderHome();
@@ -1230,11 +1262,10 @@ function renderDetail() {
         <section class="pdp-info" id="pdp-info">
           <h2 class="pdp-info__title">상품 정보</h2>
           <p class="pdp-desc">${escapeHtml(product.description)}</p>
-          <ul class="pdp-details">
-            ${product.details.map((d) => `<li>${escapeHtml(d)}</li>`).join('')}
-          </ul>
+          ${renderProductDetailBlocks(product)}
           <span class="pdp-stock">재고 ${product.stock}개 남음</span>
         </section>
+        ${renderProductPolicySections(product)}
       </div>
 
       <div class="pdp-sticky">
