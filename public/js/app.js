@@ -1489,7 +1489,7 @@ function renderProductCard(product) {
       </div>
       <div class="product-card__body">
         <p class="product-card__origin">${product.origin}</p>
-        <h3 class="product-card__name">${product.name}</h3>
+        <h3 class="product-card__name">${escapeHtml(product.name)}${product.unit ? `, ${escapeHtml(product.unit)}` : ''}</h3>
         <button type="button" class="product-card__rating product-card__rating--link"
           onclick="navigate('reviews',{reviewProductId:'${product.id}'})">
           <span>★ ${product.rating}</span> · 리뷰 ${getReviewsByProduct(product.id).length}개 보기
