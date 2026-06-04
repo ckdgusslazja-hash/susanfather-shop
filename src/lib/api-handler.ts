@@ -486,6 +486,22 @@ function normalizeProductForClient(product: Record<string, unknown>): Record<str
   return next;
 }
 
+async function loadAdminProducts(): Promise<Record<string, unknown>[]> {
+  try {
+    const rows = await prisma.product.findMany();
+    if (rows.length) {
+      return rows.map((r) => {
+        const data = r.data as Record<string, unknown>;
+        return { ...data, useOptions: data.useOptions === true };
+      });
+    }
+  } catch {
+    /* fallback */
+  }
+  const fallback = (await loadProductsFallback()) as Record<string, unknown>[];
+  return fallback.map((p) => ({ ...p, useOptions: p.useOptions === true }));
+}
+
 async function loadAllProducts(): Promise<Record<string, unknown>[]> {
   try {
     const rows = await prisma.product.findMany();
@@ -1485,13 +1501,16 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
 
     if (b === 'products') {
       if (method === 'GET' && !c) {
-        const list = await loadAllProducts();
+        const list = await loadAdminProducts();
         return json(list);
       }
       if (method === 'GET' && c) {
         const row = await prisma.product.findUnique({ where: { id: c } });
-        if (row) return json(row.data);
-        const list = await loadAllProducts();
+        if (row) {
+          const data = row.data as Record<string, unknown>;
+          return json({ ...data, useOptions: data.useOptions === true });
+        }
+        const list = await loadAdminProducts();
         const found = list.find((p) => p.id === c);
         if (!found) return json({ error: '상품을 찾을 수 없습니다.' }, 404);
         return json(found);

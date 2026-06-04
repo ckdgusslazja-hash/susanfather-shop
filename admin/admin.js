@@ -166,32 +166,39 @@ const Admin = {
   },
 
   openProductForm(id) {
-    if (id) {
-      const p = this.products.find((x) => x.id === id);
-      this.editingProduct = p ? { ...p } : null;
-    } else {
-      this.editingProduct = {
-        name: '',
-        category: 'fruit',
-        price: '',
-        originalPrice: '',
-        unit: '',
-        origin: '',
-        stock: 50,
-        badge: '신선',
-        emoji: '🛒',
-        description: '',
-        organic: false,
-        localDirect: true,
-        freeShipping: false,
-        optionLabel: '용량',
-      };
-    }
-    this.initProductDraft(this.editingProduct);
-    this.ensurePolicies().then(() => {
+    const open = async () => {
+      if (id) {
+        try {
+          const p = await this.request('/api/admin/products/' + encodeURIComponent(id));
+          this.editingProduct = p ? { ...p } : null;
+        } catch {
+          const p = (this.products || []).find((x) => x.id === id);
+          this.editingProduct = p ? { ...p } : null;
+        }
+      } else {
+        this.editingProduct = {
+          name: '',
+          category: 'fruit',
+          price: '',
+          originalPrice: '',
+          unit: '',
+          origin: '',
+          stock: 50,
+          badge: '신선',
+          emoji: '🛒',
+          description: '',
+          organic: false,
+          localDirect: true,
+          freeShipping: false,
+          optionLabel: '용량',
+        };
+      }
+      this.initProductDraft(this.editingProduct || {});
+      await this.ensurePolicies();
       this.view = 'product-form';
       this.render();
-    });
+    };
+    open().catch((err) => alert(err.message || '상품을 불러오지 못했습니다.'));
   },
 
   initProductDraft(p) {
@@ -229,7 +236,7 @@ const Admin = {
 
     this.productDraft = {
       mainImage: product.adminImages?.[0]?.url || '',
-      useOptions,
+      useOptions: product.useOptions === true,
       options,
       optionLabel: product.optionLabel || '용량',
       detailBlocks,
@@ -269,32 +276,47 @@ const Admin = {
     };
   },
 
+  syncProductOptionsFromForm() {
+    if (!this.productDraft?.useOptions) return;
+    document.querySelectorAll('.option-row[data-index]').forEach((row) => {
+      const i = Number(row.getAttribute('data-index'));
+      if (Number.isNaN(i) || !this.productDraft.options[i]) return;
+      const inputs = row.querySelectorAll('input[type="text"], input[type="number"]');
+      if (inputs[0]) this.productDraft.options[i].label = inputs[0].value;
+      if (inputs[1]) this.productDraft.options[i].price = inputs[1].value;
+      if (inputs[2]) this.productDraft.options[i].originalPrice = inputs[2].value;
+    });
+  },
+
   syncProductFormState() {
     if (this.view !== 'product-form') return;
     const form = document.getElementById('product-form');
-    if (!form || !this.editingProduct) return;
+    if (!form) return;
     const fd = new FormData(form);
-    this.editingProduct = {
-      ...this.editingProduct,
-      name: fd.get('name'),
-      category: fd.get('category'),
-      price: fd.get('price'),
-      originalPrice: fd.get('originalPrice'),
-      unit: fd.get('unit'),
-      origin: fd.get('origin'),
-      stock: fd.get('stock'),
-      badge: fd.get('badge'),
-      emoji: fd.get('emoji'),
-      description: fd.get('description'),
-      organic: fd.get('organic') === 'on',
-      localDirect: fd.get('localDirect') === 'on',
-      freeShipping: fd.get('freeShipping') === 'on',
-    };
+    if (this.editingProduct) {
+      this.editingProduct = {
+        ...this.editingProduct,
+        name: fd.get('name'),
+        category: fd.get('category'),
+        price: fd.get('price'),
+        originalPrice: fd.get('originalPrice'),
+        unit: fd.get('unit'),
+        origin: fd.get('origin'),
+        stock: fd.get('stock'),
+        badge: fd.get('badge'),
+        emoji: fd.get('emoji'),
+        description: fd.get('description'),
+        organic: fd.get('organic') === 'on',
+        localDirect: fd.get('localDirect') === 'on',
+        freeShipping: fd.get('freeShipping') === 'on',
+      };
+    }
     if (this.productDraft) {
       this.productDraft.useOptions = fd.get('useOptions') === 'on';
       this.productDraft.optionLabel = fd.get('optionLabel') || '용량';
       this.productDraft.shippingGuide = fd.get('shippingGuide') || '';
       this.productDraft.returnGuide = fd.get('returnGuide') || '';
+      this.syncProductOptionsFromForm();
     }
   },
 
@@ -402,9 +424,9 @@ const Admin = {
         const origPreview = optOrig > 0 ? optOrig : baseOrig;
         return `
       <div class="option-row" data-index="${i}">
-        <input placeholder="예: 2kg" value="${this.esc(o.label)}" onchange="Admin.productDraft.options[${i}].label=this.value" />
-        <input type="number" placeholder="0" value="${o.price === '' ? '' : o.price}" onchange="Admin.productDraft.options[${i}].price=this.value" title="기본 판매가에 더해짐" />
-        <input type="number" placeholder="${baseOrig || '기본 정가'}" value="${o.originalPrice === '' || o.originalPrice == null ? '' : o.originalPrice}" onchange="Admin.productDraft.options[${i}].originalPrice=this.value" title="이 옵션의 정가(합산 아님)" />
+        <input placeholder="예: 2kg" value="${this.esc(o.label)}" oninput="Admin.productDraft.options[${i}].label=this.value" />
+        <input type="number" placeholder="0" value="${o.price === '' ? '' : o.price}" oninput="Admin.productDraft.options[${i}].price=this.value" title="기본 판매가에 더해짐" />
+        <input type="number" placeholder="${baseOrig || '기본 정가'}" value="${o.originalPrice === '' || o.originalPrice == null ? '' : o.originalPrice}" oninput="Admin.productDraft.options[${i}].originalPrice=this.value" title="이 옵션의 정가(합산 아님)" />
         <span class="option-row__preview" title="적용 가격">→ ${this.fmt(salePreview)} / ${this.fmt(origPreview)}</span>
         <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.removeProductOption(${i})">삭제</button>
       </div>`;
@@ -442,7 +464,8 @@ const Admin = {
     this.syncProductFormState();
     const fd = new FormData(e.target);
     const d = this.productDraft || {};
-    const useOptions = d.useOptions === true;
+    const useOptions = fd.get('useOptions') === 'on';
+    d.useOptions = useOptions;
     if (useOptions && !(d.options || []).length) {
       alert('옵션 사용 시 옵션을 1개 이상 등록해 주세요.');
       return;
@@ -476,16 +499,28 @@ const Admin = {
       freeShipping: fd.get('freeShipping') === 'on',
     };
     try {
+      let res;
       if (this.editingProduct?.id && this.products.some((p) => p.id === this.editingProduct.id)) {
-        await this.request('/api/admin/products/' + encodeURIComponent(this.editingProduct.id), {
+        res = await this.request('/api/admin/products/' + encodeURIComponent(this.editingProduct.id), {
           method: 'PUT',
           body: JSON.stringify({ ...body, id: this.editingProduct.id }),
         });
       } else {
-        await this.request('/api/admin/products', { method: 'POST', body: JSON.stringify(body) });
+        res = await this.request('/api/admin/products', { method: 'POST', body: JSON.stringify(body) });
       }
+      const saved = res?.product;
+      if (saved) {
+        this.editingProduct = { ...saved };
+        this.initProductDraft(this.editingProduct);
+        const idx = (this.products || []).findIndex((p) => p.id === saved.id);
+        if (idx >= 0) this.products[idx] = saved;
+        else this.products = [...(this.products || []), saved];
+      } else {
+        await this.loadProducts();
+      }
+      this.view = 'product-form';
+      this.render();
       alert('상품이 저장되었습니다.');
-      await this.loadProducts();
     } catch (err) {
       alert(err.message);
     }
