@@ -21,8 +21,9 @@ export function getDefaultSettings(): Record<string, unknown> {
     payment: {
       provider: 'toss',
       testMode: false,
-      enabledMethods: ['card', 'transfer', 'kakao'],
-      notice: '토스페이먼츠로 안전하게 결제됩니다.',
+      enabledMethods: ['transfer'],
+      notice: '무통장 입금 주문입니다. 입금 확인 후 순차 발송됩니다.',
+      transferGuide: '주문 후 24시간 이내 입금해 주세요. 미입금 시 주문이 취소될 수 있습니다.',
       bankAccount: {
         bank: '국민은행',
         number: '문의: 010-4730-9269',

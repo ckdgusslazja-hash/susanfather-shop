@@ -2883,6 +2883,38 @@ body.is-reviews {
   color: #7a6200;
 }
 
+.checkout-bank-box {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  background: #f0f7f4;
+  border: 1px solid #c8e6d4;
+  border-radius: var(--radius-sm);
+}
+
+.checkout-bank-box__title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin-bottom: 8px;
+}
+
+.checkout-bank-box__account {
+  font-size: 1.05rem;
+  margin-bottom: 4px;
+}
+
+.checkout-bank-box__holder,
+.checkout-bank-box__guide {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.checkout-bank-box__guide {
+  margin-top: 8px;
+  color: var(--color-primary-dark);
+}
+
 /* Order complete */
 .order-complete {
   max-width: 560px;

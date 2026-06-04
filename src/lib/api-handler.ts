@@ -981,13 +981,23 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
       const testMode = p?.testMode ?? false;
       const keys = getTossKeys(testMode);
       const enabled = isPaymentEnabled(p);
+      let enabledMethods = p?.enabledMethods ?? ['card', 'transfer', 'kakao'];
+      if (!enabled) {
+        enabledMethods = enabledMethods.filter((m) => m === 'transfer');
+        if (!enabledMethods.length) enabledMethods = ['transfer'];
+      }
+      const defaultNotice = enabled
+        ? '토스페이먼츠로 안전하게 결제됩니다.'
+        : '무통장 입금 주문입니다. 입금 확인 후 순차 발송됩니다.';
       return json({
         provider: p?.provider ?? 'toss',
         testMode,
         enabled,
+        transferOnly: !enabled,
         clientKey: keys?.clientKey ?? null,
-        notice: p?.notice ?? (enabled ? '토스페이먼츠로 안전하게 결제됩니다.' : '결제 설정을 확인 중입니다.'),
-        enabledMethods: p?.enabledMethods ?? ['card', 'transfer', 'kakao'],
+        notice: p?.notice ?? defaultNotice,
+        transferGuide: p?.transferGuide ?? '주문 후 24시간 이내 입금해 주세요. 미입금 시 주문이 자동 취소될 수 있습니다.',
+        enabledMethods,
         bankAccount: p?.bankAccount ?? {
           bank: '국민은행',
           number: '문의: 010-4730-9269',
@@ -1076,7 +1086,13 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
 
       const keys = getTossKeys(testMode);
       if (!keys) {
-        return json({ error: '결제 시스템 키가 설정되지 않았습니다. Vercel 환경변수 TOSS_CLIENT_KEY, TOSS_SECRET_KEY를 확인해 주세요.' }, 503);
+        return json(
+          {
+            error:
+              '온라인 카드·간편결제는 현재 사용할 수 없습니다. 결제 수단에서 「무통장 입금」을 선택해 주세요.',
+          },
+          503
+        );
       }
 
       await prisma.order.create({

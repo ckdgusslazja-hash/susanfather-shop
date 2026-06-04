@@ -1825,12 +1825,13 @@ function renderCheckout() {
         </section>
         <section class="form-section">
           <h3 class="form-section__title">결제 수단</h3>
+          ${renderCheckoutBankBox()}
           <div class="payment-methods" id="payment-methods">
             ${renderPaymentMethodOptions()}
           </div>
           <p class="mock-notice" id="payment-notice">${escapeHtml(getPaymentNotice())}</p>
         </section>
-        <button type="submit" class="btn btn--primary btn--lg" id="checkout-submit-btn">결제하기 ${formatPrice(total)}</button>
+        <button type="submit" class="btn btn--primary btn--lg" id="checkout-submit-btn">${isTransferOnlyCheckout() ? '주문하기' : '결제하기'} ${formatPrice(total)}</button>
       </form>
       <aside class="cart-summary">
         <h3 style="font-weight:700;margin-bottom:16px">주문 상품</h3>
@@ -1842,16 +1843,46 @@ function renderCheckout() {
   `;
 }
 
+function getCheckoutPaymentMethods() {
+  const p = API.paymentSettings || {};
+  let methods = p.enabledMethods || ['card', 'transfer', 'kakao'];
+  if (!p.enabled || p.transferOnly) {
+    methods = methods.filter((m) => m === 'transfer');
+    if (!methods.length) methods = ['transfer'];
+  }
+  return methods;
+}
+
+function isTransferOnlyCheckout() {
+  return getCheckoutPaymentMethods().length === 1 && getCheckoutPaymentMethods()[0] === 'transfer';
+}
+
 function getPaymentNotice() {
   const p = API.paymentSettings || {};
   if (p.notice) return p.notice;
   if (p.enabled) return p.testMode ? '테스트 결제 모드입니다. 실제로 청구되지 않습니다.' : '토스페이먼츠로 안전하게 결제됩니다.';
-  return '카드·간편결제는 토스페이먼츠로 진행됩니다. 무통장 입금은 입금 확인 후 발송됩니다.';
+  const bank = p.bankAccount;
+  const bankLine = bank?.bank && bank?.number ? `${bank.bank} ${bank.number} (${bank.holder || ''})` : '';
+  return `무통장 입금으로 주문합니다. 입금 확인 후 배송됩니다.${bankLine ? ` 계좌: ${bankLine}` : ''}`;
+}
+
+function renderCheckoutBankBox() {
+  const p = API.paymentSettings || {};
+  if (!isTransferOnlyCheckout()) return '';
+  const bank = p.bankAccount || {};
+  const guide = p.transferGuide || '주문 후 24시간 이내 입금해 주세요.';
+  return `
+    <div class="checkout-bank-box">
+      <p class="checkout-bank-box__title">입금 계좌</p>
+      <p class="checkout-bank-box__account"><strong>${escapeHtml(bank.bank || '')}</strong> ${escapeHtml(bank.number || '')}</p>
+      <p class="checkout-bank-box__holder">예금주: ${escapeHtml(bank.holder || '')}</p>
+      <p class="checkout-bank-box__guide">${escapeHtml(guide)}</p>
+    </div>`;
 }
 
 function renderPaymentMethodOptions() {
   const p = API.paymentSettings || {};
-  const methods = p.enabledMethods || ['card', 'transfer', 'kakao'];
+  const methods = getCheckoutPaymentMethods();
   const defs = {
     card: { icon: '💳', title: '신용/체크카드', desc: p.enabled ? '토스페이먼츠 카드 결제' : '카드 결제' },
     transfer: { icon: '🏦', title: '무통장 입금', desc: '입금 확인 후 발송' },
@@ -2185,7 +2216,7 @@ async function submitOrder(e) {
   } catch (err) {
     if (btn) {
       btn.disabled = false;
-      btn.textContent = `결제하기 ${formatPrice(total)}`;
+      btn.textContent = `${isTransferOnlyCheckout() ? '주문하기' : '결제하기'} ${formatPrice(total)}`;
     }
     if (err?.code === 'USER_CANCEL') {
       showToast('결제가 취소되었습니다.');

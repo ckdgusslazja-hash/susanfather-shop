@@ -7,6 +7,7 @@ export interface PaymentSetting {
   provider?: string;
   testMode?: boolean;
   notice?: string;
+  transferGuide?: string;
   enabledMethods?: string[];
   bankAccount?: {
     bank?: string;

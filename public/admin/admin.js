@@ -1196,12 +1196,18 @@ const Admin = {
           }),
         });
       } else if (key === 'payment') {
+        const useOnline = fd.get('useOnlinePayment') === 'on';
+        const enabledMethods = useOnline
+          ? ['card', 'transfer', 'kakao'].filter((m) => fd.get(`method_${m}`) === 'on')
+          : ['transfer'];
         await this.request('/api/admin/settings/payment', {
           method: 'PUT',
           body: JSON.stringify({
             provider: fd.get('provider'),
             testMode: fd.get('testMode') === 'on',
             notice: fd.get('notice'),
+            transferGuide: fd.get('transferGuide'),
+            enabledMethods: enabledMethods.length ? enabledMethods : ['transfer'],
             bankAccount: {
               bank: fd.get('bankName'),
               number: fd.get('bankNumber'),
@@ -1687,12 +1693,20 @@ const Admin = {
       </form>
       <form id="form-payment" class="panel" onsubmit="event.preventDefault();Admin.saveSetting('payment')">
         <h2>결제 설정</h2>
-        <p class="admin-hint">토스페이먼츠 키는 Vercel 환경변수 TOSS_CLIENT_KEY, TOSS_SECRET_KEY</p>
-        <div class="form-row"><label>PG</label><select name="provider"><option value="toss" ${p.provider === 'toss' ? 'selected' : ''}>toss</option></select></div>
-        <div class="form-row"><label><input type="checkbox" name="testMode" ${p.testMode ? 'checked' : ''} /> 테스트 모드</label></div>
-        <div class="form-row"><label>은행</label><input name="bankName" value="${this.esc(bank.bank)}" /></div>
-        <div class="form-row"><label>계좌</label><input name="bankNumber" value="${this.esc(bank.number)}" /></div>
-        <div class="form-row"><label>예금주</label><input name="bankHolder" value="${this.esc(bank.holder)}" /></div>
+        <p class="admin-hint">토스페이먼츠 심사·가입비 없이 <strong>무통장 입금만</strong>으로도 주문·배송 관리가 가능합니다. 입금 확인 후 주문 상태를 「입금완료」로 변경하세요.</p>
+        <div class="form-row"><label><input type="checkbox" name="useOnlinePayment" ${(p.enabledMethods || []).some((m) => m !== 'transfer') ? 'checked' : ''} /> 온라인 카드·간편결제 사용 (토스페이먼츠 키 필요)</label></div>
+        <div class="form-row payment-online-extra" style="margin-left:12px">
+          <label><input type="checkbox" name="method_card" ${(p.enabledMethods || []).includes('card') ? 'checked' : ''} /> 카드</label>
+          <label style="margin-left:12px"><input type="checkbox" name="method_kakao" ${(p.enabledMethods || []).includes('kakao') ? 'checked' : ''} /> 간편결제</label>
+          <label style="margin-left:12px"><input type="checkbox" name="method_transfer" checked disabled /> 무통장 (항상 가능)</label>
+        </div>
+        <p class="admin-hint">온라인 결제 사용 시 Vercel 환경변수 TOSS_CLIENT_KEY, TOSS_SECRET_KEY 설정</p>
+        <div class="form-row"><label><input type="checkbox" name="testMode" ${p.testMode ? 'checked' : ''} /> 토스 테스트 모드</label></div>
+        <div class="form-row"><label>은행</label><input name="bankName" value="${this.esc(bank.bank)}" placeholder="국민은행" /></div>
+        <div class="form-row"><label>계좌번호</label><input name="bankNumber" value="${this.esc(bank.number)}" placeholder="000-00-000000" /></div>
+        <div class="form-row"><label>예금주</label><input name="bankHolder" value="${this.esc(bank.holder)}" placeholder="리벤더(변창현)" /></div>
+        <div class="form-row full"><label>결제 안내 문구</label><input name="notice" value="${this.esc(p.notice || '')}" placeholder="무통장 입금 주문입니다. 입금 확인 후 발송됩니다." /></div>
+        <div class="form-row full"><label>입금 안내</label><input name="transferGuide" value="${this.esc(p.transferGuide || '')}" placeholder="주문 후 24시간 이내 입금해 주세요." /></div>
         <button class="btn" type="submit" style="margin-top:12px">저장</button>
       </form>
       <form id="form-order" class="panel" onsubmit="event.preventDefault();Admin.saveSetting('order')">
