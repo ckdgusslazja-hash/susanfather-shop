@@ -102,100 +102,6 @@
     "timeAttackOrder": 4
   },
   {
-    "id": "vg5",
-    "name": "양파 5kg 망",
-    "unit": "5kg",
-    "badge": "신선",
-    "emoji": "🧅",
-    "price": 7900,
-    "stock": 35,
-    "origin": "경북 무안",
-    "rating": 5,
-    "details": [
-      "산지 직송",
-      "신선 포장 배송"
-    ],
-    "options": [
-      {
-        "id": "vg5-o1",
-        "label": "5kg",
-        "price": 7900,
-        "originalPrice": 9900
-      }
-    ],
-    "organic": false,
-    "reviews": 3,
-    "category": "veg",
-    "gradient": "linear-gradient(135deg, #dee2e6, #868e96)",
-    "couponNote": "",
-    "timeAttack": false,
-    "adminImages": [
-      {
-        "id": "vg5-a1",
-        "url": "/images/products/vg5.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "저장이 잘 되는 국산 양파. 가정용 대용량입니다.",
-    "localDirect": true,
-    "optionLabel": "용량",
-    "categoryPath": [
-      "식품",
-      "신선채소",
-      "양파 5kg 망"
-    ],
-    "freeShipping": false,
-    "recentBuyers": 80,
-    "originalPrice": 9900
-  },
-  {
-    "id": "sf3",
-    "name": "제주 고등어",
-    "unit": "2마리",
-    "badge": "신선",
-    "emoji": "🐟",
-    "price": 11900,
-    "stock": 35,
-    "origin": "제주",
-    "rating": 4.3,
-    "details": [
-      "산지 직송",
-      "신선 포장 배송"
-    ],
-    "options": [
-      {
-        "id": "sf3-o1",
-        "label": "2마리",
-        "price": 11900,
-        "originalPrice": 15000
-      }
-    ],
-    "organic": false,
-    "reviews": 3,
-    "category": "seafood",
-    "gradient": "linear-gradient(135deg, #339af0, #1864ab)",
-    "couponNote": "",
-    "timeAttack": false,
-    "adminImages": [
-      {
-        "id": "sf3-a1",
-        "url": "/images/products/sf3.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "제주산 고등어. 구이·조림 모두 좋습니다.",
-    "localDirect": true,
-    "optionLabel": "용량",
-    "categoryPath": [
-      "식품",
-      "수산물",
-      "제주 고등어"
-    ],
-    "freeShipping": false,
-    "recentBuyers": 80,
-    "originalPrice": 15000
-  },
-  {
     "id": "sf4",
     "name": "보리 새우",
     "unit": "500g",
@@ -337,6 +243,100 @@
     "originalPrice": 28000
   },
   {
+    "id": "vg5",
+    "name": "양파 5kg 망",
+    "unit": "5kg",
+    "badge": "신선",
+    "emoji": "🧅",
+    "price": 7900,
+    "stock": 35,
+    "origin": "경북 무안",
+    "rating": 5,
+    "details": [
+      "산지 직송",
+      "신선 포장 배송"
+    ],
+    "options": [
+      {
+        "id": "vg5-o1",
+        "label": "5kg",
+        "price": 7900,
+        "originalPrice": 9900
+      }
+    ],
+    "organic": false,
+    "reviews": 3,
+    "category": "veg",
+    "gradient": "linear-gradient(135deg, #dee2e6, #868e96)",
+    "couponNote": "",
+    "timeAttack": false,
+    "adminImages": [
+      {
+        "id": "vg5-a1",
+        "url": "/images/products/vg5.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "저장이 잘 되는 국산 양파. 가정용 대용량입니다.",
+    "localDirect": true,
+    "optionLabel": "용량",
+    "categoryPath": [
+      "식품",
+      "신선채소",
+      "양파 5kg 망"
+    ],
+    "freeShipping": false,
+    "recentBuyers": 80,
+    "originalPrice": 9900
+  },
+  {
+    "id": "sf3",
+    "name": "제주 고등어",
+    "unit": "2마리",
+    "badge": "신선",
+    "emoji": "🐟",
+    "price": 11900,
+    "stock": 35,
+    "origin": "제주",
+    "rating": 4.3,
+    "details": [
+      "산지 직송",
+      "신선 포장 배송"
+    ],
+    "options": [
+      {
+        "id": "sf3-o1",
+        "label": "2마리",
+        "price": 11900,
+        "originalPrice": 15000
+      }
+    ],
+    "organic": false,
+    "reviews": 3,
+    "category": "seafood",
+    "gradient": "linear-gradient(135deg, #339af0, #1864ab)",
+    "couponNote": "",
+    "timeAttack": false,
+    "adminImages": [
+      {
+        "id": "sf3-a1",
+        "url": "/images/products/sf3.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "제주산 고등어. 구이·조림 모두 좋습니다.",
+    "localDirect": true,
+    "optionLabel": "용량",
+    "categoryPath": [
+      "식품",
+      "수산물",
+      "제주 고등어"
+    ],
+    "freeShipping": false,
+    "recentBuyers": 80,
+    "originalPrice": 15000
+  },
+  {
     "id": "vg4",
     "name": "국산 애호박",
     "unit": "2개",
@@ -382,55 +382,6 @@
     "freeShipping": false,
     "recentBuyers": 80,
     "originalPrice": 7500
-  },
-  {
-    "id": "dr3",
-    "name": "건다시마",
-    "unit": "500g",
-    "badge": "신선",
-    "emoji": "🌿",
-    "price": 9900,
-    "stock": 35,
-    "origin": "강원 속초",
-    "rating": 5,
-    "details": [
-      "<br>"
-    ],
-    "options": [],
-    "organic": false,
-    "reviews": 3,
-    "category": "dried",
-    "gradient": "linear-gradient(135deg, #2b8a3e, #087f5b)",
-    "couponNote": "",
-    "detailHtml": "<p><br></p>",
-    "timeAttack": false,
-    "useOptions": false,
-    "adminImages": [
-      {
-        "id": "dr3-a1",
-        "url": "/images/products/dr3.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "국물 내기 좋은 건다시마. 된장찌개에 필수.",
-    "localDirect": false,
-    "optionLabel": "용량",
-    "returnGuide": "",
-    "categoryPath": [
-      "식품",
-      "건어물",
-      "건다시마"
-    ],
-    "detailBlocks": [
-      {
-        "text": "<br>",
-        "type": "text"
-      }
-    ],
-    "freeShipping": false,
-    "recentBuyers": 80,
-    "originalPrice": 12500,
-    "shippingGuide": ""
   },
   {
     "id": "mt1",
@@ -527,6 +478,55 @@
     "freeShipping": false,
     "recentBuyers": 80,
     "originalPrice": 24000
+  },
+  {
+    "id": "dr3",
+    "name": "건다시마",
+    "unit": "500g",
+    "badge": "신선",
+    "emoji": "🌿",
+    "price": 9900,
+    "stock": 35,
+    "origin": "강원 속초",
+    "rating": 5,
+    "details": [
+      "<br>"
+    ],
+    "options": [],
+    "organic": false,
+    "reviews": 3,
+    "category": "dried",
+    "gradient": "linear-gradient(135deg, #2b8a3e, #087f5b)",
+    "couponNote": "",
+    "detailHtml": "<p><br></p>",
+    "timeAttack": false,
+    "useOptions": false,
+    "adminImages": [
+      {
+        "id": "dr3-a1",
+        "url": "/images/products/dr3.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "국물 내기 좋은 건다시마. 된장찌개에 필수.",
+    "localDirect": false,
+    "optionLabel": "용량",
+    "returnGuide": "",
+    "categoryPath": [
+      "식품",
+      "건어물",
+      "건다시마"
+    ],
+    "detailBlocks": [
+      {
+        "text": "<br>",
+        "type": "text"
+      }
+    ],
+    "freeShipping": false,
+    "recentBuyers": 80,
+    "originalPrice": 12500,
+    "shippingGuide": ""
   },
   {
     "id": "dr5",
@@ -718,53 +718,6 @@
     "originalPrice": 14900
   },
   {
-    "id": "gr2",
-    "name": "국산 찹쌀",
-    "unit": "4kg",
-    "badge": "신선",
-    "emoji": "🍚",
-    "price": 14900,
-    "stock": 35,
-    "origin": "강원",
-    "rating": 4.3,
-    "details": [
-      "산지 직송",
-      "신선 포장 배송"
-    ],
-    "options": [
-      {
-        "id": "gr2-o1",
-        "label": "4kg",
-        "price": 14900,
-        "originalPrice": 18000
-      }
-    ],
-    "organic": false,
-    "reviews": 3,
-    "category": "grain",
-    "gradient": "linear-gradient(135deg, #ffe066, #fab005)",
-    "couponNote": "",
-    "timeAttack": false,
-    "adminImages": [
-      {
-        "id": "gr2-a1",
-        "url": "/images/products/gr2.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "떡·진과용 찹쌀. 찰기 좋고 윤기 있습니다.",
-    "localDirect": false,
-    "optionLabel": "용량",
-    "categoryPath": [
-      "식품",
-      "곡물·쌀",
-      "국산 찹쌀"
-    ],
-    "freeShipping": false,
-    "recentBuyers": 80,
-    "originalPrice": 18000
-  },
-  {
     "id": "gr3",
     "name": "국산 콩",
     "unit": "2kg",
@@ -810,53 +763,6 @@
     "freeShipping": false,
     "recentBuyers": 80,
     "originalPrice": 21000
-  },
-  {
-    "id": "pr1",
-    "name": "전통 재래식 된장",
-    "unit": "2kg",
-    "badge": "신선",
-    "emoji": "🫙",
-    "price": 18900,
-    "stock": 35,
-    "origin": "전남 담양",
-    "rating": 4.3,
-    "details": [
-      "산지 직송",
-      "신선 포장 배송"
-    ],
-    "options": [
-      {
-        "id": "pr1-o1",
-        "label": "2kg",
-        "price": 18900,
-        "originalPrice": 24000
-      }
-    ],
-    "organic": false,
-    "reviews": 3,
-    "category": "processed",
-    "gradient": "linear-gradient(135deg, #a68a64, #6f4e37)",
-    "couponNote": "",
-    "timeAttack": false,
-    "adminImages": [
-      {
-        "id": "pr1-a1",
-        "url": "/images/products/pr1.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "2년 숙성 된장. 찌개·쌈장으로 활용.",
-    "localDirect": true,
-    "optionLabel": "용량",
-    "categoryPath": [
-      "식품",
-      "가공식품",
-      "전통 재래식 된장"
-    ],
-    "freeShipping": false,
-    "recentBuyers": 80,
-    "originalPrice": 24000
   },
   {
     "id": "gr4",
@@ -951,6 +857,100 @@
     "freeShipping": false,
     "recentBuyers": 80,
     "originalPrice": 16500
+  },
+  {
+    "id": "gr2",
+    "name": "국산 찹쌀",
+    "unit": "4kg",
+    "badge": "신선",
+    "emoji": "🍚",
+    "price": 14900,
+    "stock": 35,
+    "origin": "강원",
+    "rating": 4.3,
+    "details": [
+      "산지 직송",
+      "신선 포장 배송"
+    ],
+    "options": [
+      {
+        "id": "gr2-o1",
+        "label": "4kg",
+        "price": 14900,
+        "originalPrice": 18000
+      }
+    ],
+    "organic": false,
+    "reviews": 3,
+    "category": "grain",
+    "gradient": "linear-gradient(135deg, #ffe066, #fab005)",
+    "couponNote": "",
+    "timeAttack": false,
+    "adminImages": [
+      {
+        "id": "gr2-a1",
+        "url": "/images/products/gr2.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "떡·진과용 찹쌀. 찰기 좋고 윤기 있습니다.",
+    "localDirect": false,
+    "optionLabel": "용량",
+    "categoryPath": [
+      "식품",
+      "곡물·쌀",
+      "국산 찹쌀"
+    ],
+    "freeShipping": false,
+    "recentBuyers": 80,
+    "originalPrice": 18000
+  },
+  {
+    "id": "pr1",
+    "name": "전통 재래식 된장",
+    "unit": "2kg",
+    "badge": "신선",
+    "emoji": "🫙",
+    "price": 18900,
+    "stock": 35,
+    "origin": "전남 담양",
+    "rating": 4.3,
+    "details": [
+      "산지 직송",
+      "신선 포장 배송"
+    ],
+    "options": [
+      {
+        "id": "pr1-o1",
+        "label": "2kg",
+        "price": 18900,
+        "originalPrice": 24000
+      }
+    ],
+    "organic": false,
+    "reviews": 3,
+    "category": "processed",
+    "gradient": "linear-gradient(135deg, #a68a64, #6f4e37)",
+    "couponNote": "",
+    "timeAttack": false,
+    "adminImages": [
+      {
+        "id": "pr1-a1",
+        "url": "/images/products/pr1.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "2년 숙성 된장. 찌개·쌈장으로 활용.",
+    "localDirect": true,
+    "optionLabel": "용량",
+    "categoryPath": [
+      "식품",
+      "가공식품",
+      "전통 재래식 된장"
+    ],
+    "freeShipping": false,
+    "recentBuyers": 80,
+    "originalPrice": 24000
   },
   {
     "id": "gr5",
@@ -1142,53 +1142,6 @@
     "timeAttackOrder": 3
   },
   {
-    "id": "pr4",
-    "name": "국산 들기름",
-    "unit": "300ml",
-    "badge": "신선",
-    "emoji": "🫒",
-    "price": 17900,
-    "stock": 35,
-    "origin": "경남",
-    "rating": 5,
-    "details": [
-      "유기농 원료",
-      "저온 압착"
-    ],
-    "options": [
-      {
-        "id": "pr4-o1",
-        "label": "300ml",
-        "price": 17900,
-        "originalPrice": 22000
-      }
-    ],
-    "organic": true,
-    "reviews": 3,
-    "category": "processed",
-    "gradient": "linear-gradient(135deg, #94d82d, #5c940d)",
-    "couponNote": "",
-    "timeAttack": false,
-    "adminImages": [
-      {
-        "id": "pr4-a1",
-        "url": "/images/products/pr4.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "고소한 국산 들기름. 나물·비빔밥용.",
-    "localDirect": false,
-    "optionLabel": "용량",
-    "categoryPath": [
-      "식품",
-      "가공식품",
-      "국산 들기름"
-    ],
-    "freeShipping": false,
-    "recentBuyers": 80,
-    "originalPrice": 22000
-  },
-  {
     "id": "dr1",
     "name": "국산 멸치볶음",
     "unit": "500g",
@@ -1283,6 +1236,115 @@
     "originalPrice": 11000
   },
   {
+    "id": "gr1",
+    "name": "유기농 햅쌀",
+    "unit": "10kg",
+    "badge": "유기농",
+    "emoji": "🌾",
+    "price": 38500,
+    "stock": 35,
+    "origin": "경기 이천",
+    "rating": 5,
+    "details": [
+      "유기농 인증",
+      "당해산",
+      "진공 포장",
+      "무료배송",
+      "산지 직송"
+    ],
+    "options": [
+      {
+        "id": "gr1-o1",
+        "label": "5kg",
+        "price": 21000,
+        "originalPrice": 24000
+      },
+      {
+        "id": "gr1-o2",
+        "label": "10kg",
+        "price": 38500,
+        "originalPrice": 42000
+      },
+      {
+        "id": "gr1-o3",
+        "label": "20kg",
+        "price": 72000,
+        "originalPrice": 78000
+      }
+    ],
+    "organic": true,
+    "reviews": 3,
+    "category": "grain",
+    "gradient": "linear-gradient(135deg, #a8e063, #56ab2f)",
+    "couponNote": "무료배송 쿠폰 적용",
+    "timeAttack": false,
+    "adminImages": [
+      {
+        "id": "gr1-a1",
+        "url": "/images/products/gr1.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "이천 유기농 햅쌀. 쫄깃하고 고소한 밥맛.",
+    "localDirect": true,
+    "optionLabel": "용량",
+    "categoryPath": [
+      "식품",
+      "곡물·쌀",
+      "유기농 햅쌀"
+    ],
+    "freeShipping": true,
+    "recentBuyers": 256,
+    "originalPrice": 42000
+  },
+  {
+    "id": "pr4",
+    "name": "국산 들기름",
+    "unit": "300ml",
+    "badge": "신선",
+    "emoji": "🫒",
+    "price": 17900,
+    "stock": 35,
+    "origin": "경남",
+    "rating": 5,
+    "details": [
+      "유기농 원료",
+      "저온 압착"
+    ],
+    "options": [
+      {
+        "id": "pr4-o1",
+        "label": "300ml",
+        "price": 17900,
+        "originalPrice": 22000
+      }
+    ],
+    "organic": true,
+    "reviews": 3,
+    "category": "processed",
+    "gradient": "linear-gradient(135deg, #94d82d, #5c940d)",
+    "couponNote": "",
+    "timeAttack": false,
+    "adminImages": [
+      {
+        "id": "pr4-a1",
+        "url": "/images/products/pr4.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "고소한 국산 들기름. 나물·비빔밥용.",
+    "localDirect": false,
+    "optionLabel": "용량",
+    "categoryPath": [
+      "식품",
+      "가공식품",
+      "국산 들기름"
+    ],
+    "freeShipping": false,
+    "recentBuyers": 80,
+    "originalPrice": 22000
+  },
+  {
     "id": "pr2",
     "name": "순창 고추장",
     "unit": "1.2kg",
@@ -1328,68 +1390,6 @@
     "freeShipping": false,
     "recentBuyers": 80,
     "originalPrice": 19500
-  },
-  {
-    "id": "gr1",
-    "name": "유기농 햅쌀",
-    "unit": "10kg",
-    "badge": "유기농",
-    "emoji": "🌾",
-    "price": 38500,
-    "stock": 35,
-    "origin": "경기 이천",
-    "rating": 5,
-    "details": [
-      "유기농 인증",
-      "당해산",
-      "진공 포장",
-      "무료배송",
-      "산지 직송"
-    ],
-    "options": [
-      {
-        "id": "gr1-o1",
-        "label": "5kg",
-        "price": 21000,
-        "originalPrice": 24000
-      },
-      {
-        "id": "gr1-o2",
-        "label": "10kg",
-        "price": 38500,
-        "originalPrice": 42000
-      },
-      {
-        "id": "gr1-o3",
-        "label": "20kg",
-        "price": 72000,
-        "originalPrice": 78000
-      }
-    ],
-    "organic": true,
-    "reviews": 3,
-    "category": "grain",
-    "gradient": "linear-gradient(135deg, #a8e063, #56ab2f)",
-    "couponNote": "무료배송 쿠폰 적용",
-    "adminImages": [
-      {
-        "id": "gr1-a1",
-        "url": "/images/products/gr1.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "이천 유기농 햅쌀. 쫄깃하고 고소한 밥맛.",
-    "localDirect": true,
-    "optionLabel": "용량",
-    "categoryPath": [
-      "식품",
-      "곡물·쌀",
-      "유기농 햅쌀"
-    ],
-    "freeShipping": true,
-    "recentBuyers": 256,
-    "originalPrice": 42000,
-    "timeAttack": false
   },
   {
     "id": "fr4",
@@ -1558,6 +1558,7 @@
     "category": "fruit",
     "gradient": "linear-gradient(135deg, #ff6b6b, #c92a2a)",
     "couponNote": "",
+    "timeAttack": false,
     "useOptions": true,
     "adminImages": [
       {
@@ -1590,60 +1591,6 @@
     "freeShipping": false,
     "recentBuyers": 80,
     "originalPrice": 9900,
-    "shippingGuide": "",
-    "timeAttack": false
-  },
-  {
-    "id": "vg2",
-    "name": "제철 시금치",
-    "unit": "300g",
-    "badge": "신선",
-    "emoji": "🥬",
-    "price": 3500,
-    "stock": 35,
-    "origin": "경기 광주",
-    "rating": 4.3,
-    "details": [
-      "산지 직송",
-      "신선 포장 배송"
-    ],
-    "options": [],
-    "organic": false,
-    "reviews": 3,
-    "category": "veg",
-    "gradient": "linear-gradient(135deg, #69db7c, #2f9e44)",
-    "couponNote": "",
-    "timeAttack": false,
-    "useOptions": false,
-    "adminImages": [
-      {
-        "id": "vg2-a1",
-        "url": "/images/products/vg2.png",
-        "label": "대표 상품컷"
-      }
-    ],
-    "description": "잎이 넓고 신선한 시금치. 나물·국에 좋습니다.",
-    "localDirect": true,
-    "optionLabel": "용량",
-    "returnGuide": "【 교환·반품 안내 (신선 농·수산물) 】\n· 본 몰의 농수산물·신선·냉장·냉동 식품은 신선도 유지 및 재판매 불가 특성상, 단순 변심에 의한 교환·반품(청약철회)이 불가합니다.\n· 「전자상거래 등에서의 소비자보호에 관한 법률」에 따라 포장 개봉·시간 경과 등으로 재판매가 곤란한 신선식품은 청약철회가 제한될 수 있습니다.\n· 아래 사유에 해당하는 경우에만 교환·환불을 접수합니다.\n  - 상품 파손·누수·변질·부패 등 품질 이상\n  - 주문과 다른 상품 오배송·누락·수량 불일\n  - 배송 중 파손으로 섭취가 어려운 경우\n· 위 사유는 상품 수령 후 24시간 이내, 상품·포장·송장 사진과 함께 고객센터 또는 마이페이지로 접수해 주세요.\n· 회사 확인 후 재발송·환불 처리하며, 고객 과실이 없는 경우 배송비는 회사 부담입니다.\n· 냉장·냉동 미보관, 개봉 후 방치 등 고객 보관 부주의로 인한 변질은 교환·환불 대상에서 제외됩니다.\n· 환불 승인 후 3~7영업일 내 원결제수단으로 환불됩니다.",
-    "categoryPath": [
-      "식품",
-      "신선채소",
-      "제철 시금치"
-    ],
-    "detailBlocks": [
-      {
-        "text": "산지 직송",
-        "type": "text"
-      },
-      {
-        "text": "신선 포장 배송",
-        "type": "text"
-      }
-    ],
-    "freeShipping": false,
-    "recentBuyers": 80,
-    "originalPrice": 4500,
     "shippingGuide": ""
   },
   {
@@ -1709,6 +1656,59 @@
     "timeAttackOrder": 0
   },
   {
+    "id": "vg2",
+    "name": "제철 시금치",
+    "unit": "300g",
+    "badge": "신선",
+    "emoji": "🥬",
+    "price": 3500,
+    "stock": 35,
+    "origin": "경기 광주",
+    "rating": 4.3,
+    "details": [
+      "산지 직송",
+      "신선 포장 배송"
+    ],
+    "options": [],
+    "organic": false,
+    "reviews": 3,
+    "category": "veg",
+    "gradient": "linear-gradient(135deg, #69db7c, #2f9e44)",
+    "couponNote": "",
+    "timeAttack": false,
+    "useOptions": false,
+    "adminImages": [
+      {
+        "id": "vg2-a1",
+        "url": "/images/products/vg2.png",
+        "label": "대표 상품컷"
+      }
+    ],
+    "description": "잎이 넓고 신선한 시금치. 나물·국에 좋습니다.",
+    "localDirect": true,
+    "optionLabel": "용량",
+    "returnGuide": "【 교환·반품 안내 (신선 농·수산물) 】\n· 본 몰의 농수산물·신선·냉장·냉동 식품은 신선도 유지 및 재판매 불가 특성상, 단순 변심에 의한 교환·반품(청약철회)이 불가합니다.\n· 「전자상거래 등에서의 소비자보호에 관한 법률」에 따라 포장 개봉·시간 경과 등으로 재판매가 곤란한 신선식품은 청약철회가 제한될 수 있습니다.\n· 아래 사유에 해당하는 경우에만 교환·환불을 접수합니다.\n  - 상품 파손·누수·변질·부패 등 품질 이상\n  - 주문과 다른 상품 오배송·누락·수량 불일\n  - 배송 중 파손으로 섭취가 어려운 경우\n· 위 사유는 상품 수령 후 24시간 이내, 상품·포장·송장 사진과 함께 고객센터 또는 마이페이지로 접수해 주세요.\n· 회사 확인 후 재발송·환불 처리하며, 고객 과실이 없는 경우 배송비는 회사 부담입니다.\n· 냉장·냉동 미보관, 개봉 후 방치 등 고객 보관 부주의로 인한 변질은 교환·환불 대상에서 제외됩니다.\n· 환불 승인 후 3~7영업일 내 원결제수단으로 환불됩니다.",
+    "categoryPath": [
+      "식품",
+      "신선채소",
+      "제철 시금치"
+    ],
+    "detailBlocks": [
+      {
+        "text": "산지 직송",
+        "type": "text"
+      },
+      {
+        "text": "신선 포장 배송",
+        "type": "text"
+      }
+    ],
+    "freeShipping": false,
+    "recentBuyers": 80,
+    "originalPrice": 4500,
+    "shippingGuide": ""
+  },
+  {
     "id": "sf1",
     "name": "국내산 광어회",
     "unit": "500g",
@@ -1720,9 +1720,10 @@
     "rating": 4.7,
     "details": [
       "당일 손질·출하",
-      "HACCP 인증",
-      "냉장 배송",
-      "산지 직송"
+      "HACCP 인증 가공",
+      "냉장·아이스팩 포장",
+      "완도 산지 직송",
+      "300g / 500g / 1kg 선택"
     ],
     "options": [
       {
@@ -1755,9 +1756,14 @@
         "id": "sf1-a1",
         "url": "/images/products/sf1.png",
         "label": "대표 상품컷"
+      },
+      {
+        "id": "sf1-a2",
+        "url": "/images/products/sf1.png",
+        "label": "손질 회 슬라이스"
       }
     ],
-    "description": "당일 손질 광어회. 아이스팩 포장으로 신선도 유지.",
+    "description": "완도 산지 국내산 광어를 주문 후 당일 손질해 보내드립니다. 300g·500g·1kg 중 선택 가능하며, 아이스팩 냉장 배송으로 신선하게 도착합니다.",
     "localDirect": true,
     "optionLabel": "용량",
     "categoryPath": [
@@ -1768,6 +1774,11 @@
     "freeShipping": false,
     "recentBuyers": 89,
     "originalPrice": 52000,
-    "timeAttackOrder": 1
+    "timeAttackOrder": 1,
+    "useOptions": true,
+    "detailHtml": "<div class=\"mall-detail\">\n  <p class=\"mall-detail__eyebrow\">전남 완도 · 당일 손질</p>\n  <h2 class=\"mall-detail__headline\">산지에서 바로, 식탁까지<br>국내산 광어회</h2>\n  <p class=\"mall-detail__lead\">완도 항에서 선별한 국내산 광어를 주문 후 당일 손질해 회로 보내드립니다. 쫄깃한 식감과 담백한 맛을 집에서 회 코스처럼 즐겨 보세요.</p>\n\n  <figure class=\"mall-detail__figure\">\n    <img src=\"/images/products/sf1.png\" alt=\"국내산 광어회 상품 이미지\" loading=\"lazy\" />\n    <figcaption>수산아빠 대표 상품컷 · 실제 발송 상품과 유사한 품질 기준으로 손질합니다.</figcaption>\n  </figure>\n\n  <ul class=\"mall-detail__points\">\n    <li><strong>당일 손질</strong><span>주문·재고 기준 당일 가공</span></li>\n    <li><strong>완도 산지</strong><span>국내산 광어 직거래</span></li>\n    <li><strong>냉장 배송</strong><span>아이스팩·보냉 포장</span></li>\n    <li><strong>용량 선택</strong><span>300g · 500g · 1kg</span></li>\n  </ul>\n\n  <section class=\"mall-detail__section\">\n    <h3 class=\"mall-detail__title\">왜 수산아빠 광어회인가요?</h3>\n    <p>대형 마트 회와 달리 <b>주문 후 손질</b>해 보내기 때문에 신선도와 식감의 차이를 체감하실 수 있습니다. 광어 특유의 담백함과 쫄깃한 식감을 살리기 위해 불필요한 잔가시·비늘을 제거하고, 회에 적합한 두께로 썰어 드립니다.</p>\n    <ul>\n      <li>HACCP 인증 가공 시설에서 위생 관리</li>\n      <li>가정·소규모 모임에 맞는 300g~1kg 용량 구성</li>\n      <li>초장·김·야채만 준비하면 바로 회식 가능</li>\n    </ul>\n  </section>\n\n  <section class=\"mall-detail__section mall-detail__section--process\">\n    <h3 class=\"mall-detail__title\">주문부터 식탁까지</h3>\n    <ol class=\"mall-detail__steps\">\n      <li><span class=\"mall-detail__step-no\">01</span><strong>주문·결제</strong><p>용량(300g/500g/1kg) 선택 후 결제</p></li>\n      <li><span class=\"mall-detail__step-no\">02</span><strong>당일 손질</strong><p>완도 산지 연계 시설에서 회 가공</p></li>\n      <li><span class=\"mall-detail__step-no\">03</span><strong>냉장 포장</strong><p>아이스팩·보냉제 동봉 후 출고</p></li>\n      <li><span class=\"mall-detail__step-no\">04</span><strong>신선 배송</strong><p>수령 후 즉시 냉장 보관</p></li>\n    </ol>\n  </section>\n\n  <figure class=\"mall-detail__figure\">\n    <img src=\"/images/products/sf1.png\" alt=\"광어회 신선 포장 예시\" loading=\"lazy\" />\n    <figcaption>냉장 유통을 전제로 한 포장·배송으로 신선도를 지킵니다.</figcaption>\n  </figure>\n\n  <section class=\"mall-detail__section\">\n    <h3 class=\"mall-detail__title\">상품 정보</h3>\n    <table class=\"mall-detail__table\">\n      <tbody>\n        <tr><th>상품명</th><td>국내산 광어회</td></tr>\n        <tr><th>원산지</th><td>전남 완도 (국내산)</td></tr>\n        <tr><th>용량</th><td>300g / 500g(기본) / 1kg — 옵션 선택</td></tr>\n        <tr><th>보관 방법</th><td>수령 즉시 냉장(0~5℃), 당일~익일 섭취 권장</td></tr>\n        <tr><th>손질</th><td>회용 슬라이스 (가시·비늘 제거)</td></tr>\n        <tr><th>배송</th><td>냉장 택배 · 산지직송</td></tr>\n      </tbody>\n    </table>\n  </section>\n\n  <section class=\"mall-detail__section\">\n    <h3 class=\"mall-detail__title\">맛있게 드시는 법</h3>\n    <ul>\n      <li>수령 후 <b>30분 이내 냉장 보관</b>해 주세요.</li>\n      <li>드시기 10분 전에 꺼내 식감이 살아납니다.</li>\n      <li>초장·와사비·깻잎·양파와 함께 곁들이면 고급 회 코스 분위기를 낼 수 있습니다.</li>\n      <li>남은 회는 밀폐 후 당일 섭취를 권장합니다.</li>\n    </ul>\n  </section>\n\n  <div class=\"mall-detail__notice\">\n    <strong>신선 식품 안내</strong>\n    <p>신선 수산물 특성상 단순 변심 반품은 어렵습니다. 품질 이상 시 수령 후 24시간 이내 고객센터로 연락해 주세요.</p>\n  </div>\n</div>",
+    "detailBlocks": [],
+    "shippingGuide": "【 배송 안내 · 신선 수산물 】\n· 입금 확인(또는 결제 완료) 후 1~2일 내 출고하며, 수도권은 보통 수령 후 1~2일 이내 도착합니다.\n· 광어회는 당일 손질 후 아이스팩·보냉제를 넣어 냉장(0~5℃) 상태로 발송합니다.\n· 배송 중 신선도 유지를 위해 전용 스티로폼·비닐 이중 포장을 사용합니다.\n· 제주·도서·산간 지역은 1~2일 추가 소요될 수 있습니다.\n· 기상·어획·물량에 따라 출고일이 하루 조정될 수 있으며, 변경 시 문자·알림으로 안내드립니다.",
+    "returnGuide": "【 교환·반품 안내 (신선 회·수산물) 】\n· 신선 회·냉장 수산물은 재판매가 불가한 상품으로, 단순 변심·주문 실수에 의한 교환·반품은 어렵습니다.\n· 아래 사유에 해당할 때만 접수해 주세요.\n  - 상품 변질·이취·파손·누수 등 품질 이상\n  - 주문과 다른 상품·용량 오배송\n  - 배송 지연으로 신선도가 현저히 떨어진 경우\n· 수령 후 24시간 이내, 상품·포장·송장 사진과 함께 고객센터 또는 마이페이지로 접수해 주세요.\n· 확인 후 재발송·환불 처리하며, 회사 귀책 시 배송비는 수산아빠가 부담합니다.\n· 개봉 후 상온 방치, 냉장 보관 지연으로 인한 변질은 교환·환불 대상에서 제외됩니다."
   }
 ]
