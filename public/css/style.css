@@ -807,6 +807,12 @@ body.is-home {
   color: var(--color-text-muted);
 }
 
+.home-dont-miss__sub {
+  margin: -4px 16px 10px;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
 .home-scroll {
   display: flex;
   gap: 10px;

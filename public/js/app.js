@@ -1450,6 +1450,49 @@ function startTimeAttackTimer() {
   timeAttackTimerId = setInterval(tickTimeAttackTimer, 1000);
 }
 
+const DONT_MISS_SHUFFLE_MS = 6 * 60 * 60 * 1000;
+
+function getDontMissShuffleSeed() {
+  return Math.floor(Date.now() / DONT_MISS_SHUFFLE_MS);
+}
+
+function shuffleProductsBySeed(products, seed) {
+  const list = [...products];
+  let s = (Number(seed) ^ 0x9e3779b9) >>> 0;
+  const rand = () => {
+    s = (Math.imul(1664525, s) + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
+  }
+  return list;
+}
+
+/** 6시간마다 같은 순서로 섞인 「이 상품 놓치지 마세요」 목록 */
+function getDontMissProducts(limit = 12) {
+  const timeAttackIds = new Set(getTimeAttackProducts().map((p) => p.id));
+  const pool = getAllProducts().filter((p) => Number(p.stock) > 0 && !timeAttackIds.has(p.id));
+  if (!pool.length) return [];
+  return shuffleProductsBySeed(pool, getDontMissShuffleSeed()).slice(0, limit);
+}
+
+function renderDontMissSection() {
+  const products = getDontMissProducts();
+  if (!products.length) return '';
+  return `
+    <section class="home-row-section home-dont-miss" aria-label="이 상품 놓치지 마세요">
+      <div class="home-row-section__head">
+        <h2 class="home-row-section__title">🛍️ 이 상품 놓치지 마세요!</h2>
+        <button type="button" class="home-row-section__more" onclick="selectCategory('all')">더보기 ›</button>
+      </div>
+      <p class="home-dont-miss__sub">6시간마다 추천 상품이 새로 섞입니다</p>
+      <div class="home-scroll">${products.map(renderHomeScrollCard).join('')}</div>
+    </section>
+  `;
+}
+
 function getTimeAttackProducts() {
   return getAllProducts()
     .filter((p) => p.timeAttack === true)
@@ -1606,13 +1649,13 @@ function renderHome() {
       ${
         !isCategoryView
           ? `
+      ${renderTimeAttackSection()}
+      ${renderDontMissSection()}
       ${renderHomeScrollSection(
         '👀 최근 본 상품',
         recentAll,
         recentAll.length ? "document.getElementById('home-product-list')?.scrollIntoView({behavior:'smooth'})" : null
       )}
-      ${renderTimeAttackSection()}
-      ${renderHomeScrollSection('🛍️ 이 상품 놓치지 마세요!', getAllProducts(), "selectCategory('all')")}
       `
           : `
       ${renderHomeScrollSection(
