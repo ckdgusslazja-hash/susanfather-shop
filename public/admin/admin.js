@@ -13,6 +13,8 @@ const Admin = {
   productFilter: '',
   productCategoryFilter: '',
   productTimeAttackFilter: false,
+  productHiddenFilter: false,
+  selectedProductIds: [],
   productOrderIds: [],
   orderFilter: '',
   editingProduct: null,
@@ -215,9 +217,68 @@ const Admin = {
     const cat = this.productCategoryFilter || '';
     return (this.products || []).filter((p) => {
       if (this.productTimeAttackFilter && !p.timeAttack) return false;
+      if (this.productHiddenFilter && !p.hidden) return false;
       if (cat && p.category !== cat) return false;
       return this.matchProductSearch(p, q);
     });
+  },
+
+  renderProductStatus(p) {
+    if (p.hidden) return '<span class="badge badge--hidden">숨김</span>';
+    if (!Number(p.stock)) return '<span class="badge badge--soldout">품절</span>';
+    return '<span class="badge badge--onsale">판매중</span>';
+  },
+
+  isProductSelected(id) {
+    return (this.selectedProductIds || []).includes(id);
+  },
+
+  toggleProductSelection(id, checked) {
+    const set = new Set(this.selectedProductIds || []);
+    if (checked) set.add(id);
+    else set.delete(id);
+    this.selectedProductIds = [...set];
+    this.render();
+  },
+
+  toggleSelectAllFiltered(checked) {
+    const ids = this.getFilteredProducts().map((p) => p.id);
+    const set = new Set(this.selectedProductIds || []);
+    ids.forEach((id) => (checked ? set.add(id) : set.delete(id)));
+    this.selectedProductIds = [...set];
+    this.render();
+  },
+
+  clearProductSelection() {
+    this.selectedProductIds = [];
+    this.render();
+  },
+
+  async bulkProductsAction(action) {
+    const ids = [...(this.selectedProductIds || [])];
+    if (!ids.length) {
+      alert('상품을 선택해 주세요.');
+      return;
+    }
+    const labels = {
+      hide: '숨김 처리',
+      unhide: '숨김 해제',
+      soldout: '품절 처리',
+      restock: '품절 해제(재고 복구)',
+    };
+    if (!labels[action]) return;
+    if (!confirm(`선택한 ${ids.length}개 상품을 ${labels[action]}할까요?`)) return;
+    try {
+      await this.request('/api/admin/products/bulk', {
+        method: 'PATCH',
+        body: JSON.stringify({ ids, action }),
+      });
+      this.selectedProductIds = [];
+      await this.loadProducts();
+      alert(`${labels[action]} 완료 (${ids.length}개)`);
+    } catch (err) {
+      alert(err.message || '일괄 처리에 실패했습니다.');
+    }
   },
 
   renderTimeAttackPanel() {
@@ -263,6 +324,13 @@ const Admin = {
     this.productFilter = '';
     this.productCategoryFilter = '';
     this.productTimeAttackFilter = false;
+    this.productHiddenFilter = false;
+    this.selectedProductIds = [];
+    this.render();
+  },
+
+  setProductHiddenFilter(on) {
+    this.productHiddenFilter = !!on;
     this.render();
   },
 
@@ -319,6 +387,7 @@ const Admin = {
         p.timeAttack && p.timeAttackOrder != null && p.timeAttackOrder !== ''
           ? Number(p.timeAttackOrder)
           : null,
+      hidden: !!p.hidden,
       sortIndex: p.sortIndex,
       ...overrides,
     };
@@ -853,6 +922,7 @@ const Admin = {
         localDirect: fd.get('localDirect') === 'on',
         freeShipping: fd.get('freeShipping') === 'on',
         timeAttack: fd.get('timeAttack') === 'on',
+        hidden: fd.get('hidden') === 'on',
       };
     }
     if (this.productDraft) {
@@ -1160,6 +1230,7 @@ const Admin = {
       localDirect: fd.get('localDirect') === 'on',
       freeShipping: fd.get('freeShipping') === 'on',
       timeAttack: fd.get('timeAttack') === 'on',
+      hidden: fd.get('hidden') === 'on',
       timeAttackOrder: (() => {
         if (fd.get('timeAttack') !== 'on') return null;
         const raw = fd.get('timeAttackOrder');
@@ -1534,15 +1605,29 @@ const Admin = {
     const q = (this.productFilter || '').trim();
     const cat = this.productCategoryFilter || '';
     const taOnly = this.productTimeAttackFilter;
+    const hiddenOnly = this.productHiddenFilter;
+    const selected = this.selectedProductIds || [];
+    const allFilteredSelected = list.length > 0 && list.every((p) => selected.includes(p.id));
     const rows = list
       .map((p) => {
         const img = p.adminImages?.[0]?.url || '';
-        return `<tr class="${p.timeAttack ? 'row--time-attack' : ''}">
+        const checked = this.isProductSelected(p.id);
+        const rowClass = [
+          p.timeAttack ? 'row--time-attack' : '',
+          p.hidden ? 'row--hidden-product' : '',
+          !Number(p.stock) ? 'row--soldout' : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
+        return `<tr class="${rowClass}">
+          <td class="product-check-cell">
+            <input type="checkbox" class="product-row-check" data-product-id="${p.id}" ${checked ? 'checked' : ''} onchange="Admin.toggleProductSelection('${p.id}', this.checked)" aria-label="${this.esc(p.name)} 선택" />
+          </td>
           <td>${img ? `<img class="thumb" src="${img}" alt="" onerror="this.style.display='none'" />` : '📦'}</td>
           <td><strong>${this.esc(p.name)}</strong>${p.timeAttack ? ' <span class="badge badge--time-attack">타임어택</span>' : ''}<br><small>${this.esc(p.unit)} · ${this.CATEGORIES[p.category] || p.category}</small></td>
           <td>${this.fmt(p.price)}</td>
           <td>${p.stock ?? '-'}개</td>
-          <td>${this.badge(p.stock > 0 ? 'paid' : 'cancel').replace('결제완료', '판매중').replace('취소', '품절')}</td>
+          <td>${this.renderProductStatus(p)}</td>
           <td class="product-actions-cell">
             <button type="button" class="btn btn--sm ${p.timeAttack ? 'btn--warn' : 'btn--ghost'}" onclick="Admin.toggleProductTimeAttack('${p.id}')">${p.timeAttack ? '⚡ 해제' : '⚡ 타임어택'}</button>
             <button class="btn btn--sm btn--ghost" onclick="Admin.openProductForm('${p.id}')">수정</button>
@@ -1552,17 +1637,32 @@ const Admin = {
       })
       .join('');
 
-    const emptyMsg = taOnly
-      ? '타임어택으로 지정된 상품이 없습니다.'
-      : q || cat
-        ? '검색 조건에 맞는 상품이 없습니다.'
-        : '등록된 상품이 없습니다.';
+    const emptyMsg = hiddenOnly
+      ? '숨김 처리된 상품이 없습니다.'
+      : taOnly
+        ? '타임어택으로 지정된 상품이 없습니다.'
+        : q || cat
+          ? '검색 조건에 맞는 상품이 없습니다.'
+          : '등록된 상품이 없습니다.';
+
+    const bulkBar =
+      selected.length > 0
+        ? `
+        <div class="product-bulk-bar">
+          <span><strong>${selected.length}</strong>개 선택됨</span>
+          <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.bulkProductsAction('hide')">숨김</button>
+          <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.bulkProductsAction('unhide')">숨김 해제</button>
+          <button type="button" class="btn btn--sm btn--warn" onclick="Admin.bulkProductsAction('soldout')">품절 처리</button>
+          <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.bulkProductsAction('restock')">품절 해제</button>
+          <button type="button" class="btn btn--sm btn--ghost" onclick="Admin.clearProductSelection()">선택 해제</button>
+        </div>`
+        : '';
 
     return `
       ${this.renderTimeAttackPanel()}
       <div class="panel">
         <div class="panel__head">
-          <h2>상품 관리 ${q || cat || taOnly ? `(${list.length} / ${total}개)` : `(${total}개)`}</h2>
+          <h2>상품 관리 ${q || cat || taOnly || hiddenOnly ? `(${list.length} / ${total}개)` : `(${total}개)`}</h2>
           <div class="toolbar">
             <input type="search" class="product-search-input" placeholder="상품명·카테고리·단위·산지 검색" value="${this.esc(this.productFilter)}" oninput="Admin.setProductSearch(this.value)" />
             <select onchange="Admin.setProductCategoryFilter(this.value)">
@@ -1575,13 +1675,18 @@ const Admin = {
                 .join('')}
             </select>
             <button type="button" class="btn btn--sm ${taOnly ? 'btn--warn' : 'btn--ghost'}" onclick="Admin.setProductTimeAttackFilter(!Admin.productTimeAttackFilter)">${taOnly ? '⚡ 타임어택만' : '타임어택만 보기'}</button>
-            ${q || cat || taOnly ? `<button type="button" class="btn btn--sm btn--ghost" onclick="Admin.clearProductSearch()">검색 초기화</button>` : ''}
+            <button type="button" class="btn btn--sm ${hiddenOnly ? 'btn--warn' : 'btn--ghost'}" onclick="Admin.setProductHiddenFilter(!Admin.productHiddenFilter)">${hiddenOnly ? '숨김만' : '숨김만 보기'}</button>
+            ${q || cat || taOnly || hiddenOnly ? `<button type="button" class="btn btn--sm btn--ghost" onclick="Admin.clearProductSearch()">검색 초기화</button>` : ''}
             <button class="btn" onclick="Admin.openProductForm(null)">+ 상품 등록</button>
           </div>
         </div>
-        <table class="data-table">
-          <thead><tr><th></th><th>상품명</th><th>가격</th><th>재고</th><th>상태</th><th>관리</th></tr></thead>
-          <tbody>${rows || `<tr><td colspan="6" class="empty-msg">${emptyMsg}</td></tr>`}</tbody>
+        ${bulkBar}
+        <table class="data-table data-table--products">
+          <thead><tr>
+            <th class="product-check-cell"><input type="checkbox" ${allFilteredSelected ? 'checked' : ''} onchange="Admin.toggleSelectAllFiltered(this.checked)" aria-label="현재 목록 전체 선택" /></th>
+            <th></th><th>상품명</th><th>가격</th><th>재고</th><th>상태</th><th>관리</th>
+          </tr></thead>
+          <tbody>${rows || `<tr><td colspan="7" class="empty-msg">${emptyMsg}</td></tr>`}</tbody>
         </table>
       </div>`;
   },
@@ -1659,6 +1764,7 @@ const Admin = {
               <label class="checkbox-inline"><input type="checkbox" name="localDirect" ${p.localDirect !== false ? 'checked' : ''} /> 산지직송</label>
               <label class="checkbox-inline"><input type="checkbox" name="freeShipping" ${p.freeShipping ? 'checked' : ''} /> 무료배송</label>
               <label class="checkbox-inline checkbox-inline--time-attack"><input type="checkbox" name="timeAttack" ${p.timeAttack ? 'checked' : ''} /> 메인 타임어택 노출</label>
+              <label class="checkbox-inline"><input type="checkbox" name="hidden" ${p.hidden ? 'checked' : ''} /> 쇼핑몰 숨김 (목록·상세 미노출)</label>
             </div>
             <div class="form-row">
               <label>타임어택 순서</label>

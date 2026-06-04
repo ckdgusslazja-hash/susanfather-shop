@@ -354,6 +354,41 @@ a { color: #2d6a4f; }
 .badge--cancel { background: #fee2e2; color: #991b1b; }
 .badge--pending { background: #fef3c7; color: #92400e; }
 .badge--time-attack { background: #ffedd5; color: #c2410c; font-size: 0.72rem; margin-left: 4px; }
+.badge--hidden { background: #e5e7eb; color: #4b5563; }
+.badge--soldout { background: #fee2e2; color: #991b1b; }
+.badge--onsale { background: #dcfce7; color: #166534; }
+
+.product-check-cell {
+  width: 40px;
+  text-align: center;
+}
+
+.product-check-cell input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.product-bulk-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 16px 12px;
+  padding: 12px 14px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+}
+
+.row--hidden-product {
+  opacity: 0.72;
+  background: #f9fafb;
+}
+
+.row--soldout td {
+  color: #6b7280;
+}
 
 .time-attack-panel {
   margin-bottom: 16px;

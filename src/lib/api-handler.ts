@@ -762,6 +762,7 @@ function buildProductRecord(body: Record<string, unknown>, id: string, existing?
       }
       return undefined;
     })(),
+    hidden: body.hidden !== undefined ? !!body.hidden : !!existing?.hidden,
     sortIndex:
       existing?.sortIndex !== undefined && existing?.sortIndex !== null
         ? Number(existing.sortIndex)
@@ -1222,13 +1223,17 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
     try {
       const rows = await prisma.product.findMany();
       if (rows.length) {
-        return json(rows.map((r) => normalizeProductForClient(mergeProductRow(r))));
+        return json(
+          rows
+            .map((r) => normalizeProductForClient(mergeProductRow(r)))
+            .filter((p) => !p.hidden)
+        );
       }
     } catch {
       /* DB 미연결 시 JSON 폴백 */
     }
-    const fallback = await loadProductsFallback();
-    return json(fallback);
+    const fallback = (await loadProductsFallback()) as Record<string, unknown>[];
+    return json(fallback.filter((p) => !p.hidden));
   }
 
   /* ── Reviews ── */
@@ -1702,6 +1707,51 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
         }
 
         return json({ ok: true, product });
+      }
+      if (method === 'PATCH' && c === 'bulk') {
+        const body = await parseBody<{ ids?: string[]; action?: string }>(request);
+        const ids = Array.isArray(body.ids) ? body.ids.map(String) : [];
+        const action = String(body.action || '');
+        if (!ids.length) return json({ error: '선택한 상품이 없습니다.' }, 400);
+
+        const updated: Record<string, unknown>[] = [];
+        for (const id of ids) {
+          const row = await prisma.product.findUnique({ where: { id } });
+          if (!row) continue;
+          const base = mergeProductRow(row);
+          let patch: Record<string, unknown> = {};
+          switch (action) {
+            case 'hide':
+              patch = { hidden: true };
+              break;
+            case 'unhide':
+              patch = { hidden: false };
+              break;
+            case 'soldout':
+              patch = { stock: 0 };
+              break;
+            case 'restock': {
+              const cur = Number(base.stock) || 0;
+              patch = { stock: cur > 0 ? cur : 50 };
+              break;
+            }
+            default:
+              return json({ error: '지원하지 않는 작업입니다.' }, 400);
+          }
+          const product = buildProductRecord({ ...base, ...patch }, id, base);
+          await prisma.product.update({
+            where: { id },
+            data: { data: product as Prisma.InputJsonValue },
+          });
+          updated.push(product);
+        }
+
+        try {
+          await syncProductsJson(await loadAllProducts());
+        } catch {
+          /* */
+        }
+        return json({ ok: true, count: updated.length, products: updated });
       }
       if (method === 'PUT' && c) {
         const body = await parseBody<Record<string, unknown>>(request);

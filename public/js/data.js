@@ -640,7 +640,8 @@ function getCategoryName(categoryId) {
 }
 
 function getAllProducts() {
-  return window.PRODUCTS_FROM_API?.length ? window.PRODUCTS_FROM_API : PRODUCTS;
+  const list = window.PRODUCTS_FROM_API?.length ? window.PRODUCTS_FROM_API : PRODUCTS;
+  return list.filter((p) => !p.hidden);
 }
 
 function filterProductsByCategory(categoryId, searchQuery = '') {

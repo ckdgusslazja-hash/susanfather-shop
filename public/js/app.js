@@ -346,9 +346,10 @@ function formatPrice(n) {
 }
 
 function getProduct(id) {
-  const list = window.PRODUCTS_FROM_API || PRODUCTS;
-  const p = list.find((p) => p.id === id);
-  return p ? normalizeLegacyProductOptions(p) : undefined;
+  const source = window.PRODUCTS_FROM_API?.length ? window.PRODUCTS_FROM_API : PRODUCTS;
+  const p = source.find((p) => p.id === id);
+  if (!p || p.hidden) return undefined;
+  return normalizeLegacyProductOptions(p);
 }
 
 function getCartCount() {
