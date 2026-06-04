@@ -611,7 +611,7 @@ function buildProductRecord(body: Record<string, unknown>, id: string, existing?
     description: String(body.description ?? existing?.description ?? ''),
     details,
     detailBlocks,
-    shippingGuide: String(body.shippingGuide ?? existing?.shippingGuide ?? ''),
+    shippingGuide: String(body.shippingGuide ?? existing?.shippingGuide ?? defaultProductPolicies().shippingGuide),
     returnGuide: String(body.returnGuide ?? existing?.returnGuide ?? defaultProductPolicies().returnGuide),
   };
 }

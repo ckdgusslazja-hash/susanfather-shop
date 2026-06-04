@@ -19,6 +19,26 @@ const Admin = {
   BADGES: ['신선', '베스트', '특가', 'NEW', '한정', '산지직송', '유기농', '할인'],
   OPTION_LABELS: ['용량', '중량', '수량', '규격', '옵션'],
 
+  DEFAULT_PRODUCT_POLICIES: {
+    shippingGuide: `【 배송 안내 】
+· 산지에서 직접 포장·발송하는 신선 농수산물입니다.
+· 결제 완료(또는 입금 확인) 후 1~2일 내 출고되며, 수령까지 1~3일 소요됩니다.
+· 제주·도서·산간 지역은 1~2일 추가 소요될 수 있습니다.
+· 기상 악화, 산지 수급 등으로 출고일이 변경될 수 있으며 개별 안내드립니다.
+· 배송 조회는 마이페이지 또는 주문·배송 조회에서 확인할 수 있습니다.`,
+    returnGuide: `【 교환·반품 안내 (신선 농·수산물) 】
+· 본 몰의 농수산물·신선·냉장·냉동 식품은 신선도 유지 및 재판매 불가 특성상, 단순 변심에 의한 교환·반품(청약철회)이 불가합니다.
+· 「전자상거래 등에서의 소비자보호에 관한 법률」에 따라 포장 개봉·시간 경과 등으로 재판매가 곤란한 신선식품은 청약철회가 제한될 수 있습니다.
+· 아래 사유에 해당하는 경우에만 교환·환불을 접수합니다.
+  - 상품 파손·누수·변질·부패 등 품질 이상
+  - 주문과 다른 상품 오배송·누락·수량 불일
+  - 배송 중 파손으로 섭취가 어려운 경우
+· 위 사유는 상품 수령 후 24시간 이내, 상품·포장·송장 사진과 함께 고객센터 또는 마이페이지로 접수해 주세요.
+· 회사 확인 후 재발송·환불 처리하며, 고객 과실이 없는 경우 배송비는 회사 부담합니다.
+· 냉장·냉동 미보관, 개봉 후 방치 등 고객 보관 부주의로 인한 변질은 교환·환불 대상에서 제외됩니다.
+· 환불 승인 후 3~7영업일 내 원결제수단으로 환불됩니다.`,
+  },
+
   CATEGORIES: {
     fruit: '제철과일',
     veg: '신선채소',
@@ -218,14 +238,35 @@ const Admin = {
     };
   },
 
-  async ensurePolicies() {
+  async ensurePolicies(force = false) {
     try {
-      if (!this.settings?.productPolicies) {
-        this.settings = await this.request('/api/admin/settings');
+      if (force || !String(this.settings?.productPolicies?.shippingGuide || '').trim()) {
+        const data = await this.request('/api/admin/settings');
+        this.settings = { ...(this.settings || {}), ...data };
       }
     } catch {
-      this.settings = this.settings || { productPolicies: {} };
+      /* API 실패 시 아래 기본값 사용 */
     }
+    if (!this.settings) this.settings = {};
+    this.settings.productPolicies = {
+      ...this.DEFAULT_PRODUCT_POLICIES,
+      ...(this.settings.productPolicies || {}),
+    };
+    if (!String(this.settings.productPolicies.shippingGuide || '').trim()) {
+      this.settings.productPolicies.shippingGuide = this.DEFAULT_PRODUCT_POLICIES.shippingGuide;
+    }
+    if (!String(this.settings.productPolicies.returnGuide || '').trim()) {
+      this.settings.productPolicies.returnGuide = this.DEFAULT_PRODUCT_POLICIES.returnGuide;
+    }
+  },
+
+  getProductPolicies() {
+    const pol = this.settings?.productPolicies || this.DEFAULT_PRODUCT_POLICIES;
+    return {
+      shippingGuide:
+        String(pol.shippingGuide || '').trim() || this.DEFAULT_PRODUCT_POLICIES.shippingGuide,
+      returnGuide: String(pol.returnGuide || '').trim() || this.DEFAULT_PRODUCT_POLICIES.returnGuide,
+    };
   },
 
   syncProductFormState() {
@@ -332,11 +373,13 @@ const Admin = {
     this.render();
   },
 
-  applyPolicyTemplate(field) {
+  async applyPolicyTemplate(field) {
     this.syncProductFormState();
-    const pol = this.settings?.productPolicies || {};
-    if (field === 'shipping') this.productDraft.shippingGuide = pol.shippingGuide || '';
-    if (field === 'return') this.productDraft.returnGuide = pol.returnGuide || '';
+    if (!this.productDraft) this.initProductDraft(this.editingProduct || {});
+    await this.ensurePolicies(true);
+    const pol = this.getProductPolicies();
+    if (field === 'shipping') this.productDraft.shippingGuide = pol.shippingGuide;
+    if (field === 'return') this.productDraft.returnGuide = pol.returnGuide;
     this.render();
   },
 
@@ -551,6 +594,7 @@ const Admin = {
 
   async loadSettingsGuides() {
     this.settings = await this.request('/api/admin/settings');
+    await this.ensurePolicies();
     this.view = 'settings-guides';
     this.render();
   },
@@ -1069,18 +1113,18 @@ const Admin = {
   },
 
   renderSettingsGuides() {
-    const pol = this.settings?.productPolicies || {};
+    const pol = this.getProductPolicies();
     return `
       <form id="form-productPolicies" class="panel" onsubmit="event.preventDefault();Admin.saveSetting('productPolicies')">
         <h2>상품 배송 안내 (기본 템플릿)</h2>
         <p class="admin-hint">여기에 작성한 내용은 상품 등록 시 「기본안내 불러오기」로 불러올 수 있습니다.</p>
         <div class="form-row full"><label>배송 안내</label>
-          <textarea name="shippingGuide" rows="8">${this.esc(pol.shippingGuide || '')}</textarea>
+          <textarea name="shippingGuide" rows="8">${this.esc(pol.shippingGuide)}</textarea>
         </div>
         <h2 style="margin-top:24px">교환·반품 안내 (신선식품 기본 템플릿)</h2>
         <p class="admin-hint">신선·냉장·냉동 농수산물은 단순 변심 교환·반품이 불가합니다. 품질 이상 시에만 접수합니다.</p>
         <div class="form-row full"><label>교환·반품 안내</label>
-          <textarea name="returnGuide" rows="8">${this.esc(pol.returnGuide || '')}</textarea>
+          <textarea name="returnGuide" rows="8">${this.esc(pol.returnGuide)}</textarea>
         </div>
         <button class="btn" type="submit" style="margin-top:12px">저장</button>
       </form>`;
