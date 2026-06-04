@@ -1,5 +1,6 @@
 const STORAGE_KEY = 'greenharvest_cart';
 const LAST_ORDER_KEY = 'greenharvest_last_order';
+const ROUTE_SESSION_KEY = 'greenharvest_route';
 
 const APP_PAGES = new Set([
   'home',
@@ -295,6 +296,37 @@ function loadLastOrder() {
 }
 
 let _restoringHash = false;
+let _routeSyncing = false;
+
+function persistRouteSession() {
+  try {
+    sessionStorage.setItem(
+      ROUTE_SESSION_KEY,
+      JSON.stringify({
+        page: state.page,
+        selectedProductId: state.selectedProductId,
+        selectedOptionId: state.selectedOptionId,
+        reviewProductId: state.reviewProductId,
+        category: state.category,
+        searchQuery: state.searchQuery,
+        orderId: state.orderId,
+        mypageTab: state.mypageTab,
+        quantity: state.quantity,
+      })
+    );
+  } catch {
+    /* ignore */
+  }
+}
+
+function readRouteSession() {
+  try {
+    const raw = sessionStorage.getItem(ROUTE_SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 function serializeRoute() {
   const q = new URLSearchParams();
@@ -327,22 +359,48 @@ function serializeRoute() {
   return `#/${state.page}${qs ? `?${qs}` : ''}`;
 }
 
-function parseRouteHash() {
-  const raw = window.location.hash.replace(/^#\/?/, '').trim();
-  if (!raw) return { page: 'home', params: {} };
-  const [path, query = ''] = raw.split('?');
-  const page = path || 'home';
-  const params = Object.fromEntries(new URLSearchParams(query));
-  return { page, params };
+function getCurrentRouteUrl() {
+  return `${window.location.pathname}${window.location.search}${serializeRoute()}`;
 }
 
 function syncHashFromState(replace = false) {
-  if (_restoringHash) return;
-  const next = serializeRoute();
-  if (window.location.hash === next) return;
-  const url = `${window.location.pathname}${window.location.search}${next}`;
-  if (replace) history.replaceState(null, '', url);
-  else window.location.hash = next;
+  if (_restoringHash || _routeSyncing) return;
+  const url = getCurrentRouteUrl();
+  if (`${window.location.pathname}${window.location.search}${window.location.hash}` === url) {
+    persistRouteSession();
+    return;
+  }
+  _routeSyncing = true;
+  try {
+    if (replace) history.replaceState({ ghRoute: true }, '', url);
+    else history.pushState({ ghRoute: true }, '', url);
+    persistRouteSession();
+  } finally {
+    _routeSyncing = false;
+  }
+}
+
+function parseRouteHash() {
+  const hash = window.location.hash.replace(/^#/, '').trim();
+  if (hash) {
+    const raw = hash.replace(/^\/?/, '');
+    const [path, query = ''] = raw.split('?');
+    return { page: path || 'home', params: Object.fromEntries(new URLSearchParams(query)) };
+  }
+  const saved = readRouteSession();
+  if (saved?.page) {
+    const params = {};
+    if (saved.selectedProductId) params.productId = saved.selectedProductId;
+    if (saved.selectedOptionId) params.optionId = saved.selectedOptionId;
+    if (saved.reviewProductId) params.productId = saved.reviewProductId;
+    if (saved.category && saved.category !== 'all') params.category = saved.category;
+    if (saved.searchQuery) params.q = saved.searchQuery;
+    if (saved.orderId) params.orderId = saved.orderId;
+    if (saved.mypageTab && saved.mypageTab !== 'orders') params.tab = saved.mypageTab;
+    if (saved.quantity > 1) params.qty = String(saved.quantity);
+    return { page: saved.page, params };
+  }
+  return { page: 'home', params: {} };
 }
 
 function buildNavigateParams(page, routeParams = {}) {
@@ -380,24 +438,29 @@ async function restoreFromHash() {
     navigate('home', { skipScroll: true, replaceHash: true });
     return;
   }
-  if (page === 'detail' && params.productId && !getProduct(params.productId)) {
-    navigate('home', { skipScroll: true, replaceHash: true });
-    return;
+  if (page === 'detail' && params.productId && !getProduct(params.productId) && typeof API !== 'undefined') {
+    await API.loadProducts();
   }
   _restoringHash = true;
   try {
     await navigate(page, buildNavigateParams(page, params));
+    syncHashFromState(true);
   } finally {
     _restoringHash = false;
   }
 }
 
 function onRouteHashChange() {
-  if (_restoringHash) return;
+  if (_restoringHash || _routeSyncing) return;
   _restoringHash = true;
   restoreFromHash().finally(() => {
     _restoringHash = false;
   });
+}
+
+function onRoutePopState() {
+  if (_restoringHash || _routeSyncing) return;
+  onRouteHashChange();
 }
 
 function showToast(message) {
@@ -445,6 +508,7 @@ function navigate(page, params = {}) {
   if (page === 'complete' && !state.lastOrder) loadLastOrder();
 
   if (!params.restore) syncHashFromState(!!params.replaceHash);
+  else persistRouteSession();
 
   const needReviews = ['reviews', 'detail', 'write-review'].includes(page);
   const pid =
@@ -1328,7 +1392,15 @@ function renderProductPolicySections(product) {
 
 function renderDetail() {
   const product = getProduct(state.selectedProductId);
-  if (!product) return renderHome();
+  if (!product) {
+    return `
+      <div class="empty-state" style="padding:48px 16px">
+        <div class="empty-state__icon">📦</div>
+        <h3 class="empty-state__title">상품을 불러오는 중입니다</h3>
+        <p class="empty-state__desc">잠시 후 다시 시도해 주세요.</p>
+        <button class="btn btn--outline" type="button" onclick="navigate('home')">홈으로</button>
+      </div>`;
+  }
 
   const option = getSelectedOption(product);
   const price = getOptionSalePrice(product, option);
@@ -2071,7 +2143,8 @@ async function initApp() {
     const hadPaymentReturn = window.location.search.includes('payment=');
     await handlePaymentReturn();
     if (!hadPaymentReturn) {
-      if (window.location.hash) {
+      const hasRoute = window.location.hash || readRouteSession()?.page;
+      if (hasRoute && (hasRoute !== 'home' || window.location.hash)) {
         await restoreFromHash();
       } else {
         syncHashFromState(true);
@@ -2098,3 +2171,4 @@ function hideAppLoader() {
 
 /* initApp()는 pages-extra.js에서 호출 */
 window.addEventListener('hashchange', onRouteHashChange);
+window.addEventListener('popstate', onRoutePopState);
