@@ -2494,9 +2494,6 @@ async function validateCheckoutWidgetBeforePay() {
   if (!selected?.code) {
     throw new Error('결제 방법을 선택해 주세요. (아래 토스 UI에서 카드·토스페이 등을 먼저 눌러 주세요)');
   }
-  if (!checkoutAgreementOk) {
-    throw new Error('결제 약관에 동의해 주세요.');
-  }
 }
 
 async function destroyCheckoutPaymentWindow() {
