@@ -3719,6 +3719,24 @@ body.is-reviews {
   display: none !important;
 }
 
+.checkout-test-guide {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: #444;
+  background: #fff8e6;
+  border: 1px solid #f0d78c;
+  border-radius: var(--radius-sm);
+}
+
+.checkout-test-guide code {
+  font-size: 0.78rem;
+  background: #fff;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
 .checkout-widget-method {
   min-height: 48px;
 }

@@ -2323,6 +2323,10 @@ function getTossPaymentCustomer(orderPayload) {
 
 function mapTossPayError(err) {
   const code = err?.code || '';
+  const msg = String(err?.message || '');
+  if (/계약된 결제수단|계약된 결제 수단/i.test(msg)) {
+    return '선택한 결제수단이 테스트 키에서 지원되지 않습니다. 토스페이·네이버페이·카드를 시도하거나, 토스 상점관리자에서 결제 UI를 설정해 주세요.';
+  }
   const messages = {
     NEED_AGREEMENT_WITH_REQUIRED_TERMS: '결제 약관에 동의해 주세요.',
     NOT_SELECTED_PAYMENT_METHOD: '결제 방법을 선택해 주세요.',
@@ -2332,7 +2336,7 @@ function mapTossPayError(err) {
       '결제를 진행할 수 없습니다. 토스페이먼츠 계약·결제수단 설정을 확인하거나 무통장 입금을 이용해 주세요.',
     COMMON_ERROR: '일시적인 오류입니다. 잠시 후 다시 시도해 주세요.',
   };
-  return messages[code] || err?.message || '결제 처리에 실패했습니다.';
+  return messages[code] || msg || '결제 처리에 실패했습니다.';
 }
 
 function getCheckoutPaymentMethods() {
@@ -2576,6 +2580,7 @@ function renderPaymentMethodOptions() {
       <div class="payment-option-group ${onlineActive ? 'is-active' : ''}">
         ${renderPaymentOptionLabel('online', defs, onlineActive)}
         <div id="checkout-widget-panel" class="checkout-widget-panel" ${onlineActive ? '' : 'hidden'}>
+          ${p.testMode ? `<p class="checkout-test-guide">테스트 모드: 위젯에 보이는 <b>카드·토스페이·네이버페이</b>로 결제해 보세요. 카드 테스트 — 번호 <code>4330123412341234</code>, 유효기간 <code>12/28</code>, CVC <code>123</code></p>` : ''}
           <div id="checkout-payment-method" class="checkout-widget-method"></div>
           <div id="checkout-agreement" class="checkout-widget-agreement"></div>
         </div>
