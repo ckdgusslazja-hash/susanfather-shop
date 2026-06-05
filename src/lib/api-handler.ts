@@ -200,6 +200,7 @@ function defaultSettingsBundle() {
       email: 'reven9269@naver.com',
       phone: '010 4730 9269',
       hours: '09:00~18:00',
+      kakaoChannelId: '',
     },
     customerCenter: {
       faq: [
@@ -247,6 +248,7 @@ function normalizeShopSettings(shop: unknown) {
     email: String(s.email || defaults.email).trim() || defaults.email,
     phone: String(s.phone || defaults.phone).trim() || defaults.phone,
     hours: String(s.hours || defaults.hours).trim() || defaults.hours,
+    kakaoChannelId: String(s.kakaoChannelId || defaults.kakaoChannelId || '').trim(),
   };
 }
 

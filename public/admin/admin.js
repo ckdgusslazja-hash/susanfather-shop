@@ -1552,6 +1552,7 @@ const Admin = {
             email: fd.get('email'),
             phone: fd.get('phone'),
             hours: fd.get('hours') || existing.hours || '09:00~18:00',
+            kakaoChannelId: String(fd.get('kakaoChannelId') || '').trim(),
           }),
         });
       } else if (key === 'payment') {
@@ -2112,6 +2113,8 @@ const Admin = {
           <div class="form-row"><label>이메일</label><input name="email" value="${this.esc(s.email)}" /></div>
           <div class="form-row"><label>전화</label><input name="phone" value="${this.esc(s.phone)}" /></div>
           <div class="form-row"><label>영업시간</label><input name="hours" value="${this.esc(s.hours)}" placeholder="09:00~18:00" /></div>
+          <div class="form-row full"><label>카카오채널 ID</label><input name="kakaoChannelId" value="${this.esc(s.kakaoChannelId)}" placeholder="_로 시작 (예: _AbCdE)" /></div>
+          <p class="admin-hint">카카오비즈니스 → 채널 관리 → 상세설정의 <strong>채널 public ID</strong> (_로 시작). 입력 시 메인 화면에 채팅하기 버튼이 표시됩니다.</p>
         </div>
         <button class="btn" type="submit" style="margin-top:12px">저장</button>
       </form>

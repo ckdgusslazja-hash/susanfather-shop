@@ -2851,6 +2851,7 @@ function render() {
   } else {
     destroyCheckoutWidget();
   }
+  if (typeof updateKakaoChannelWidget === 'function') updateKakaoChannelWidget();
   updateNotificationPanel();
   if (state.page === 'home' && state.category === 'all') {
     startTimeAttackTimer();
