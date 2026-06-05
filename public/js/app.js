@@ -2306,6 +2306,54 @@ let checkoutAgreementOk = false;
 let checkoutPaymentWindowInstance = null;
 let checkoutWidgetMountPromise = null;
 let checkoutWidgetMounted = { clientKey: null, amount: null };
+let checkoutWidgetFitBound = false;
+
+function resetCheckoutWidgetFit(host) {
+  if (!host) return;
+  const inner = host.firstElementChild;
+  if (!inner) return;
+  inner.style.transform = '';
+  inner.style.transformOrigin = '';
+  inner.style.width = '';
+  host.style.height = '';
+}
+
+function fitCheckoutWidgetHost(host) {
+  if (!host) return;
+  const inner = host.firstElementChild;
+  if (!inner) return;
+  resetCheckoutWidgetFit(host);
+  const containerWidth = host.clientWidth;
+  const contentWidth = inner.scrollWidth;
+  if (!containerWidth || !contentWidth || contentWidth <= containerWidth) return;
+  const scale = containerWidth / contentWidth;
+  inner.style.transform = `scale(${scale})`;
+  inner.style.transformOrigin = 'top left';
+  inner.style.width = `${contentWidth}px`;
+  host.style.height = `${Math.ceil(inner.offsetHeight * scale)}px`;
+}
+
+function fitCheckoutWidgetToViewport() {
+  fitCheckoutWidgetHost(document.getElementById('checkout-payment-method'));
+  fitCheckoutWidgetHost(document.getElementById('checkout-agreement'));
+}
+
+function scheduleCheckoutWidgetFit() {
+  if (state.page !== 'checkout') return;
+  requestAnimationFrame(() => {
+    fitCheckoutWidgetToViewport();
+    setTimeout(fitCheckoutWidgetToViewport, 120);
+    setTimeout(fitCheckoutWidgetToViewport, 500);
+  });
+}
+
+function bindCheckoutWidgetFit() {
+  if (checkoutWidgetFitBound) return;
+  checkoutWidgetFitBound = true;
+  window.addEventListener('resize', () => {
+    if (state.page === 'checkout') scheduleCheckoutWidgetFit();
+  });
+}
 
 function normalizePayAmount(amount) {
   return Math.max(0, Math.round(Number(amount) || 0));
@@ -2575,6 +2623,7 @@ async function mountCheckoutWidget(clientKey, amount) {
     checkoutWidgetMounted.clientKey === clientKey &&
     checkoutWidgetMounted.amount === payAmount
   ) {
+    scheduleCheckoutWidgetFit();
     return true;
   }
 
@@ -2616,10 +2665,13 @@ async function mountCheckoutWidget(clientKey, amount) {
       });
     }
     checkoutWidgetMounted = { clientKey, amount: payAmount };
+    bindCheckoutWidgetFit();
+    scheduleCheckoutWidgetFit();
   })();
 
   try {
     await checkoutWidgetMountPromise;
+    scheduleCheckoutWidgetFit();
     return true;
   } catch (err) {
     console.error('checkout widget mount failed', err);
@@ -2659,6 +2711,7 @@ async function syncCheckoutPaymentUI() {
   if (showWidget && p.clientKey) {
     const total = getCartSubtotal() + getShippingFee(getCartSubtotal());
     await mountCheckoutWidget(p.clientKey, total);
+    scheduleCheckoutWidgetFit();
   } else {
     destroyCheckoutWidget();
     destroyCheckoutPaymentWindow();
@@ -2840,6 +2893,7 @@ function render() {
   document.body.classList.toggle('is-reviews', state.page === 'reviews');
   document.body.classList.toggle('is-home', state.page === 'home');
   document.body.classList.toggle('is-mypage', state.page === 'mypage');
+  document.body.classList.toggle('is-order-page', state.page === 'checkout' || state.page === 'cart');
   renderHeader();
   renderBottomNav();
   if (typeof updatePageSeo === 'function') updatePageSeo();
