@@ -1257,12 +1257,6 @@ body.is-home {
 
 .kakao-channel-fab {
   display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 0;
-  background: transparent;
-  color: #191919;
   text-decoration: none;
   transition: transform 0.15s ease;
 }
@@ -1271,30 +1265,31 @@ body.is-home {
   transform: translateY(-2px);
 }
 
-.kakao-channel-fab__circle {
-  display: flex;
+.kakao-channel-fab__bubble {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
+  padding: 4px;
   border-radius: 50%;
   background: #fee500;
   color: #191919;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.16);
   transition: box-shadow 0.15s ease;
 }
 
-.kakao-channel-fab:hover .kakao-channel-fab__circle {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+.kakao-channel-fab:hover .kakao-channel-fab__bubble {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
-.kakao-channel-fab__label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  line-height: 1.2;
+.kakao-channel-fab__text {
+  font-size: 0.48rem;
+  font-weight: 800;
+  line-height: 1.1;
   text-align: center;
-  white-space: nowrap;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  letter-spacing: -0.05em;
+  word-break: keep-all;
 }
 
 @media (min-width: 768px) {
