@@ -3705,7 +3705,7 @@ body.is-order-page .address-card strong {
   color: var(--color-danger);
 }
 
-.form-group input,
+.form-group input:not([type="checkbox"]):not([type="radio"]),
 .form-group select,
 .form-group textarea {
   width: 100%;
@@ -3715,6 +3715,17 @@ body.is-order-page .address-card strong {
   border: 2px solid var(--color-border);
   border-radius: var(--radius-sm);
   transition: var(--transition);
+}
+
+.form-group input[type="checkbox"],
+.form-group input[type="radio"] {
+  width: auto;
+  max-width: none;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  flex-shrink: 0;
 }
 
 .form-group input:focus,
@@ -4370,11 +4381,25 @@ body.is-order-page .address-card strong {
 }
 
 .checkbox-inline {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.4;
   cursor: pointer;
+  width: auto;
+  max-width: 100%;
+  color: var(--color-text);
+}
+
+.checkbox-inline input[type="checkbox"],
+.checkbox-inline input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--color-primary);
+  flex-shrink: 0;
 }
 
 .address-book-list {
