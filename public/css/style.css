@@ -3588,40 +3588,101 @@ body.is-reviews {
 }
 
 .payment-option {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px;
-  border: 2px solid var(--color-border);
+  padding: 16px 72px 16px 16px;
+  border: 2px solid #e2e6ea;
   border-radius: var(--radius-md);
+  background: #f8f9fa;
   cursor: pointer;
-  transition: var(--transition);
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, opacity 0.2s;
+  opacity: 0.72;
 }
 
-.payment-option:hover,
+.payment-option:hover:not(.selected) {
+  border-color: #b8d4c4;
+  background: #f3f8f5;
+  opacity: 0.9;
+}
+
 .payment-option.selected {
-  border-color: var(--color-primary);
-  background: rgba(26, 107, 74, 0.04);
+  border: 3px solid var(--color-primary);
+  background: linear-gradient(135deg, #e6f4ed 0%, #f4fbf7 100%);
+  box-shadow: 0 0 0 1px rgba(26, 107, 74, 0.25), 0 4px 14px rgba(26, 107, 74, 0.14);
+  opacity: 1;
 }
 
 .payment-option input {
   accent-color: var(--color-primary);
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
 .payment-option__icon {
   font-size: 1.5rem;
+  flex-shrink: 0;
+  filter: grayscale(0.35);
+  transition: filter 0.2s;
+}
+
+.payment-option.selected .payment-option__icon {
+  filter: none;
+}
+
+.payment-option__info {
+  flex: 1;
+  min-width: 0;
 }
 
 .payment-option__info strong {
   display: block;
   font-size: 0.95rem;
+  color: #555;
+  transition: color 0.2s;
+}
+
+.payment-option.selected .payment-option__info strong {
+  color: #0d4d32;
+  font-weight: 800;
 }
 
 .payment-option__info span {
   font-size: 0.8rem;
   color: var(--color-text-muted);
+}
+
+.payment-option.selected .payment-option__info span {
+  color: #2f6b4f;
+}
+
+.payment-option__badge {
+  display: none;
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--color-primary);
+  border-radius: 999px;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.payment-option.selected .payment-option__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.payment-option.selected .payment-option__badge::before {
+  content: '✓';
+  font-size: 0.7rem;
 }
 
 .checkout-widget-wrap {

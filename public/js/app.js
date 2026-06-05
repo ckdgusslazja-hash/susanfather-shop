@@ -2512,6 +2512,7 @@ function renderPaymentMethodOptions() {
       <input type="radio" name="payment" value="${m}" ${i === 0 ? 'checked' : ''} />
       <span class="payment-option__icon">${defs[m].icon}</span>
       <span class="payment-option__info"><strong>${defs[m].title}</strong><span>${defs[m].desc}</span></span>
+      <span class="payment-option__badge" aria-hidden="true">선택됨</span>
     </label>`
     )
     .join('');
