@@ -1157,6 +1157,11 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
         );
       }
 
+      const payTotal = Math.max(0, Math.round(Number(body.total) || 0));
+      if (payTotal < 100) {
+        return json({ error: '결제 금액은 100원 이상이어야 합니다.' }, 400);
+      }
+
       await prisma.order.create({
         data: {
           id,
@@ -1171,20 +1176,22 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
           paymentMethod,
           subtotal: body.subtotal,
           shipping: body.shipping,
-          total: body.total,
+          total: payTotal,
           items: (body.items || []) as Prisma.InputJsonValue,
           status: 'pending',
           paymentStatus: 'ready',
         },
       });
 
+      const orderName = String(body.orderName || '수산아빠 주문').slice(0, 100);
+
       return json({
         ok: true,
         orderId: id,
         clientKey: keys.clientKey,
         widgetMode: isWidgetClientKey(keys.clientKey),
-        amount: body.total,
-        orderName: body.orderName || '수산아빠 주문',
+        amount: payTotal,
+        orderName,
         testMode,
       });
     }

@@ -2303,6 +2303,7 @@ let checkoutWidgetInstance = null;
 let checkoutPaymentMethodWidget = null;
 let checkoutAgreementWidget = null;
 let checkoutAgreementOk = false;
+let checkoutPaymentWindowInstance = null;
 let checkoutWidgetMountPromise = null;
 let checkoutWidgetMounted = { clientKey: null, amount: null };
 
@@ -2332,7 +2333,7 @@ function mapTossPayError(err) {
   const code = err?.code || '';
   const msg = String(err?.message || '');
   if (/계약된 결제수단|계약된 결제 수단/i.test(msg)) {
-    return '선택한 결제수단이 테스트 키에서 지원되지 않습니다. 토스페이·네이버페이·카드를 시도하거나, 토스 상점관리자에서 결제 UI를 설정해 주세요.';
+    return '선택한 결제수단이 상점에 계약되지 않았습니다. 토스 상점관리자 → 결제 UI에서 카드·간편결제를 활성화해 주세요.';
   }
   const messages = {
     NEED_AGREEMENT_WITH_REQUIRED_TERMS: '결제 약관에 동의해 주세요.',
@@ -2480,22 +2481,60 @@ function destroyCheckoutWidget() {
   if (ag) ag.innerHTML = '';
 }
 
-async function validateCheckoutWidgetBeforePay() {
-  if (!checkoutWidgetInstance || !checkoutPaymentMethodWidget) {
-    throw new Error('결제 UI를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
-  }
-  let selected = null;
+async function destroyCheckoutPaymentWindow() {
+  if (!checkoutPaymentWindowInstance) return;
   try {
-    selected = await checkoutPaymentMethodWidget.getSelectedPaymentMethod();
-  } catch (err) {
-    console.error('getSelectedPaymentMethod failed', err);
+    await checkoutPaymentWindowInstance.destroy();
+  } catch {
+    /* ignore */
   }
-  if (!selected?.code) {
-    throw new Error('결제 방법을 선택해 주세요. (토스 UI에서 카드·토스페이 등을 먼저 눌러 주세요)');
+  checkoutPaymentWindowInstance = null;
+}
+
+async function requestCheckoutPaymentWindow(prepare, payCustomer, siteOrigin) {
+  await destroyCheckoutPaymentWindow();
+  const customerKey = API.user?.id ? String(API.user.id) : TossPayments.ANONYMOUS;
+  const tossPayments = TossPayments(prepare.clientKey);
+  const widgets = tossPayments.widgets({ customerKey });
+  const payAmount = normalizePayAmount(prepare.amount);
+  await widgets.setAmount({ currency: 'KRW', value: payAmount });
+
+  if (typeof widgets.renderPaymentWindow !== 'function') {
+    throw new Error('결제창을 열 수 없습니다. 페이지를 새로고침해 주세요.');
   }
-  if (!checkoutAgreementOk) {
-    throw new Error('결제 약관에 동의해 주세요.');
-  }
+
+  const paymentWindow = await widgets.renderPaymentWindow({
+    variantKey: {
+      paymentMethod: 'DEFAULT',
+      agreement: 'AGREEMENT',
+    },
+  });
+  checkoutPaymentWindowInstance = paymentWindow;
+
+  await new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (fn, value) => {
+      if (settled) return;
+      settled = true;
+      fn(value);
+    };
+
+    paymentWindow.on('paymentRequest', async () => {
+      try {
+        await widgets.requestPayment({
+          orderId: prepare.orderId,
+          orderName: prepare.orderName,
+          successUrl: siteOrigin + '/?payment=success',
+          failUrl: siteOrigin + '/?payment=fail',
+          ...payCustomer,
+        });
+        finish(resolve);
+      } catch (err) {
+        destroyCheckoutPaymentWindow();
+        finish(reject, err);
+      }
+    });
+  });
 }
 
 async function mountCheckoutWidget(clientKey, amount) {
@@ -2580,12 +2619,8 @@ async function syncCheckoutPaymentUI() {
   if (transferPanel) transferPanel.hidden = !showTransfer;
   if (notice) notice.style.display = showWidget || showTransfer ? 'none' : '';
 
-  if (showWidget && p.clientKey) {
-    const total = getCartSubtotal() + getShippingFee(getCartSubtotal());
-    await mountCheckoutWidget(p.clientKey, total);
-  } else {
-    destroyCheckoutWidget();
-  }
+  destroyCheckoutWidget();
+  if (!showWidget) destroyCheckoutPaymentWindow();
 }
 
 function renderPaymentOptionLabel(m, defs, selected) {
@@ -2604,7 +2639,7 @@ function renderPaymentMethodOptions() {
   const methods = getCheckoutPaymentMethods();
   const defaultMethod = methods[0] || 'transfer';
   const defs = {
-    online: { icon: '💳', title: '카드·간편결제', desc: '아래에서 토스페이·카드·카카오페이 선택' },
+    online: { icon: '💳', title: '카드·간편결제', desc: '결제하기를 누르면 토스 결제창이 열립니다' },
     card: { icon: '💳', title: '신용/체크카드', desc: p.enabled ? '토스페이먼츠 카드 결제' : '카드 결제' },
     transfer: { icon: '🏦', title: '무통장 입금', desc: '입금 확인 후 발송' },
     kakao: { icon: '💬', title: '간편결제', desc: p.enabled ? '카카오페이·토스페이 등' : '간편결제' },
@@ -2617,9 +2652,8 @@ function renderPaymentMethodOptions() {
       <div class="payment-option-group ${onlineActive ? 'is-active' : ''}">
         ${renderPaymentOptionLabel('online', defs, onlineActive)}
         <div id="checkout-widget-panel" class="checkout-widget-panel" ${onlineActive ? '' : 'hidden'}>
-          ${p.testMode ? `<p class="checkout-test-guide">테스트 모드: 위젯에 보이는 <b>카드·토스페이·네이버페이</b>로 결제해 보세요. 카드 테스트 — 번호 <code>4330123412341234</code>, 유효기간 <code>12/28</code>, CVC <code>123</code></p>` : `<p class="checkout-live-guide">결제수단은 <b>토스페이먼츠 상점관리자 → 결제 UI</b> 설정에 따라 표시됩니다. 카드·카카오페이 등이 안 보이면 상점관리자에서 활성화해 주세요.</p>`}
-          <div id="checkout-payment-method" class="checkout-widget-method"></div>
-          <div id="checkout-agreement" class="checkout-widget-agreement"></div>
+          <p class="checkout-pay-window-guide">「결제하기」를 누르면 <b>토스 결제창</b>이 열립니다. 결제수단을 선택하고 약관에 동의한 뒤 결제를 진행해 주세요.</p>
+          ${p.testMode ? `<p class="checkout-test-guide">테스트 카드 — 번호 <code>4330123412341234</code>, 유효기간 <code>12/28</code>, CVC <code>123</code></p>` : `<p class="checkout-live-guide">결제수단은 <b>토스페이먼츠 상점관리자 → 결제 UI</b> 설정에 따라 표시됩니다.</p>`}
         </div>
       </div>`);
     if (methods.includes('transfer')) {
@@ -2971,18 +3005,7 @@ async function submitOrder(e) {
     const payCustomer = getTossPaymentCustomer(orderPayload);
 
     if (prepare.widgetMode || payment === 'online') {
-      const mounted = await mountCheckoutWidget(prepare.clientKey, prepare.amount);
-      if (!mounted || !checkoutWidgetInstance) {
-        throw new Error('결제 UI를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
-      }
-      await validateCheckoutWidgetBeforePay();
-      await checkoutWidgetInstance.requestPayment({
-        orderId: prepare.orderId,
-        orderName: prepare.orderName,
-        successUrl: siteOrigin + '/?payment=success',
-        failUrl: siteOrigin + '/?payment=fail',
-        ...payCustomer,
-      });
+      await requestCheckoutPaymentWindow(prepare, payCustomer, siteOrigin);
       return;
     }
 
@@ -3050,11 +3073,17 @@ async function handlePaymentReturn() {
 
   if (payment === 'fail') {
     const orderId = params.get('orderId');
-    const message = params.get('message') || '결제가 취소되었습니다.';
+    const code = params.get('code') || '';
+    let message = params.get('message') || '결제가 취소되었습니다.';
+    try {
+      message = decodeURIComponent(message);
+    } catch {
+      /* use raw */
+    }
     if (orderId) {
       API.failPayment({ orderId, message }).catch(() => {});
     }
-    showToast(decodeURIComponent(message));
+    showToast(mapTossPayError({ code, message }));
     navigate('checkout');
   }
 }
