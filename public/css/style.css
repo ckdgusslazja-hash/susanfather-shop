@@ -3685,35 +3685,42 @@ body.is-reviews {
   font-size: 0.7rem;
 }
 
-.checkout-transfer-section {
-  margin-bottom: 18px;
+.payment-option-group {
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 
-.checkout-widget-section {
-  margin-top: 4px;
-}
-
-.checkout-widget-guide {
-  margin: 0 0 14px;
-  padding: 12px 14px;
-  font-size: 0.84rem;
-  line-height: 1.55;
-  color: #444;
-  background: #f0f7f4;
-  border: 1px solid #cfe8db;
+.payment-option-group .payment-option {
+  margin: 0;
   border-radius: var(--radius-md);
 }
 
-.checkout-widget-wrap {
-  padding: 16px 14px;
-  border: 2px solid var(--color-primary);
-  border-radius: var(--radius-md);
+.payment-option-group.is-active .payment-option {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-bottom: none;
+}
+
+.payment-option-group.is-active .payment-option.selected {
+  border-bottom: 1px solid #cfe8db;
+}
+
+.checkout-widget-panel,
+.checkout-transfer-panel {
+  padding: 14px 14px 16px;
   background: #fff;
-  box-shadow: 0 2px 12px rgba(26, 107, 74, 0.08);
+  border: 3px solid var(--color-primary);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  box-shadow: 0 4px 14px rgba(26, 107, 74, 0.1);
+}
+
+.checkout-widget-panel[hidden],
+.checkout-transfer-panel[hidden] {
+  display: none !important;
 }
 
 .checkout-widget-method {
-  min-height: 56px;
+  min-height: 48px;
 }
 
 .checkout-widget-method :is(iframe, div) {
@@ -3721,9 +3728,17 @@ body.is-reviews {
 }
 
 .checkout-widget-agreement {
-  margin-top: 14px;
-  padding-top: 12px;
+  margin-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid #eee;
+}
+
+.checkout-transfer-panel .bank-copy-panel {
+  margin: 0;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  background: transparent;
 }
 
 .mock-notice {

@@ -2286,17 +2286,6 @@ function renderCheckout() {
             ${renderPaymentMethodOptions()}
           </div>
         </section>
-        <div id="checkout-transfer-section" class="checkout-transfer-section" hidden>
-          ${renderCheckoutBankBox()}
-        </div>
-        <section id="checkout-widget-section" class="form-section checkout-widget-section" hidden>
-          <h3 class="form-section__title">결제 방법</h3>
-          <p class="checkout-widget-guide">토스페이먼츠 결제 UI에서 <b>신용·체크카드</b> 또는 <b>토스페이·카카오페이</b> 등 간편결제를 선택해 주세요.</p>
-          <div id="checkout-widget-wrap" class="checkout-widget-wrap">
-            <div id="checkout-payment-method" class="checkout-widget-method"></div>
-            <div id="checkout-agreement" class="checkout-widget-agreement"></div>
-          </div>
-        </section>
         <p class="mock-notice" id="payment-notice">${escapeHtml(getPaymentNotice())}</p>
         <button type="submit" class="btn btn--primary btn--lg" id="checkout-submit-btn">${isTransferOnlyCheckout() ? '주문하기' : '결제하기'} ${formatPrice(total)}</button>
       </form>
@@ -2481,15 +2470,21 @@ async function initCheckoutPagePayment() {
 function syncCheckoutPaymentUI() {
   const p = API.paymentSettings || {};
   const selected = document.querySelector('input[name="payment"]:checked')?.value || 'transfer';
-  const transferSection = document.getElementById('checkout-transfer-section');
-  const widgetSection = document.getElementById('checkout-widget-section');
   const notice = document.getElementById('payment-notice');
-  const showTransfer = selected === 'transfer' || isTransferOnlyCheckout();
   const showWidget = p.widgetMode && selected === 'online';
+  const showTransfer = selected === 'transfer' || isTransferOnlyCheckout();
 
-  if (transferSection) transferSection.hidden = !showTransfer;
-  if (widgetSection) widgetSection.hidden = !showWidget;
-  if (notice) notice.style.display = showWidget ? 'none' : '';
+  document.querySelectorAll('.payment-option-group').forEach((group) => {
+    const input = group.querySelector('input[name="payment"]');
+    const active = input?.value === selected;
+    group.classList.toggle('is-active', !!active);
+  });
+
+  const widgetPanel = document.getElementById('checkout-widget-panel');
+  const transferPanel = document.getElementById('checkout-transfer-panel');
+  if (widgetPanel) widgetPanel.hidden = !showWidget;
+  if (transferPanel) transferPanel.hidden = !showTransfer;
+  if (notice) notice.style.display = showWidget || showTransfer ? 'none' : '';
 
   if (showWidget && p.clientKey) {
     const total = getCartSubtotal() + getShippingFee(getCartSubtotal());
@@ -2499,26 +2494,55 @@ function syncCheckoutPaymentUI() {
   }
 }
 
+function renderPaymentOptionLabel(m, defs, selected) {
+  const d = defs[m];
+  return `
+    <label class="payment-option ${selected ? 'selected' : ''}">
+      <input type="radio" name="payment" value="${m}" ${selected ? 'checked' : ''} />
+      <span class="payment-option__icon">${d.icon}</span>
+      <span class="payment-option__info"><strong>${d.title}</strong><span>${d.desc}</span></span>
+      <span class="payment-option__badge" aria-hidden="true">선택됨</span>
+    </label>`;
+}
+
 function renderPaymentMethodOptions() {
   const p = API.paymentSettings || {};
   const methods = getCheckoutPaymentMethods();
+  const defaultMethod = methods[0] || 'transfer';
   const defs = {
-    online: { icon: '💳', title: '카드·간편결제', desc: '토스페이·카드·카카오페이 등' },
+    online: { icon: '💳', title: '카드·간편결제', desc: '아래에서 토스페이·카드·카카오페이 선택' },
     card: { icon: '💳', title: '신용/체크카드', desc: p.enabled ? '토스페이먼츠 카드 결제' : '카드 결제' },
     transfer: { icon: '🏦', title: '무통장 입금', desc: '입금 확인 후 발송' },
     kakao: { icon: '💬', title: '간편결제', desc: p.enabled ? '카카오페이·토스페이 등' : '간편결제' },
   };
+
+  if (p.widgetMode && methods.includes('online')) {
+    const parts = [];
+    const onlineActive = defaultMethod === 'online';
+    parts.push(`
+      <div class="payment-option-group ${onlineActive ? 'is-active' : ''}">
+        ${renderPaymentOptionLabel('online', defs, onlineActive)}
+        <div id="checkout-widget-panel" class="checkout-widget-panel" ${onlineActive ? '' : 'hidden'}>
+          <div id="checkout-payment-method" class="checkout-widget-method"></div>
+          <div id="checkout-agreement" class="checkout-widget-agreement"></div>
+        </div>
+      </div>`);
+    if (methods.includes('transfer')) {
+      const transferActive = defaultMethod === 'transfer';
+      parts.push(`
+      <div class="payment-option-group ${transferActive ? 'is-active' : ''}">
+        ${renderPaymentOptionLabel('transfer', defs, transferActive)}
+        <div id="checkout-transfer-panel" class="checkout-transfer-panel" ${transferActive ? '' : 'hidden'}>
+          ${renderCheckoutBankBox()}
+        </div>
+      </div>`);
+    }
+    return parts.join('');
+  }
+
   return methods
     .filter((m) => defs[m])
-    .map(
-      (m, i) => `
-    <label class="payment-option ${i === 0 ? 'selected' : ''}">
-      <input type="radio" name="payment" value="${m}" ${i === 0 ? 'checked' : ''} />
-      <span class="payment-option__icon">${defs[m].icon}</span>
-      <span class="payment-option__info"><strong>${defs[m].title}</strong><span>${defs[m].desc}</span></span>
-      <span class="payment-option__badge" aria-hidden="true">선택됨</span>
-    </label>`
-    )
+    .map((m, i) => renderPaymentOptionLabel(m, defs, i === 0))
     .join('');
 }
 
