@@ -2300,7 +2300,40 @@ function renderCheckout() {
 }
 
 let checkoutWidgetInstance = null;
-let checkoutWidgetMounting = false;
+let checkoutWidgetMountPromise = null;
+let checkoutWidgetMounted = { clientKey: null, amount: null };
+
+function formatTossPhone(phone) {
+  let digits = String(phone || '').replace(/\D/g, '');
+  if (digits.startsWith('82') && digits.length >= 12) digits = '0' + digits.slice(2);
+  return digits;
+}
+
+function getTossPaymentCustomer(orderPayload) {
+  const phone = formatTossPhone(orderPayload.phone);
+  if (!/^01[016789]\d{7,8}$/.test(phone)) {
+    throw new Error('올바른 휴대폰 번호를 입력해 주세요. (예: 010-1234-5678)');
+  }
+  return {
+    customerEmail: orderPayload.email || 'guest@susanfather.com',
+    customerName: String(orderPayload.name),
+    customerMobilePhone: phone,
+  };
+}
+
+function mapTossPayError(err) {
+  const code = err?.code || '';
+  const messages = {
+    NEED_AGREEMENT_WITH_REQUIRED_TERMS: '결제 약관에 동의해 주세요.',
+    NOT_SELECTED_PAYMENT_METHOD: '결제 방법을 선택해 주세요.',
+    NEED_CARD_PAYMENT_DETAIL: '카드 결제 정보를 선택해 주세요.',
+    INVALID_PHONE: '올바른 휴대폰 번호를 입력해 주세요.',
+    PAY_PROCESS_ABORTED:
+      '결제를 진행할 수 없습니다. 토스페이먼츠 계약·결제수단 설정을 확인하거나 무통장 입금을 이용해 주세요.',
+    COMMON_ERROR: '일시적인 오류입니다. 잠시 후 다시 시도해 주세요.',
+  };
+  return messages[code] || err?.message || '결제 처리에 실패했습니다.';
+}
 
 function getCheckoutPaymentMethods() {
   const p = API.paymentSettings || {};
@@ -2425,6 +2458,7 @@ function renderCheckoutBankBox() {
 
 function destroyCheckoutWidget() {
   checkoutWidgetInstance = null;
+  checkoutWidgetMounted = { clientKey: null, amount: null };
   const pm = document.getElementById('checkout-payment-method');
   const ag = document.getElementById('checkout-agreement');
   if (pm) pm.innerHTML = '';
@@ -2432,9 +2466,29 @@ function destroyCheckoutWidget() {
 }
 
 async function mountCheckoutWidget(clientKey, amount) {
-  if (checkoutWidgetMounting || typeof TossPayments === 'undefined') return;
-  checkoutWidgetMounting = true;
-  try {
+  if (typeof TossPayments === 'undefined') return false;
+
+  if (
+    checkoutWidgetInstance &&
+    checkoutWidgetMounted.clientKey === clientKey &&
+    checkoutWidgetMounted.amount === amount
+  ) {
+    await checkoutWidgetInstance.setAmount({ currency: 'KRW', value: amount });
+    return true;
+  }
+
+  if (checkoutWidgetMountPromise) {
+    await checkoutWidgetMountPromise;
+    if (
+      checkoutWidgetInstance &&
+      checkoutWidgetMounted.clientKey === clientKey &&
+      checkoutWidgetMounted.amount === amount
+    ) {
+      return true;
+    }
+  }
+
+  checkoutWidgetMountPromise = (async () => {
     destroyCheckoutWidget();
     const customerKey = API.user?.id ? String(API.user.id) : TossPayments.ANONYMOUS;
     const tossPayments = TossPayments(clientKey);
@@ -2451,23 +2505,22 @@ async function mountCheckoutWidget(clientKey, amount) {
       }),
     ]);
     checkoutWidgetInstance = widgets;
+    checkoutWidgetMounted = { clientKey, amount };
+  })();
+
+  try {
+    await checkoutWidgetMountPromise;
+    return true;
+  } catch (err) {
+    console.error('checkout widget mount failed', err);
+    destroyCheckoutWidget();
+    return false;
   } finally {
-    checkoutWidgetMounting = false;
+    checkoutWidgetMountPromise = null;
   }
 }
 
-async function initCheckoutPagePayment() {
-  const p = API.paymentSettings || {};
-  if (!p.widgetMode || !p.clientKey) return;
-  const subtotal = getCartSubtotal();
-  const total = subtotal + getShippingFee(subtotal);
-  const selected = document.querySelector('input[name="payment"]:checked')?.value || 'online';
-  if (selected === 'online') {
-    await mountCheckoutWidget(p.clientKey, total);
-  }
-}
-
-function syncCheckoutPaymentUI() {
+async function syncCheckoutPaymentUI() {
   const p = API.paymentSettings || {};
   const selected = document.querySelector('input[name="payment"]:checked')?.value || 'transfer';
   const notice = document.getElementById('payment-notice');
@@ -2488,7 +2541,7 @@ function syncCheckoutPaymentUI() {
 
   if (showWidget && p.clientKey) {
     const total = getCartSubtotal() + getShippingFee(getCartSubtotal());
-    mountCheckoutWidget(p.clientKey, total);
+    await mountCheckoutWidget(p.clientKey, total);
   } else {
     destroyCheckoutWidget();
   }
@@ -2676,8 +2729,7 @@ function render() {
   if (typeof renderSiteFooter === 'function') renderSiteFooter();
   if (state.page === 'checkout' && typeof bindCheckoutAddress === 'function') bindCheckoutAddress();
   if (state.page === 'checkout') {
-    syncCheckoutPaymentUI();
-    initCheckoutPagePayment();
+    void syncCheckoutPaymentUI();
   } else {
     destroyCheckoutWidget();
   }
@@ -2874,19 +2926,14 @@ async function submitOrder(e) {
     }
 
     const siteOrigin = window.location.origin;
-    const payCustomer = {
-      customerEmail: orderPayload.email || 'guest@susanfather.com',
-      customerName: String(orderPayload.name),
-      customerMobilePhone: String(orderPayload.phone).replace(/\D/g, ''),
-    };
+    const payCustomer = getTossPaymentCustomer(orderPayload);
 
     if (prepare.widgetMode || payment === 'online') {
-      if (!checkoutWidgetInstance) {
-        await mountCheckoutWidget(prepare.clientKey, prepare.amount);
+      const mounted = await mountCheckoutWidget(prepare.clientKey, prepare.amount);
+      if (!mounted || !checkoutWidgetInstance) {
+        throw new Error('결제 UI를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
       }
-      if (!checkoutWidgetInstance) {
-        throw new Error('결제 UI를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
-      }
+      await checkoutWidgetInstance.setAmount({ currency: 'KRW', value: prepare.amount });
       await checkoutWidgetInstance.requestPayment({
         orderId: prepare.orderId,
         orderName: prepare.orderName,
@@ -2922,7 +2969,8 @@ async function submitOrder(e) {
       showToast('결제가 취소되었습니다.');
       return;
     }
-    showToast(err?.message || '결제 처리에 실패했습니다.');
+    console.error('payment error', err);
+    showToast(mapTossPayError(err));
   }
 }
 
