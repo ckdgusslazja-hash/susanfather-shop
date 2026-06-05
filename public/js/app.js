@@ -2300,8 +2300,15 @@ function renderCheckout() {
 }
 
 let checkoutWidgetInstance = null;
+let checkoutPaymentMethodWidget = null;
+let checkoutAgreementWidget = null;
+let checkoutAgreementOk = false;
 let checkoutWidgetMountPromise = null;
 let checkoutWidgetMounted = { clientKey: null, amount: null };
+
+function normalizePayAmount(amount) {
+  return Math.max(0, Math.round(Number(amount) || 0));
+}
 
 function formatTossPhone(phone) {
   let digits = String(phone || '').replace(/\D/g, '');
@@ -2329,7 +2336,8 @@ function mapTossPayError(err) {
   }
   const messages = {
     NEED_AGREEMENT_WITH_REQUIRED_TERMS: '결제 약관에 동의해 주세요.',
-    NOT_SELECTED_PAYMENT_METHOD: '결제 방법을 선택해 주세요.',
+    NOT_SELECTED_PAYMENT_METHOD: '결제 방법을 선택해 주세요. (토스 UI에서 카드·토스페이 등을 먼저 눌러 주세요)',
+    NOT_REGISTERED_PAYMENT_WIDGET: '토스 상점관리자에서 결제 UI를 추가해 주세요.',
     NEED_CARD_PAYMENT_DETAIL: '카드 결제 정보를 선택해 주세요.',
     INVALID_PHONE: '올바른 휴대폰 번호를 입력해 주세요.',
     PAY_PROCESS_ABORTED:
@@ -2462,6 +2470,9 @@ function renderCheckoutBankBox() {
 
 function destroyCheckoutWidget() {
   checkoutWidgetInstance = null;
+  checkoutPaymentMethodWidget = null;
+  checkoutAgreementWidget = null;
+  checkoutAgreementOk = false;
   checkoutWidgetMounted = { clientKey: null, amount: null };
   const pm = document.getElementById('checkout-payment-method');
   const ag = document.getElementById('checkout-agreement');
@@ -2469,15 +2480,33 @@ function destroyCheckoutWidget() {
   if (ag) ag.innerHTML = '';
 }
 
+async function validateCheckoutWidgetBeforePay() {
+  if (!checkoutWidgetInstance || !checkoutPaymentMethodWidget) {
+    throw new Error('결제 UI를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
+  }
+  let selected = null;
+  try {
+    selected = await checkoutPaymentMethodWidget.getSelectedPaymentMethod();
+  } catch (err) {
+    console.error('getSelectedPaymentMethod failed', err);
+  }
+  if (!selected?.code) {
+    throw new Error('결제 방법을 선택해 주세요. (토스 UI에서 카드·토스페이 등을 먼저 눌러 주세요)');
+  }
+  if (!checkoutAgreementOk) {
+    throw new Error('결제 약관에 동의해 주세요.');
+  }
+}
+
 async function mountCheckoutWidget(clientKey, amount) {
   if (typeof TossPayments === 'undefined') return false;
+  const payAmount = normalizePayAmount(amount);
 
   if (
     checkoutWidgetInstance &&
     checkoutWidgetMounted.clientKey === clientKey &&
-    checkoutWidgetMounted.amount === amount
+    checkoutWidgetMounted.amount === payAmount
   ) {
-    await checkoutWidgetInstance.setAmount({ currency: 'KRW', value: amount });
     return true;
   }
 
@@ -2486,7 +2515,7 @@ async function mountCheckoutWidget(clientKey, amount) {
     if (
       checkoutWidgetInstance &&
       checkoutWidgetMounted.clientKey === clientKey &&
-      checkoutWidgetMounted.amount === amount
+      checkoutWidgetMounted.amount === payAmount
     ) {
       return true;
     }
@@ -2497,8 +2526,8 @@ async function mountCheckoutWidget(clientKey, amount) {
     const customerKey = API.user?.id ? String(API.user.id) : TossPayments.ANONYMOUS;
     const tossPayments = TossPayments(clientKey);
     const widgets = tossPayments.widgets({ customerKey });
-    await widgets.setAmount({ currency: 'KRW', value: amount });
-    await Promise.all([
+    await widgets.setAmount({ currency: 'KRW', value: payAmount });
+    const [paymentMethodWidget, agreementWidget] = await Promise.all([
       widgets.renderPaymentMethods({
         selector: '#checkout-payment-method',
         variantKey: 'DEFAULT',
@@ -2509,7 +2538,15 @@ async function mountCheckoutWidget(clientKey, amount) {
       }),
     ]);
     checkoutWidgetInstance = widgets;
-    checkoutWidgetMounted = { clientKey, amount };
+    checkoutPaymentMethodWidget = paymentMethodWidget;
+    checkoutAgreementWidget = agreementWidget;
+    checkoutAgreementOk = false;
+    if (agreementWidget?.on) {
+      agreementWidget.on('agreementStatusChange', (status) => {
+        checkoutAgreementOk = !!status?.agreedRequiredTerms;
+      });
+    }
+    checkoutWidgetMounted = { clientKey, amount: payAmount };
   })();
 
   try {
@@ -2938,7 +2975,7 @@ async function submitOrder(e) {
       if (!mounted || !checkoutWidgetInstance) {
         throw new Error('결제 UI를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
       }
-      await checkoutWidgetInstance.setAmount({ currency: 'KRW', value: prepare.amount });
+      await validateCheckoutWidgetBeforePay();
       await checkoutWidgetInstance.requestPayment({
         orderId: prepare.orderId,
         orderName: prepare.orderName,
