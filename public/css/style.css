@@ -3073,6 +3073,142 @@ body.is-reviews {
   }
 }
 
+/* 사과 상세 — 레드 포인트 (문경 사과 fr2) */
+.pdp-detail-html .mall-detail--apple .mall-detail__eyebrow {
+  color: #c92a2a;
+  background: #ffe3e3;
+}
+
+.pdp-detail-html .mall-detail--apple .mall-detail__points {
+  border-color: #ffc9c9;
+  background: #fff5f5;
+}
+
+.pdp-detail-html .mall-detail--apple .mall-detail__points li strong {
+  color: #c92a2a;
+}
+
+.pdp-detail-html .mall-detail--apple .mall-detail__band {
+  background: linear-gradient(135deg, #c92a2a 0%, #e03131 100%);
+}
+
+.pdp-detail-html .mall-detail--apple .mall-detail__hero-cap {
+  background: linear-gradient(135deg, #c92a2a, #862e2e);
+}
+
+.pdp-detail-html .mall-detail--apple .mall-detail__title {
+  border-left-color: #e03131;
+}
+
+.pdp-detail-html .mall-detail--apple .mall-detail__step-no {
+  background: linear-gradient(135deg, #c92a2a, #e03131);
+}
+
+.pdp-detail-html .mall-detail--apple .mall-detail__compare thead th {
+  background: #c92a2a;
+}
+
+.pdp-detail-html .mall-detail--apple .mall-detail__qa dt {
+  color: #c92a2a;
+}
+
+.pdp-detail-html .mall-detail__quote {
+  margin: 0 0 20px;
+  padding: 20px 14px;
+  text-align: center;
+  background: #fff;
+  border: none;
+}
+
+.pdp-detail-html .mall-detail__quote p {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: #333;
+}
+
+.pdp-detail-html .mall-detail__quote-mark {
+  color: #c92a2a;
+  font-weight: 800;
+}
+
+.pdp-detail-html .mall-detail__strip {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 0 22px;
+}
+
+.pdp-detail-html .mall-detail__strip figure {
+  margin: 0;
+}
+
+.pdp-detail-html .mall-detail__strip img {
+  width: 100%;
+  display: block;
+  border-radius: 10px;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.pdp-detail-html .mall-detail__strip figcaption {
+  margin-top: 6px;
+  font-size: 0.76rem;
+  color: #868e96;
+  text-align: center;
+}
+
+.pdp-detail-html .mall-detail__center-text {
+  text-align: center;
+  font-size: 0.86rem;
+  line-height: 1.65;
+  color: #444;
+  margin: 0 0 14px;
+}
+
+.pdp-detail-html .mall-detail__fine {
+  font-size: 0.74rem;
+  color: #868e96;
+  margin: 8px 0 0;
+}
+
+.pdp-detail-html .mall-detail__features {
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 14px 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #eee;
+}
+
+.pdp-detail-html .mall-detail__features li {
+  margin: 0;
+  padding: 10px 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.pdp-detail-html .mall-detail__feat-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.pdp-detail-html .mall-detail__features strong {
+  font-size: 0.78rem;
+  color: #111;
+}
+
+.pdp-detail-html .mall-detail__features span:last-child {
+  font-size: 0.7rem;
+  color: #666;
+}
+
 .pdp-detail-html img {
   width: 100%;
   max-width: 100%;
