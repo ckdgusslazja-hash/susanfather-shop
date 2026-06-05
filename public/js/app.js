@@ -2580,7 +2580,7 @@ function renderPaymentMethodOptions() {
       <div class="payment-option-group ${onlineActive ? 'is-active' : ''}">
         ${renderPaymentOptionLabel('online', defs, onlineActive)}
         <div id="checkout-widget-panel" class="checkout-widget-panel" ${onlineActive ? '' : 'hidden'}>
-          ${p.testMode ? `<p class="checkout-test-guide">테스트 모드: 위젯에 보이는 <b>카드·토스페이·네이버페이</b>로 결제해 보세요. 카드 테스트 — 번호 <code>4330123412341234</code>, 유효기간 <code>12/28</code>, CVC <code>123</code></p>` : ''}
+          ${p.testMode ? `<p class="checkout-test-guide">테스트 모드: 위젯에 보이는 <b>카드·토스페이·네이버페이</b>로 결제해 보세요. 카드 테스트 — 번호 <code>4330123412341234</code>, 유효기간 <code>12/28</code>, CVC <code>123</code></p>` : `<p class="checkout-live-guide">결제수단은 <b>토스페이먼츠 상점관리자 → 결제 UI</b> 설정에 따라 표시됩니다. 카드·카카오페이 등이 안 보이면 상점관리자에서 활성화해 주세요.</p>`}
           <div id="checkout-payment-method" class="checkout-widget-method"></div>
           <div id="checkout-agreement" class="checkout-widget-agreement"></div>
         </div>
