@@ -2286,7 +2286,7 @@ function renderCheckout() {
             ${renderPaymentMethodOptions()}
           </div>
         </section>
-        <p class="mock-notice" id="payment-notice">${escapeHtml(getPaymentNotice())}</p>
+        ${(API.paymentSettings || {}).widgetMode ? '' : `<p class="mock-notice" id="payment-notice">${escapeHtml(getPaymentNotice())}</p>`}
         <button type="submit" class="btn btn--primary btn--lg" id="checkout-submit-btn">${isTransferOnlyCheckout() ? '주문하기' : '결제하기'} ${formatPrice(total)}</button>
       </form>
       <aside class="cart-summary">
@@ -2555,8 +2555,22 @@ async function requestCheckoutPaymentWindow(prepare, payCustomer, siteOrigin) {
   });
 }
 
+async function waitForTossSdk(maxMs = 8000) {
+  const start = Date.now();
+  while (typeof TossPayments === 'undefined' && Date.now() - start < maxMs) {
+    await new Promise((r) => setTimeout(r, 80));
+  }
+  return typeof TossPayments !== 'undefined';
+}
+
+function showCheckoutWidgetLoading() {
+  const pm = document.getElementById('checkout-payment-method');
+  if (pm) pm.innerHTML = '<p class="checkout-widget-loading">토스페이먼츠 결제 UI 불러오는 중…</p>';
+}
+
 async function mountCheckoutWidget(clientKey, amount) {
-  if (typeof TossPayments === 'undefined') return false;
+  const sdkReady = await waitForTossSdk();
+  if (!sdkReady) return false;
   const payAmount = normalizePayAmount(amount);
 
   if (
@@ -2580,6 +2594,7 @@ async function mountCheckoutWidget(clientKey, amount) {
 
   checkoutWidgetMountPromise = (async () => {
     destroyCheckoutWidget();
+    showCheckoutWidgetLoading();
     const customerKey = API.user?.id ? String(API.user.id) : TossPayments.ANONYMOUS;
     const tossPayments = TossPayments(clientKey);
     const widgets = tossPayments.widgets({ customerKey });
@@ -2619,6 +2634,13 @@ async function mountCheckoutWidget(clientKey, amount) {
 }
 
 async function syncCheckoutPaymentUI() {
+  if (typeof API.loadPaymentSettings === 'function' && !API.paymentSettings?.clientKey) {
+    try {
+      await API.loadPaymentSettings();
+    } catch {
+      /* ignore */
+    }
+  }
   const p = API.paymentSettings || {};
   const selected = document.querySelector('input[name="payment"]:checked')?.value || 'transfer';
   const notice = document.getElementById('payment-notice');
@@ -2677,7 +2699,6 @@ function renderPaymentMethodOptions() {
         <div id="checkout-widget-panel" class="checkout-widget-panel" ${onlineActive ? '' : 'hidden'}>
           <div id="checkout-payment-method" class="checkout-widget-method"></div>
           <div id="checkout-agreement" class="checkout-widget-agreement"></div>
-          ${p.testMode ? `<p class="checkout-test-guide">테스트 모드 · 카드 <code>4330123412341234</code> / <code>12/28</code> / CVC <code>123</code></p>` : ''}
         </div>
       </div>`);
     if (methods.includes('transfer')) {
