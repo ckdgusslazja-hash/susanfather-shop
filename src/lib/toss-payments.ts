@@ -16,13 +16,25 @@ export interface PaymentSetting {
   };
 }
 
+export function isWidgetClientKey(clientKey: string): boolean {
+  return /gck_/i.test(clientKey);
+}
+
 export function getTossKeys(testMode: boolean): TossKeys | null {
   const clientKey = testMode
-    ? process.env.TOSS_TEST_CLIENT_KEY || process.env.TOSS_CLIENT_KEY
-    : process.env.TOSS_LIVE_CLIENT_KEY || process.env.TOSS_CLIENT_KEY;
+    ? process.env.TOSS_TEST_WIDGET_CLIENT_KEY ||
+      process.env.TOSS_TEST_CLIENT_KEY ||
+      process.env.TOSS_CLIENT_KEY
+    : process.env.TOSS_LIVE_WIDGET_CLIENT_KEY ||
+      process.env.TOSS_LIVE_CLIENT_KEY ||
+      process.env.TOSS_CLIENT_KEY;
   const secretKey = testMode
-    ? process.env.TOSS_TEST_SECRET_KEY || process.env.TOSS_SECRET_KEY
-    : process.env.TOSS_LIVE_SECRET_KEY || process.env.TOSS_SECRET_KEY;
+    ? process.env.TOSS_TEST_WIDGET_SECRET_KEY ||
+      process.env.TOSS_TEST_SECRET_KEY ||
+      process.env.TOSS_SECRET_KEY
+    : process.env.TOSS_LIVE_WIDGET_SECRET_KEY ||
+      process.env.TOSS_LIVE_SECRET_KEY ||
+      process.env.TOSS_SECRET_KEY;
   if (!clientKey || !secretKey) return null;
   return { clientKey, secretKey };
 }

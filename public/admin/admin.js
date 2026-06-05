@@ -2124,7 +2124,7 @@ const Admin = {
           <label style="margin-left:12px"><input type="checkbox" name="method_kakao" ${(p.enabledMethods || []).includes('kakao') ? 'checked' : ''} /> 간편결제</label>
           <label style="margin-left:12px"><input type="checkbox" name="method_transfer" checked disabled /> 무통장 (항상 가능)</label>
         </div>
-        <p class="admin-hint">온라인 결제 사용 시 Vercel 환경변수 TOSS_CLIENT_KEY, TOSS_SECRET_KEY 설정</p>
+        <p class="admin-hint">온라인 결제 사용 시 Vercel 환경변수 <code>TOSS_LIVE_WIDGET_CLIENT_KEY</code>(live_gck_…), <code>TOSS_LIVE_WIDGET_SECRET_KEY</code>(live_gsk_…) 설정</p>
         <div class="form-row"><label><input type="checkbox" name="testMode" ${p.testMode ? 'checked' : ''} /> 토스 테스트 모드</label></div>
         <div class="form-row"><label>은행</label><input name="bankName" value="${this.esc(bank.bank)}" placeholder="국민은행" /></div>
         <div class="form-row"><label>계좌번호</label><input name="bankNumber" value="${this.esc(bank.number)}" placeholder="000-00-000000" /></div>

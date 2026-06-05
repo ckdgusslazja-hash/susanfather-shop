@@ -17,6 +17,7 @@ import {
   getTossKeys,
   isPaymentEnabled,
   type PaymentSetting,
+  isWidgetClientKey,
 } from './toss-payments';
 
 interface JwtPayload {
@@ -1048,10 +1049,12 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
       const defaultNotice = enabled
         ? '토스페이먼츠로 안전하게 결제됩니다.'
         : '무통장 입금 주문입니다. 입금 확인 후 순차 발송됩니다.';
+      const widgetMode = !!(keys?.clientKey && isWidgetClientKey(keys.clientKey));
       return json({
         provider: p?.provider ?? 'toss',
         testMode,
         enabled,
+        widgetMode,
         transferOnly: !enabled,
         clientKey: keys?.clientKey ?? null,
         notice: p?.notice ?? defaultNotice,
@@ -1179,6 +1182,7 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
         ok: true,
         orderId: id,
         clientKey: keys.clientKey,
+        widgetMode: isWidgetClientKey(keys.clientKey),
         amount: body.total,
         orderName: body.orderName || '수산아빠 주문',
         testMode,

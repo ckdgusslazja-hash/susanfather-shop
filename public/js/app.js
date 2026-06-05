@@ -2286,6 +2286,10 @@ function renderCheckout() {
           <div class="payment-methods" id="payment-methods">
             ${renderPaymentMethodOptions()}
           </div>
+          <div id="checkout-widget-wrap" class="checkout-widget-wrap" hidden>
+            <div id="checkout-payment-method" class="checkout-widget-method"></div>
+            <div id="checkout-agreement" class="checkout-widget-agreement"></div>
+          </div>
           <p class="mock-notice" id="payment-notice">${escapeHtml(getPaymentNotice())}</p>
         </section>
         <button type="submit" class="btn btn--primary btn--lg" id="checkout-submit-btn">${isTransferOnlyCheckout() ? '주문하기' : '결제하기'} ${formatPrice(total)}</button>
@@ -2300,14 +2304,22 @@ function renderCheckout() {
   `;
 }
 
+let checkoutWidgetInstance = null;
+let checkoutWidgetMounting = false;
+
 function getCheckoutPaymentMethods() {
   const p = API.paymentSettings || {};
-  let methods = p.enabledMethods || ['card', 'transfer', 'kakao'];
   if (!p.enabled || p.transferOnly) {
-    methods = methods.filter((m) => m === 'transfer');
-    if (!methods.length) methods = ['transfer'];
+    return ['transfer'];
   }
-  return methods;
+  if (p.widgetMode) {
+    const methods = ['online'];
+    if ((p.enabledMethods || []).includes('transfer')) methods.push('transfer');
+    return methods;
+  }
+  let methods = p.enabledMethods || ['card', 'transfer', 'kakao'];
+  methods = methods.filter((m) => m !== 'online');
+  return methods.length ? methods : ['transfer'];
 }
 
 function isTransferOnlyCheckout() {
@@ -2416,6 +2428,50 @@ function renderCheckoutBankBox() {
   })}</div>`;
 }
 
+function destroyCheckoutWidget() {
+  checkoutWidgetInstance = null;
+  const pm = document.getElementById('checkout-payment-method');
+  const ag = document.getElementById('checkout-agreement');
+  if (pm) pm.innerHTML = '';
+  if (ag) ag.innerHTML = '';
+}
+
+async function mountCheckoutWidget(clientKey, amount) {
+  if (checkoutWidgetMounting || typeof TossPayments === 'undefined') return;
+  checkoutWidgetMounting = true;
+  try {
+    destroyCheckoutWidget();
+    const customerKey = API.user?.id ? String(API.user.id) : TossPayments.ANONYMOUS;
+    const tossPayments = TossPayments(clientKey);
+    const widgets = tossPayments.widgets({ customerKey });
+    await widgets.setAmount({ currency: 'KRW', value: amount });
+    await Promise.all([
+      widgets.renderPaymentMethods({
+        selector: '#checkout-payment-method',
+        variantKey: 'DEFAULT',
+      }),
+      widgets.renderAgreement({
+        selector: '#checkout-agreement',
+        variantKey: 'AGREEMENT',
+      }),
+    ]);
+    checkoutWidgetInstance = widgets;
+  } finally {
+    checkoutWidgetMounting = false;
+  }
+}
+
+async function initCheckoutPagePayment() {
+  const p = API.paymentSettings || {};
+  if (!p.widgetMode || !p.clientKey) return;
+  const subtotal = getCartSubtotal();
+  const total = subtotal + getShippingFee(subtotal);
+  const selected = document.querySelector('input[name="payment"]:checked')?.value || 'online';
+  if (selected === 'online') {
+    await mountCheckoutWidget(p.clientKey, total);
+  }
+}
+
 function syncCheckoutBankBoxVisibility() {
   const wrap = document.getElementById('checkout-bank-box');
   if (!wrap) return;
@@ -2424,10 +2480,26 @@ function syncCheckoutBankBoxVisibility() {
   wrap.style.display = show ? '' : 'none';
 }
 
+function syncCheckoutPaymentUI() {
+  const p = API.paymentSettings || {};
+  const selected = document.querySelector('input[name="payment"]:checked')?.value || 'transfer';
+  const widgetWrap = document.getElementById('checkout-widget-wrap');
+  const showWidget = p.widgetMode && selected === 'online';
+  if (widgetWrap) widgetWrap.hidden = !showWidget;
+  syncCheckoutBankBoxVisibility();
+  if (showWidget && p.clientKey) {
+    const total = getCartSubtotal() + getShippingFee(getCartSubtotal());
+    mountCheckoutWidget(p.clientKey, total);
+  } else {
+    destroyCheckoutWidget();
+  }
+}
+
 function renderPaymentMethodOptions() {
   const p = API.paymentSettings || {};
   const methods = getCheckoutPaymentMethods();
   const defs = {
+    online: { icon: '💳', title: '카드·간편결제', desc: '토스페이먼츠 결제위젯' },
     card: { icon: '💳', title: '신용/체크카드', desc: p.enabled ? '토스페이먼츠 카드 결제' : '카드 결제' },
     transfer: { icon: '🏦', title: '무통장 입금', desc: '입금 확인 후 발송' },
     kakao: { icon: '💬', title: '간편결제', desc: p.enabled ? '카카오페이·토스페이 등' : '간편결제' },
@@ -2574,6 +2646,12 @@ function render() {
   bindPaymentOptions();
   if (typeof renderSiteFooter === 'function') renderSiteFooter();
   if (state.page === 'checkout' && typeof bindCheckoutAddress === 'function') bindCheckoutAddress();
+  if (state.page === 'checkout') {
+    syncCheckoutPaymentUI();
+    initCheckoutPagePayment();
+  } else {
+    destroyCheckoutWidget();
+  }
   updateNotificationPanel();
   if (state.page === 'home' && state.category === 'all') {
     startTimeAttackTimer();
@@ -2591,13 +2669,13 @@ function bindPaymentOptions() {
       opt.classList.add('selected');
       const radio = opt.querySelector('input[type="radio"]');
       if (radio) radio.checked = true;
-      syncCheckoutBankBoxVisibility();
+      syncCheckoutPaymentUI();
     });
   });
   document.querySelectorAll('input[name="payment"]').forEach((radio) => {
-    radio.addEventListener('change', syncCheckoutBankBoxVisibility);
+    radio.addEventListener('change', syncCheckoutPaymentUI);
   });
-  syncCheckoutBankBoxVisibility();
+  syncCheckoutPaymentUI();
 }
 
 window.copyBankAccountFromEl = copyBankAccountFromEl;
@@ -2649,7 +2727,13 @@ async function submitOrder(e) {
   const form = e.target;
   const fd = new FormData(form);
   const payment = fd.get('payment');
-  const labels = { card: '신용/체크카드', transfer: '무통장 입금', kakao: '간편결제' };
+  const apiPayment = payment === 'online' ? 'card' : payment;
+  const labels = {
+    online: '카드·간편결제',
+    card: '신용/체크카드',
+    transfer: '무통장 입금',
+    kakao: '간편결제',
+  };
 
   const subtotal = getCartSubtotal();
   const shipping = getShippingFee(subtotal);
@@ -2667,7 +2751,7 @@ async function submitOrder(e) {
     address: base,
     addressDetail: detail,
     memo: fd.get('memo'),
-    payment,
+    payment: apiPayment,
     subtotal,
     shipping,
     total,
@@ -2760,9 +2844,32 @@ async function submitOrder(e) {
       throw new Error('결제 모듈을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
     }
 
+    const siteOrigin = window.location.origin;
+    const payCustomer = {
+      customerEmail: orderPayload.email || 'guest@susanfather.com',
+      customerName: String(orderPayload.name),
+      customerMobilePhone: String(orderPayload.phone).replace(/\D/g, ''),
+    };
+
+    if (prepare.widgetMode || payment === 'online') {
+      if (!checkoutWidgetInstance) {
+        await mountCheckoutWidget(prepare.clientKey, prepare.amount);
+      }
+      if (!checkoutWidgetInstance) {
+        throw new Error('결제 UI를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      }
+      await checkoutWidgetInstance.requestPayment({
+        orderId: prepare.orderId,
+        orderName: prepare.orderName,
+        successUrl: siteOrigin + '/?payment=success',
+        failUrl: siteOrigin + '/?payment=fail',
+        ...payCustomer,
+      });
+      return;
+    }
+
     const tossPayments = TossPayments(prepare.clientKey);
     const paymentWidget = tossPayments.payment({ customerKey: TossPayments.ANONYMOUS });
-    const siteOrigin = window.location.origin;
     const req = {
       method: payment === 'kakao' ? 'EASY_PAY' : 'CARD',
       amount: { currency: 'KRW', value: prepare.amount },
@@ -2770,9 +2877,7 @@ async function submitOrder(e) {
       orderName: prepare.orderName,
       successUrl: siteOrigin + '/?payment=success',
       failUrl: siteOrigin + '/?payment=fail',
-      customerEmail: orderPayload.email || 'guest@susanfather.com',
-      customerName: String(orderPayload.name),
-      customerMobilePhone: String(orderPayload.phone).replace(/\D/g, ''),
+      ...payCustomer,
     };
     if (payment === 'kakao') {
       req.easyPay = { easyPayProvider: 'KAKAOPAY' };
