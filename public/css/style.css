@@ -1255,28 +1255,44 @@ body.is-home {
 
 .kakao-channel-fab {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px 12px 14px;
-  background: #fee500;
+  gap: 6px;
+  padding: 0;
+  background: transparent;
   color: #191919;
-  border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 700;
   text-decoration: none;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease;
 }
 
 .kakao-channel-fab:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
 }
 
-.kakao-channel-fab__icon {
+.kakao-channel-fab__circle {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fee500;
+  color: #191919;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  transition: box-shadow 0.15s ease;
+}
+
+.kakao-channel-fab:hover .kakao-channel-fab__circle {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+}
+
+.kakao-channel-fab__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 @media (min-width: 768px) {
