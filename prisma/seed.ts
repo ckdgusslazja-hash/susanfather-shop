@@ -23,6 +23,7 @@ export function getDefaultSettings(): Record<string, unknown> {
       provider: 'toss',
       testMode: false,
       enabledMethods: ['transfer'],
+      showOnlinePaymentUI: true,
       notice: '무통장 입금 주문입니다. 입금 확인 후 순차 발송됩니다.',
       transferGuide: '주문 후 24시간 이내 입금해 주세요. 미입금 시 주문이 취소될 수 있습니다.',
       bankAccount: {

@@ -2350,10 +2350,11 @@ function mapTossPayError(err) {
 
 function getCheckoutPaymentMethods() {
   const p = API.paymentSettings || {};
-  if (!p.enabled || p.transferOnly) {
+  const onlineUiVisible = p.showOnlinePaymentUI !== false;
+  if (!p.enabled || p.transferOnly || !onlineUiVisible) {
     return ['transfer'];
   }
-  if (p.widgetMode) {
+  if (p.widgetMode && onlineUiVisible) {
     const methods = ['online'];
     if ((p.enabledMethods || []).includes('transfer')) methods.push('transfer');
     return methods;

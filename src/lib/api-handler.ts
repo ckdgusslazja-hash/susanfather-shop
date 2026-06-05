@@ -16,6 +16,7 @@ import {
   confirmTossPayment,
   getTossKeys,
   isPaymentEnabled,
+  isOnlinePaymentUIVisible,
   type PaymentSetting,
   isWidgetClientKey,
 } from './toss-payments';
@@ -1051,13 +1052,18 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
       const defaultNotice = enabled
         ? '토스페이먼츠로 안전하게 결제됩니다.'
         : '무통장 입금 주문입니다. 입금 확인 후 순차 발송됩니다.';
-      const widgetMode = !!(keys?.clientKey && isWidgetClientKey(keys.clientKey));
+      const widgetMode =
+        !!(keys?.clientKey && isWidgetClientKey(keys.clientKey)) &&
+        enabled &&
+        isOnlinePaymentUIVisible(p);
+      const showOnlinePaymentUI = isOnlinePaymentUIVisible(p);
       return json({
         provider: p?.provider ?? 'toss',
         testMode,
         enabled,
         widgetMode,
-        transferOnly: !enabled,
+        showOnlinePaymentUI,
+        transferOnly: !enabled || !showOnlinePaymentUI,
         clientKey: keys?.clientKey ?? null,
         notice: p?.notice ?? defaultNotice,
         transferGuide: p?.transferGuide ?? '주문 후 24시간 이내 입금해 주세요. 미입금 시 주문이 자동 취소될 수 있습니다.',
@@ -1148,6 +1154,16 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
         });
       }
 
+      if (!isOnlinePaymentUIVisible(paymentSetting)) {
+        return json(
+          {
+            error:
+              '카드·간편결제는 현재 사용할 수 없습니다. 결제 수단에서 「무통장 입금」을 선택해 주세요.',
+          },
+          503
+        );
+      }
+
       const keys = getTossKeys(testMode);
       if (!keys) {
         return json(
@@ -1191,7 +1207,8 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
         ok: true,
         orderId: id,
         clientKey: keys.clientKey,
-        widgetMode: isWidgetClientKey(keys.clientKey),
+        widgetMode:
+          isWidgetClientKey(keys.clientKey) && isOnlinePaymentUIVisible(paymentSetting),
         amount: payTotal,
         orderName,
         testMode,
@@ -1836,6 +1853,10 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
       if (key === 'shop') {
         const existing = await getSetting('shop');
         value = normalizeShopSettings({ ...(existing as object), ...body });
+      }
+      if (key === 'payment') {
+        const existing = await getSetting('payment');
+        value = { ...(existing && typeof existing === 'object' ? existing : {}), ...body };
       }
       if (key === 'customerCenter') value = normalizeCustomerCenter(body);
       if (key === 'productPolicies') value = normalizeProductPolicies(body);

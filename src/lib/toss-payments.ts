@@ -9,6 +9,8 @@ export interface PaymentSetting {
   notice?: string;
   transferGuide?: string;
   enabledMethods?: string[];
+  /** 주문 화면 카드·간편결제 UI 표시 (false면 숨김, 무통장만) */
+  showOnlinePaymentUI?: boolean;
   bankAccount?: {
     bank?: string;
     number?: string;
@@ -43,6 +45,10 @@ export function isPaymentEnabled(setting: PaymentSetting | null): boolean {
   if (!setting || setting.provider === 'demo') return false;
   const testMode = setting.testMode ?? true;
   return !!getTossKeys(testMode);
+}
+
+export function isOnlinePaymentUIVisible(setting: PaymentSetting | null): boolean {
+  return setting?.showOnlinePaymentUI !== false;
 }
 
 export async function confirmTossPayment(

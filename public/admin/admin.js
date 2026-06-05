@@ -1518,6 +1518,12 @@ const Admin = {
     this.render();
   },
 
+  async loadSettingsPaymentUI() {
+    this.settings = await this.request('/api/admin/settings');
+    this.view = 'settings-payment-ui';
+    this.render();
+  },
+
   async deleteReview(id) {
     if (!confirm('삭제할까요?')) return;
     await this.request('/api/admin/reviews/' + id, { method: 'DELETE' });
@@ -1556,6 +1562,7 @@ const Admin = {
           }),
         });
       } else if (key === 'payment') {
+        const existing = this.settings?.payment || {};
         const useOnline = fd.get('useOnlinePayment') === 'on';
         const enabledMethods = useOnline
           ? ['card', 'transfer', 'kakao'].filter((m) => fd.get(`method_${m}`) === 'on')
@@ -1563,6 +1570,7 @@ const Admin = {
         await this.request('/api/admin/settings/payment', {
           method: 'PUT',
           body: JSON.stringify({
+            ...existing,
             provider: fd.get('provider'),
             testMode: fd.get('testMode') === 'on',
             notice: fd.get('notice'),
@@ -1573,6 +1581,15 @@ const Admin = {
               number: fd.get('bankNumber'),
               holder: fd.get('bankHolder'),
             },
+          }),
+        });
+      } else if (key === 'payment-ui') {
+        const existing = this.settings?.payment || {};
+        await this.request('/api/admin/settings/payment', {
+          method: 'PUT',
+          body: JSON.stringify({
+            ...existing,
+            showOnlinePaymentUI: fd.get('showOnlinePaymentUI') === 'on',
           }),
         });
       } else if (key === 'order') {
@@ -1612,6 +1629,7 @@ const Admin = {
       }
       alert('저장되었습니다');
       if (key === 'productPolicies') await this.loadSettingsGuides();
+      else if (key === 'payment-ui') await this.loadSettingsPaymentUI();
       else await this.loadSettings();
     } catch (e) {
       alert(e.message);
@@ -1644,6 +1662,7 @@ const Admin = {
       ['reviews', '⭐', '리뷰관리', () => 'Admin.loadReviews()'],
       ['inquiries', '💬', '문의함', () => 'Admin.loadInquiries()'],
       ['settings', '⚙️', '설정', () => 'Admin.loadSettings()'],
+      ['settings-payment-ui', '💳', '결제 UI', () => 'Admin.loadSettingsPaymentUI()'],
       ['settings-guides', '📋', '배송·반품 안내', () => 'Admin.loadSettingsGuides()'],
     ];
     const activeView =
@@ -2150,6 +2169,22 @@ const Admin = {
       </form>`;
   },
 
+  renderSettingsPaymentUI() {
+    const p = this.settings?.payment || {};
+    const shown = p.showOnlinePaymentUI !== false;
+    const onlineConfigured = (p.enabledMethods || []).some((m) => m !== 'transfer');
+    return `
+      <form id="form-payment-ui" class="panel" onsubmit="event.preventDefault();Admin.saveSetting('payment-ui')">
+        <h2>카드·간편결제 UI 표시</h2>
+        <p class="admin-hint">쇼핑몰 <strong>주문·결제</strong> 화면에서 토스 카드·간편결제 선택 UI를 보이거나 숨깁니다. 숨겨도 토스 키·결제 설정은 유지되며, 고객은 무통장 입금만 이용합니다.</p>
+        <div class="form-row">
+          <label><input type="checkbox" name="showOnlinePaymentUI" ${shown ? 'checked' : ''} /> 주문 화면에 카드·간편결제 UI 표시</label>
+        </div>
+        <p class="admin-hint">${onlineConfigured ? '현재 온라인 결제가 설정되어 있습니다. 체크 해제 시 주문 화면에서만 숨겨집니다.' : '「설정」 메뉴에서 온라인 결제를 켜야 카드·간편결제 UI가 표시됩니다.'}</p>
+        <button class="btn" type="submit" style="margin-top:12px">저장</button>
+      </form>`;
+  },
+
   renderSettingsGuides() {
     if (!this.policyTemplatesDraft) this.initPolicyTemplatesDraft(this.getProductPolicies());
     return `
@@ -2190,6 +2225,8 @@ const Admin = {
         return this.renderInquiries();
       case 'settings':
         return this.renderSettings();
+      case 'settings-payment-ui':
+        return this.renderSettingsPaymentUI();
       case 'settings-guides':
         return this.renderSettingsGuides();
       default:
@@ -2215,6 +2252,7 @@ const Admin = {
       reviews: '리뷰 관리',
       inquiries: '문의함',
       settings: '설정',
+      'settings-payment-ui': '결제 UI',
       'settings-guides': '배송·반품 안내',
     };
 
