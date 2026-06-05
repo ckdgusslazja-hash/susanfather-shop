@@ -3685,20 +3685,45 @@ body.is-reviews {
   font-size: 0.7rem;
 }
 
-.checkout-widget-wrap {
-  margin-top: 14px;
-  padding: 14px 12px;
-  border: 1px solid var(--color-border);
+.checkout-transfer-section {
+  margin-bottom: 18px;
+}
+
+.checkout-widget-section {
+  margin-top: 4px;
+}
+
+.checkout-widget-guide {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: #444;
+  background: #f0f7f4;
+  border: 1px solid #cfe8db;
   border-radius: var(--radius-md);
-  background: #fafbfc;
+}
+
+.checkout-widget-wrap {
+  padding: 16px 14px;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(26, 107, 74, 0.08);
 }
 
 .checkout-widget-method {
-  min-height: 48px;
+  min-height: 56px;
+}
+
+.checkout-widget-method :is(iframe, div) {
+  max-width: 100%;
 }
 
 .checkout-widget-agreement {
-  margin-top: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
 }
 
 .mock-notice {

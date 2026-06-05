@@ -2282,16 +2282,22 @@ function renderCheckout() {
         </section>
         <section class="form-section">
           <h3 class="form-section__title">결제 수단</h3>
-          ${renderCheckoutBankBox()}
           <div class="payment-methods" id="payment-methods">
             ${renderPaymentMethodOptions()}
           </div>
-          <div id="checkout-widget-wrap" class="checkout-widget-wrap" hidden>
+        </section>
+        <div id="checkout-transfer-section" class="checkout-transfer-section" hidden>
+          ${renderCheckoutBankBox()}
+        </div>
+        <section id="checkout-widget-section" class="form-section checkout-widget-section" hidden>
+          <h3 class="form-section__title">결제 방법</h3>
+          <p class="checkout-widget-guide">토스페이먼츠 결제 UI에서 <b>신용·체크카드</b> 또는 <b>토스페이·카카오페이</b> 등 간편결제를 선택해 주세요.</p>
+          <div id="checkout-widget-wrap" class="checkout-widget-wrap">
             <div id="checkout-payment-method" class="checkout-widget-method"></div>
             <div id="checkout-agreement" class="checkout-widget-agreement"></div>
           </div>
-          <p class="mock-notice" id="payment-notice">${escapeHtml(getPaymentNotice())}</p>
         </section>
+        <p class="mock-notice" id="payment-notice">${escapeHtml(getPaymentNotice())}</p>
         <button type="submit" class="btn btn--primary btn--lg" id="checkout-submit-btn">${isTransferOnlyCheckout() ? '주문하기' : '결제하기'} ${formatPrice(total)}</button>
       </form>
       <aside class="cart-summary">
@@ -2421,11 +2427,11 @@ function renderCheckoutBankBox() {
   const p = API.paymentSettings || {};
   const bank = getPaymentBankAccount(p.bankAccount);
   const guide = p.transferGuide || '주문 후 24시간 이내 입금해 주세요.';
-  return `<div id="checkout-bank-box" class="checkout-bank-box-wrap">${renderBankAccountPanel(bank, {
+  return renderBankAccountPanel(bank, {
     className: 'bank-copy-panel--checkout',
     guide,
     footer: '입금자명은 주문자명과 동일하게 입력해 주세요.',
-  })}</div>`;
+  });
 }
 
 function destroyCheckoutWidget() {
@@ -2472,21 +2478,19 @@ async function initCheckoutPagePayment() {
   }
 }
 
-function syncCheckoutBankBoxVisibility() {
-  const wrap = document.getElementById('checkout-bank-box');
-  if (!wrap) return;
-  const selected = document.querySelector('input[name="payment"]:checked')?.value || 'transfer';
-  const show = selected === 'transfer' || isTransferOnlyCheckout();
-  wrap.style.display = show ? '' : 'none';
-}
-
 function syncCheckoutPaymentUI() {
   const p = API.paymentSettings || {};
   const selected = document.querySelector('input[name="payment"]:checked')?.value || 'transfer';
-  const widgetWrap = document.getElementById('checkout-widget-wrap');
+  const transferSection = document.getElementById('checkout-transfer-section');
+  const widgetSection = document.getElementById('checkout-widget-section');
+  const notice = document.getElementById('payment-notice');
+  const showTransfer = selected === 'transfer' || isTransferOnlyCheckout();
   const showWidget = p.widgetMode && selected === 'online';
-  if (widgetWrap) widgetWrap.hidden = !showWidget;
-  syncCheckoutBankBoxVisibility();
+
+  if (transferSection) transferSection.hidden = !showTransfer;
+  if (widgetSection) widgetSection.hidden = !showWidget;
+  if (notice) notice.style.display = showWidget ? 'none' : '';
+
   if (showWidget && p.clientKey) {
     const total = getCartSubtotal() + getShippingFee(getCartSubtotal());
     mountCheckoutWidget(p.clientKey, total);
@@ -2499,7 +2503,7 @@ function renderPaymentMethodOptions() {
   const p = API.paymentSettings || {};
   const methods = getCheckoutPaymentMethods();
   const defs = {
-    online: { icon: '💳', title: '카드·간편결제', desc: '토스페이먼츠 결제위젯' },
+    online: { icon: '💳', title: '카드·간편결제', desc: '토스페이·카드·카카오페이 등' },
     card: { icon: '💳', title: '신용/체크카드', desc: p.enabled ? '토스페이먼츠 카드 결제' : '카드 결제' },
     transfer: { icon: '🏦', title: '무통장 입금', desc: '입금 확인 후 발송' },
     kakao: { icon: '💬', title: '간편결제', desc: p.enabled ? '카카오페이·토스페이 등' : '간편결제' },
