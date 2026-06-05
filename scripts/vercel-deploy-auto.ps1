@@ -1,4 +1,4 @@
-﻿# Susan Father — Vercel 자동 배포 (셀러비온과 동일 방식)
+# Susan Father — Vercel 자동 배포 (셀러비온과 동일 방식)
 $ErrorActionPreference = "Stop"
 chcp 65001 | Out-Null
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8

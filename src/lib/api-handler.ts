@@ -181,8 +181,8 @@ function mapAdminUser(u: Pick<User, 'id' | 'email' | 'name' | 'phone' | 'role' |
 
 async function getSetting(key: string): Promise<unknown> {
   try {
-    const row = await prisma.setting.findUnique({ where: { key } });
-    return row?.value ?? null;
+  const row = await prisma.setting.findUnique({ where: { key } });
+  return row?.value ?? null;
   } catch {
     return null;
   }
@@ -871,28 +871,28 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
         return json({ error: '비밀번호는 8자 이상이어야 합니다.' }, 400);
       }
       try {
-        const normalized = email.toLowerCase();
-        const exists = await prisma.user.findUnique({ where: { email: normalized } });
-        if (exists) return json({ error: '이미 가입된 이메일입니다.' }, 409);
+      const normalized = email.toLowerCase();
+      const exists = await prisma.user.findUnique({ where: { email: normalized } });
+      if (exists) return json({ error: '이미 가입된 이메일입니다.' }, 409);
 
-        const id = uuidv4();
-        const hash = bcrypt.hashSync(password, 10);
-        await prisma.user.create({
-          data: {
-            id,
-            email: normalized,
-            passwordHash: hash,
-            name,
-            phone: phone || '',
-            provider: 'email',
-          },
-        });
-        const token = jwt.sign(
-          { id, email: normalized, name, role: 'user' },
-          jwtSecret,
-          { expiresIn: '7d' }
-        );
-        return json({ token, user: { id, email: normalized, name, phone, role: 'user' } });
+      const id = uuidv4();
+      const hash = bcrypt.hashSync(password, 10);
+      await prisma.user.create({
+        data: {
+          id,
+          email: normalized,
+          passwordHash: hash,
+          name,
+          phone: phone || '',
+          provider: 'email',
+        },
+      });
+      const token = jwt.sign(
+        { id, email: normalized, name, role: 'user' },
+        jwtSecret,
+        { expiresIn: '7d' }
+      );
+      return json({ token, user: { id, email: normalized, name, phone, role: 'user' } });
       } catch {
         return json({ error: '회원가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.' }, 503);
       }
@@ -1251,8 +1251,8 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
   /* ── Products ── */
   if (method === 'GET' && a === 'products') {
     try {
-      const rows = await prisma.product.findMany();
-      if (rows.length) {
+    const rows = await prisma.product.findMany();
+    if (rows.length) {
         return json(
           rows
             .map((r) => normalizeProductForClient(mergeProductRow(r)))

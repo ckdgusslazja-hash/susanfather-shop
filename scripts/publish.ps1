@@ -1,4 +1,4 @@
-﻿# 수정 후 자동 반영: Git commit + GitHub push (Vercel GitHub 연동으로 자동 배포)
+# 수정 후 자동 반영: Git commit + GitHub push (Vercel GitHub 연동으로 자동 배포)
 # Usage: .\scripts\publish.ps1 -Message "수정 내용 요약"
 
 param(

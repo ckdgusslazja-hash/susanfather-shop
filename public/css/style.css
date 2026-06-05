@@ -241,9 +241,18 @@ textarea {
 
 /* Main layout */
 .main {
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px 80px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+#main-content {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 body.is-home .header,
@@ -3609,6 +3618,46 @@ body.is-reviews {
 
 body.is-order-page .main {
   max-width: 100%;
+  width: 100%;
+  overflow-x: clip;
+}
+
+body.is-order-page #main-content {
+  overflow-x: clip;
+}
+
+body.is-order-page .header__inner {
+  max-width: 100%;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+body.is-order-page .checkout-layout,
+body.is-order-page .checkout-form,
+body.is-order-page #checkout-form,
+body.is-order-page .form-section,
+body.is-order-page .form-grid,
+body.is-order-page .saved-address-picker,
+body.is-order-page .address-list,
+body.is-order-page .payment-methods,
+body.is-order-page .payment-option-group {
+  min-width: 0;
+  max-width: 100%;
+}
+
+body.is-order-page .address-card {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+body.is-order-page .address-card__addr,
+body.is-order-page .address-card__phone,
+body.is-order-page .address-card strong {
+  display: block;
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .form-section {
@@ -3817,6 +3866,10 @@ body.is-order-page .main {
   border-top: none;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   box-shadow: 0 4px 14px rgba(26, 107, 74, 0.1);
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .checkout-widget-panel[hidden],
@@ -3875,15 +3928,16 @@ body.is-order-page .main {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  overflow: hidden;
 }
 
 .checkout-widget-method :is(iframe, div, button) {
   max-width: 100%;
+  box-sizing: border-box;
 }
 
 .checkout-widget-method iframe {
   width: 100% !important;
+  max-width: 100% !important;
   min-height: 56px;
 }
 
@@ -3894,7 +3948,6 @@ body.is-order-page .main {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  overflow: hidden;
 }
 
 .checkout-transfer-panel .bank-copy-panel {
@@ -4253,6 +4306,9 @@ body.is-order-page .main {
 
 .saved-address-picker {
   margin-bottom: 20px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .saved-address-picker__title {
@@ -4265,6 +4321,8 @@ body.is-order-page .main {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .address-card {

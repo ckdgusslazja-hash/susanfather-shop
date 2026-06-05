@@ -644,13 +644,13 @@ function navigate(page, params = {}) {
         if (params.qty) state.quantity = Math.min(state.quantity, p.stock || state.quantity);
       }
     } else {
-      state.reviewProductId = params.productId;
-      state.quantity = 1;
-      state.carouselIndex = 0;
-      const p = getProduct(params.productId);
-      if (p) {
-        state.selectedOptionId = getDefaultOptionId(p);
-        saveRecentProduct(p.id);
+    state.reviewProductId = params.productId;
+    state.quantity = 1;
+    state.carouselIndex = 0;
+    const p = getProduct(params.productId);
+    if (p) {
+      state.selectedOptionId = getDefaultOptionId(p);
+      saveRecentProduct(p.id);
       }
     }
   }
@@ -677,7 +677,7 @@ function navigate(page, params = {}) {
   }
   if (page === 'checkout' && typeof API !== 'undefined' && typeof API.loadPaymentSettings === 'function') {
     return API.loadPaymentSettings().then(() => {
-      render();
+  render();
       if (!params.skipScroll) window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   }
@@ -2180,7 +2180,7 @@ function renderCart() {
       const unitPrice = getCartItemUnitPrice(item);
       const optId = item.optionId || '';
       return `
-          <div class="cart-item">
+        <div class="cart-item">
           ${renderProductThumbHtml(p, 'cart-item__visual')}
           <div class="cart-item__info">
             <h3 class="cart-item__name">${p.name}</h3>
@@ -2306,54 +2306,6 @@ let checkoutAgreementOk = false;
 let checkoutPaymentWindowInstance = null;
 let checkoutWidgetMountPromise = null;
 let checkoutWidgetMounted = { clientKey: null, amount: null };
-let checkoutWidgetFitBound = false;
-
-function resetCheckoutWidgetFit(host) {
-  if (!host) return;
-  const inner = host.firstElementChild;
-  if (!inner) return;
-  inner.style.transform = '';
-  inner.style.transformOrigin = '';
-  inner.style.width = '';
-  host.style.height = '';
-}
-
-function fitCheckoutWidgetHost(host) {
-  if (!host) return;
-  const inner = host.firstElementChild;
-  if (!inner) return;
-  resetCheckoutWidgetFit(host);
-  const containerWidth = host.clientWidth;
-  const contentWidth = inner.scrollWidth;
-  if (!containerWidth || !contentWidth || contentWidth <= containerWidth) return;
-  const scale = containerWidth / contentWidth;
-  inner.style.transform = `scale(${scale})`;
-  inner.style.transformOrigin = 'top left';
-  inner.style.width = `${contentWidth}px`;
-  host.style.height = `${Math.ceil(inner.offsetHeight * scale)}px`;
-}
-
-function fitCheckoutWidgetToViewport() {
-  fitCheckoutWidgetHost(document.getElementById('checkout-payment-method'));
-  fitCheckoutWidgetHost(document.getElementById('checkout-agreement'));
-}
-
-function scheduleCheckoutWidgetFit() {
-  if (state.page !== 'checkout') return;
-  requestAnimationFrame(() => {
-    fitCheckoutWidgetToViewport();
-    setTimeout(fitCheckoutWidgetToViewport, 120);
-    setTimeout(fitCheckoutWidgetToViewport, 500);
-  });
-}
-
-function bindCheckoutWidgetFit() {
-  if (checkoutWidgetFitBound) return;
-  checkoutWidgetFitBound = true;
-  window.addEventListener('resize', () => {
-    if (state.page === 'checkout') scheduleCheckoutWidgetFit();
-  });
-}
 
 function normalizePayAmount(amount) {
   return Math.max(0, Math.round(Number(amount) || 0));
@@ -2623,7 +2575,6 @@ async function mountCheckoutWidget(clientKey, amount) {
     checkoutWidgetMounted.clientKey === clientKey &&
     checkoutWidgetMounted.amount === payAmount
   ) {
-    scheduleCheckoutWidgetFit();
     return true;
   }
 
@@ -2665,13 +2616,10 @@ async function mountCheckoutWidget(clientKey, amount) {
       });
     }
     checkoutWidgetMounted = { clientKey, amount: payAmount };
-    bindCheckoutWidgetFit();
-    scheduleCheckoutWidgetFit();
   })();
 
   try {
     await checkoutWidgetMountPromise;
-    scheduleCheckoutWidgetFit();
     return true;
   } catch (err) {
     console.error('checkout widget mount failed', err);
@@ -2711,7 +2659,6 @@ async function syncCheckoutPaymentUI() {
   if (showWidget && p.clientKey) {
     const total = getCartSubtotal() + getShippingFee(getCartSubtotal());
     await mountCheckoutWidget(p.clientKey, total);
-    scheduleCheckoutWidgetFit();
   } else {
     destroyCheckoutWidget();
     destroyCheckoutPaymentWindow();
@@ -3041,25 +2988,25 @@ async function submitOrder(e) {
           addressDetail: detail,
           isDefault: state.savedAddresses.length === 0,
         });
-      } catch {
+  } catch {
         /* ignore */
       }
-    }
+  }
 
     if (prepare.transfer) {
       saveLastOrder({
         id: prepare.orderId,
-        name: fd.get('name'),
-        phone: fd.get('phone'),
-        address: fullAddress,
-        memo: fd.get('memo'),
-        payment,
-        paymentLabel: labels[payment] || payment,
-        subtotal,
-        shipping,
-        total,
-        items: [...state.cart],
-        date: new Date().toISOString(),
+    name: fd.get('name'),
+    phone: fd.get('phone'),
+    address: fullAddress,
+    memo: fd.get('memo'),
+    payment,
+    paymentLabel: labels[payment] || payment,
+    subtotal,
+    shipping,
+    total,
+    items: [...state.cart],
+    date: new Date().toISOString(),
         testMode: false,
         transfer: true,
         bankAccount: prepare.bankAccount,
@@ -3173,11 +3120,11 @@ async function handlePaymentReturn() {
       const res = await API.confirmPayment({ paymentKey, orderId, amount });
       saveLastOrder(buildLastOrderFromApi(res.order, { testMode: res.testMode }));
       if (!API.user) state.guestOrderView = res.order;
-      state.cart = [];
-      saveCart();
-      if (typeof state.reviewEligibility === 'object') state.reviewEligibility = {};
+  state.cart = [];
+  saveCart();
+  if (typeof state.reviewEligibility === 'object') state.reviewEligibility = {};
       if (typeof loadNotifications === 'function') await loadNotifications();
-      navigate('complete');
+  navigate('complete');
       showToast('결제가 완료되었습니다.');
     } catch (err) {
       showToast(err.message || '결제 승인에 실패했습니다.');
@@ -3209,8 +3156,8 @@ function goMypage() {
 
 async function initApp() {
   try {
-    loadCart();
-    if (typeof API !== 'undefined') {
+  loadCart();
+  if (typeof API !== 'undefined') {
       await Promise.all([API.loadShopSettings(), API.loadProducts(), API.loadPaymentSettings(), loadNotifications()]);
     }
     const hadPaymentReturn = window.location.search.includes('payment=');
@@ -3223,8 +3170,8 @@ async function initApp() {
       } else {
         syncHashFromState(true);
       }
-    }
-    render();
+  }
+  render();
   } finally {
     hideAppLoader();
   }
