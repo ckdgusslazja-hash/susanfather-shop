@@ -32,7 +32,6 @@
 
 html {
   scroll-behavior: smooth;
-  overflow-x: hidden;
 }
 
 body {
@@ -42,7 +41,6 @@ body {
   line-height: 1.6;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
 }
 
 body.is-app-loading {
@@ -241,18 +239,9 @@ textarea {
 
 /* Main layout */
 .main {
-  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px 80px;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
-#main-content {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
 }
 
 body.is-home .header,
@@ -3449,8 +3438,6 @@ body.is-reviews {
   grid-template-columns: 1fr 360px;
   gap: 32px;
   margin-top: 32px;
-  min-width: 0;
-  max-width: 100%;
 }
 
 .cart-items {
@@ -3535,8 +3522,6 @@ body.is-reviews {
   height: fit-content;
   position: sticky;
   top: calc(var(--header-h) + 24px);
-  min-width: 0;
-  max-width: 100%;
 }
 
 .cart-summary__row {
@@ -3604,60 +3589,12 @@ body.is-reviews {
   grid-template-columns: 1fr 380px;
   gap: 32px;
   margin-top: 32px;
-  min-width: 0;
-  max-width: 100%;
 }
 
 .checkout-form {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  min-width: 0;
-  max-width: 100%;
-}
-
-body.is-order-page .main {
-  max-width: 100%;
-  width: 100%;
-  overflow-x: clip;
-}
-
-body.is-order-page #main-content {
-  overflow-x: clip;
-}
-
-body.is-order-page .header__inner {
-  max-width: 100%;
-  padding-left: 16px;
-  padding-right: 16px;
-}
-
-body.is-order-page .checkout-layout,
-body.is-order-page .checkout-form,
-body.is-order-page #checkout-form,
-body.is-order-page .form-section,
-body.is-order-page .form-grid,
-body.is-order-page .saved-address-picker,
-body.is-order-page .address-list,
-body.is-order-page .payment-methods,
-body.is-order-page .payment-option-group {
-  min-width: 0;
-  max-width: 100%;
-}
-
-body.is-order-page .address-card {
-  min-width: 0;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-body.is-order-page .address-card__addr,
-body.is-order-page .address-card__phone,
-body.is-order-page .address-card strong {
-  display: block;
-  max-width: 100%;
-  word-break: break-word;
-  overflow-wrap: anywhere;
 }
 
 .form-section {
@@ -3665,8 +3602,6 @@ body.is-order-page .address-card strong {
   border-radius: var(--radius-lg);
   padding: 28px;
   box-shadow: var(--shadow-sm);
-  min-width: 0;
-  max-width: 100%;
 }
 
 .form-section__title {
@@ -3681,14 +3616,12 @@ body.is-order-page .address-card strong {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  min-width: 0;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  min-width: 0;
 }
 
 .form-group--full {
@@ -3744,8 +3677,6 @@ body.is-order-page .address-card strong {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-width: 0;
-  max-width: 100%;
 }
 
 .payment-option {
@@ -3754,8 +3685,6 @@ body.is-order-page .address-card strong {
   align-items: center;
   gap: 12px;
   padding: 16px 72px 16px 16px;
-  min-width: 0;
-  max-width: 100%;
   border: 2px solid #e2e6ea;
   border-radius: var(--radius-md);
   background: #f8f9fa;
@@ -3851,8 +3780,6 @@ body.is-order-page .address-card strong {
 .payment-option-group {
   border-radius: var(--radius-md);
   overflow: visible;
-  min-width: 0;
-  max-width: 100%;
 }
 
 .payment-option-group .payment-option {
@@ -3877,10 +3804,6 @@ body.is-order-page .address-card strong {
   border-top: none;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   box-shadow: 0 4px 14px rgba(26, 107, 74, 0.1);
-  min-width: 0;
-  max-width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .checkout-widget-panel[hidden],
@@ -3937,18 +3860,14 @@ body.is-order-page .address-card strong {
 .checkout-widget-method {
   min-height: 80px;
   width: 100%;
-  max-width: 100%;
-  min-width: 0;
 }
 
 .checkout-widget-method :is(iframe, div, button) {
   max-width: 100%;
-  box-sizing: border-box;
 }
 
 .checkout-widget-method iframe {
   width: 100% !important;
-  max-width: 100% !important;
   min-height: 56px;
 }
 
@@ -3956,9 +3875,6 @@ body.is-order-page .address-card strong {
   margin-top: 12px;
   padding-top: 10px;
   border-top: 1px solid #eee;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
 }
 
 .checkout-transfer-panel .bank-copy-panel {
@@ -4302,24 +4218,14 @@ body.is-order-page .address-card strong {
 .address-row {
   display: flex;
   gap: 8px;
-  min-width: 0;
 }
 
 .address-row input {
   flex: 1;
-  min-width: 0;
-}
-
-.address-row .btn {
-  flex-shrink: 0;
-  white-space: nowrap;
 }
 
 .saved-address-picker {
   margin-bottom: 20px;
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
 }
 
 .saved-address-picker__title {
@@ -4332,8 +4238,6 @@ body.is-order-page .address-card strong {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-width: 0;
-  max-width: 100%;
 }
 
 .address-card {
@@ -5599,6 +5503,88 @@ body.is-mypage .header {
 
   .nav {
     display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  html,
+  body.is-order-page {
+    overflow-x: hidden;
+  }
+
+  body.is-order-page .main,
+  body.is-order-page #main-content {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: clip;
+  }
+
+  body.is-order-page .header__inner {
+    max-width: 100%;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  body.is-order-page .checkout-layout,
+  body.is-order-page .checkout-form,
+  body.is-order-page #checkout-form,
+  body.is-order-page .form-section,
+  body.is-order-page .form-grid,
+  body.is-order-page .saved-address-picker,
+  body.is-order-page .address-list,
+  body.is-order-page .payment-methods,
+  body.is-order-page .payment-option-group,
+  body.is-order-page .cart-layout {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  body.is-order-page .address-card {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  body.is-order-page .address-card__addr,
+  body.is-order-page .address-card__phone,
+  body.is-order-page .address-card strong {
+    display: block;
+    max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  body.is-order-page .address-row {
+    min-width: 0;
+  }
+
+  body.is-order-page .address-row input {
+    min-width: 0;
+  }
+
+  body.is-order-page .address-row .btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  body.is-order-page .payment-option {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  body.is-order-page .checkout-widget-panel,
+  body.is-order-page .checkout-transfer-panel {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body.is-order-page .checkout-widget-method,
+  body.is-order-page .checkout-widget-agreement {
+    min-width: 0;
+    max-width: 100%;
   }
 }
 
