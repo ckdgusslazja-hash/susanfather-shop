@@ -8,6 +8,8 @@ const SEO_SITE = {
   defaultKeywords:
     '수산아빠, susanfather, 농수산물, 산지직송, 제철과일, 신선채소, 수산물, 온라인 쇼핑몰, 유기농, 햅쌀',
   logo: '/images/logo.png',
+  logoWidth: 1024,
+  logoHeight: 1024,
 };
 
 const SEO_NOINDEX = new Set([
@@ -76,6 +78,39 @@ function getProductImage(product) {
     typeof getAdminProductImages === 'function' ? getAdminProductImages(product) : product.adminImages;
   const url = imgs?.[0]?.url || (product.id ? `/images/products/${product.id}.png` : SEO_SITE.logo);
   return url;
+}
+
+function getOrgJsonLd() {
+  const logoUrl = seoAbsUrl(SEO_SITE.logo);
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': `${SEO_SITE.host}/#organization`,
+        name: SEO_SITE.name,
+        url: `${SEO_SITE.host}/`,
+        logo: {
+          '@type': 'ImageObject',
+          url: logoUrl,
+          width: SEO_SITE.logoWidth,
+          height: SEO_SITE.logoHeight,
+        },
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${SEO_SITE.host}/#website`,
+        name: SEO_SITE.name,
+        url: `${SEO_SITE.host}/`,
+        publisher: { '@id': `${SEO_SITE.host}/#organization` },
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: `${SEO_SITE.host}/?q={search_term_string}`,
+          'query-input': 'required name=search_term_string',
+        },
+      },
+    ],
+  };
 }
 
 function updatePageSeo() {
@@ -169,6 +204,10 @@ function updatePageSeo() {
   setMeta('name', 'twitter:title', title);
   setMeta('name', 'twitter:description', description);
   setMeta('name', 'twitter:image', image);
+
+  if (!noindex) {
+    setJsonLd('seo-jsonld-org', getOrgJsonLd());
+  }
 }
 
 window.updatePageSeo = updatePageSeo;

@@ -10,7 +10,9 @@
     <meta name="robots" content="index, follow" />
     <meta name="author" content="수산아빠" />
     <title>수산아빠 | 신선 농수산물 온라인 쇼핑몰</title>
-    <link rel="icon" href="images/logo.png" type="image/png" />
+    <link rel="icon" href="https://susanfather.com/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" href="https://susanfather.com/images/logo.png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="https://susanfather.com/images/logo.png" />
     <link rel="canonical" href="https://susanfather.com/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="수산아빠" />
@@ -23,20 +25,28 @@
     <meta name="twitter:title" content="수산아빠 | 신선 농수산물 온라인 쇼핑몰" />
     <meta name="twitter:description" content="제철 과일, 신선 채소, 수산물 산지직송 쇼핑몰" />
     <meta name="twitter:image" content="https://susanfather.com/images/logo.png" />
-    <script type="application/ld+json">
+    <script type="application/ld+json" id="seo-jsonld-org">
       {
         "@context": "https://schema.org",
         "@graph": [
           {
             "@type": "Organization",
+            "@id": "https://susanfather.com/#organization",
             "name": "수산아빠",
             "url": "https://susanfather.com/",
-            "logo": "https://susanfather.com/images/logo.png"
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://susanfather.com/images/logo.png",
+              "width": 1024,
+              "height": 1024
+            }
           },
           {
             "@type": "WebSite",
+            "@id": "https://susanfather.com/#website",
             "name": "수산아빠",
             "url": "https://susanfather.com/",
+            "publisher": { "@id": "https://susanfather.com/#organization" },
             "potentialAction": {
               "@type": "SearchAction",
               "target": "https://susanfather.com/?q={search_term_string}",
@@ -141,10 +151,10 @@
     <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
     <script src="js/review-seeds.js?v=1"></script>
     <script src="js/data.js?v=9"></script>
-    <script src="js/seo.js?v=1"></script>
+    <script src="js/seo.js?v=2"></script>
     <script src="js/api.js?v=3"></script>
     <script src="js/app.js?v=44"></script>
-    <script src="js/kakao-channel.js?v=3"></script>
+    <script src="js/kakao-channel.js?v=4"></script>
     <script src="js/pages-extra.js?v=6"></script>
   </body>
 </html>
