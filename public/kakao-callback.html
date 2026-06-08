@@ -37,7 +37,15 @@
             var user = JSON.parse(decodeURIComponent(userStr));
             localStorage.setItem('gh_token', token);
             localStorage.setItem('gh_user', JSON.stringify(user));
-            location.replace('/#/mypage');
+            function isPlaceholderName(name) {
+              var n = (name || '').trim();
+              return !n || n === '카카오회원' || n === '-' || n === '—';
+            }
+            function needsProfile(u) {
+              if (!u || u.provider !== 'kakao') return false;
+              return !(u.phone || '').trim() || isPlaceholderName(u.name);
+            }
+            location.replace(needsProfile(user) ? '/#/mypage' : '/#/home');
             return;
           } catch (e) {}
         }

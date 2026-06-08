@@ -67,8 +67,8 @@ function renderKakaoProfileFormHtml() {
     </div>`;
 }
 
-function getPostKakaoLoginPage() {
-  return 'mypage';
+function getPostKakaoLoginPage(user) {
+  return needsKakaoProfileComplete(user) ? 'mypage' : 'home';
 }
 
 const KAKAO_PROFILE_SKIP_PAGES = new Set([
@@ -118,8 +118,8 @@ function handleKakaoOAuthReturn() {
       const user = JSON.parse(decodeURIComponent(userStr));
       API.setAuth(token, user);
       if (typeof updateNavAuth === 'function') updateNavAuth();
-      const nextPage = getPostKakaoLoginPage();
-      state.mypageTab = needsKakaoProfileComplete(user) ? 'profile' : 'orders';
+      const nextPage = getPostKakaoLoginPage(user);
+      if (nextPage === 'mypage') state.mypageTab = 'profile';
       history.replaceState(null, '', `/#/${nextPage}`);
       return nextPage;
     } catch {
@@ -449,11 +449,12 @@ function renderMypage() {
   }
   const needsProfile = needsKakaoProfileComplete(u);
   const tab = needsProfile ? 'profile' : state.mypageTab || 'orders';
+  const displayName = isPlaceholderKakaoName(u.name) ? '회원' : u.name;
   return `
     <div class="mypage-wrap">
       <div class="mypage-profile">
         <div class="mypage-profile__main">
-          <p class="mypage-profile__name"><strong>${escapeHtml(u.name)}</strong>님</p>
+          <p class="mypage-profile__name"><strong>${escapeHtml(displayName)}</strong>님</p>
           <p class="mypage-profile__email">${escapeHtml(u.email)}</p>
           ${renderMypageProfileContact()}
         </div>
