@@ -71,20 +71,15 @@ function getPostKakaoLoginPage(user) {
   return needsKakaoProfileComplete(user) ? 'mypage' : 'home';
 }
 
-const KAKAO_PROFILE_SKIP_PAGES = new Set([
-  'mypage',
-  'complete-profile',
-  'login',
-  'home',
-  'detail',
-  'reviews',
-  'cart',
-  'shop-info',
-  'terms',
-  'privacy',
-  'customer-center',
-  'order-lookup',
-]);
+function forceKakaoProfileMypage() {
+  if (!API.user || !needsKakaoProfileComplete(API.user)) return false;
+  state.mypageTab = 'profile';
+  if (state.page !== 'mypage') {
+    navigate('mypage', { mypageTab: 'profile', replaceHash: true });
+    return true;
+  }
+  return false;
+}
 
 /** 카카오 OAuth 콜백 — middleware가 index.html로 넘긴 경우에도 토큰 처리 */
 function handleKakaoOAuthReturn() {
@@ -412,11 +407,8 @@ function renderCompleteProfile() {
     navigate('login');
     return '';
   }
-  if (!needsKakaoProfileComplete(API.user)) {
-    navigate('mypage');
-    return '';
-  }
-  return renderAuthWrap('추가 정보 등록', renderKakaoProfileFormHtml(), '');
+  navigate('mypage', { mypageTab: 'profile', replaceHash: true });
+  return '';
 }
 
 async function handleCompleteProfile(e) {
@@ -1723,13 +1715,9 @@ function updateNavAuth() {
 
 const _navigateOrig = navigate;
 window.navigate = function (page, params = {}) {
-  if (
-    API.user &&
-    needsKakaoProfileComplete(API.user) &&
-    !KAKAO_PROFILE_SKIP_PAGES.has(page)
-  ) {
+  if (API.user && needsKakaoProfileComplete(API.user) && page !== 'mypage') {
     page = 'mypage';
-    state.mypageTab = 'profile';
+    params = { ...params, mypageTab: 'profile', replaceHash: params.replaceHash };
   }
   if (page === 'addresses') addressBookLoaded = false;
   if (page === 'checkout') state.selectedAddressId = '';
@@ -1767,8 +1755,9 @@ initApp = async function () {
   ) {
     navigate('mypage', { mypageTab: 'profile', replaceHash: true });
   }
-  if (kakaoPage === 'mypage' && typeof loadNotifications === 'function') {
+  if (kakaoPage && typeof loadNotifications === 'function') {
     await loadNotifications();
+    if (kakaoPage === 'home') showToast('로그인되었습니다.');
     render();
   }
 };
