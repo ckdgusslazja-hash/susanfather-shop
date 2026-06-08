@@ -8,11 +8,16 @@ export interface KakaoConfig {
   enabled: boolean;
 }
 
+function stripEnv(value: string): string {
+  return value.replace(/^\uFEFF+/, '').trim();
+}
+
 export function getKakaoConfig(siteUrl: string): KakaoConfig {
-  const restApiKey = process.env.KAKAO_REST_API_KEY || '';
+  const restApiKey = stripEnv(process.env.KAKAO_REST_API_KEY || '');
   const base = siteUrl || 'http://localhost:3000';
-  const redirectUri =
-    process.env.KAKAO_REDIRECT_URI || `${base.replace(/\/$/, '')}/api/auth/kakao/callback`;
+  const redirectUri = stripEnv(
+    process.env.KAKAO_REDIRECT_URI || `${base.replace(/\/$/, '')}/api/auth/kakao/callback`
+  );
   return { restApiKey, redirectUri, enabled: !!restApiKey };
 }
 
@@ -21,7 +26,7 @@ export function buildAuthorizeUrl(config: KakaoConfig): string {
   url.searchParams.set('client_id', config.restApiKey);
   url.searchParams.set('redirect_uri', config.redirectUri);
   url.searchParams.set('response_type', 'code');
-  url.searchParams.set('scope', 'profile_nickname,account_email');
+  // scope 미지정 → 카카오 콘솔 [동의항목]에 활성화된 항목만 동의 화면에 표시 (KOE205 방지)
   return url.toString();
 }
 

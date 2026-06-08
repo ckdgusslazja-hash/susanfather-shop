@@ -14,11 +14,16 @@ if (-not (Test-Path ".env")) {
   exit 1
 }
 
+function Strip-Bom($text) {
+  if (-not $text) { return $text }
+  return $text.Trim().Trim([char]0xFEFF).Trim('"').Trim("'")
+}
+
 function Get-EnvValue($key) {
   $line = Get-Content ".env" | Where-Object { $_ -match "^\s*$key\s*=" } | Select-Object -First 1
   if (-not $line) { return $null }
   $v = $line -replace "^\s*$key\s*=\s*", ""
-  return $v.Trim().Trim('"').Trim("'")
+  return Strip-Bom $v
 }
 
 $dbUrl = Get-EnvValue "DATABASE_URL"
@@ -38,10 +43,15 @@ if (-not $jwt -or $jwt.Length -lt 32) {
 $prodUrl = "https://susanfather.com"
 
 function Set-VercelEnv($name, $value) {
+  $value = Strip-Bom $value
+  $tmp = Join-Path $env:TEMP "vercel-env-$name.txt"
+  $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+  [System.IO.File]::WriteAllText($tmp, $value, $utf8NoBom)
   $prev = $ErrorActionPreference
   $ErrorActionPreference = "Continue"
-  $value | npx vercel@latest env add $name production --force 2>&1 | Out-Null
+  Get-Content -Path $tmp -Raw -Encoding UTF8 | npx vercel@latest env add $name production --force 2>&1 | Out-Null
   $ErrorActionPreference = $prev
+  Remove-Item $tmp -Force -ErrorAction SilentlyContinue
   Write-Host "  env: $name"
 }
 
