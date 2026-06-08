@@ -2075,18 +2075,31 @@ const Admin = {
       </div>`;
   },
 
+  formatMemberPhone(u) {
+    if ((u.phone || '').trim()) return u.phone;
+    if (u.provider === 'kakao') return '미등록 (카카오)';
+    return '-';
+  },
+
+  formatMemberProvider(u) {
+    if (u.provider === 'kakao') return '카카오';
+    return '이메일';
+  },
+
   renderMembers() {
     const rows = (this.members || [])
       .filter((u) => u.role === 'user')
       .map(
         (u) => `<tr>
-        <td>${this.esc(u.name)}</td><td>${this.esc(u.email)}</td><td>${this.esc(u.phone || '-')}</td>
+        <td>${this.esc(u.name || '-')}</td><td>${this.esc(u.email)}</td>
+        <td>${this.esc(this.formatMemberPhone(u))}</td>
+        <td>${this.esc(this.formatMemberProvider(u))}</td>
         <td>${this.fmtDate(u.created_at)}</td>
       </tr>`
       )
       .join('');
     return `<div class="panel"><div class="panel__head"><h2>회원 관리 (${(this.members || []).filter((u) => u.role === 'user').length}명)</h2></div>
-      <table class="data-table"><thead><tr><th>이름</th><th>이메일</th><th>연락처</th><th>가입일</th></tr></thead><tbody>${rows || '<tr><td colspan="4" class="empty-msg">회원 없음</td></tr>'}</tbody></table></div>`;
+      <table class="data-table"><thead><tr><th>이름</th><th>이메일</th><th>연락처</th><th>가입방식</th><th>가입일</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty-msg">회원 없음</td></tr>'}</tbody></table></div>`;
   },
 
   renderReviews() {

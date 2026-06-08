@@ -4424,6 +4424,38 @@ body.is-mypage .header {
   color: var(--color-text-muted);
 }
 
+.mypage-profile__phone {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+.mypage-profile__phone-alert {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #fff8e6;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+}
+
+.mypage-profile__phone-alert p {
+  margin: 0 0 8px;
+  color: #8a6d00;
+}
+
+.mypage-phone-form {
+  display: flex;
+  gap: 8px;
+}
+
+.mypage-phone-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
 .mypage-quick-nav {
   display: grid;
   grid-template-columns: repeat(5, 1fr);

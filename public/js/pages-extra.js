@@ -56,6 +56,9 @@ function handleKakaoOAuthReturn() {
       const user = JSON.parse(decodeURIComponent(userStr));
       API.setAuth(token, user);
       if (typeof updateNavAuth === 'function') updateNavAuth();
+      if (!(user.phone || '').trim()) {
+        showToast('마이메뉴에서 연락처를 등록해 주세요.');
+      }
       history.replaceState(null, '', '/#/mypage');
       return 'mypage';
     } catch {
@@ -331,6 +334,37 @@ async function handleChangePassword(e) {
   }
 }
 
+function renderMypageProfileContact() {
+  const u = API.user;
+  if (!u) return '';
+  if ((u.phone || '').trim()) {
+    return `<p class="mypage-profile__phone">연락처 ${escapeHtml(u.phone)}</p>`;
+  }
+  return `
+    <div class="mypage-profile__phone-alert">
+      <p>주문·배송 안내를 위해 연락처를 등록해 주세요.</p>
+      <form class="mypage-phone-form" onsubmit="handleSaveProfilePhone(event)">
+        <input type="tel" name="phone" required placeholder="010-0000-0000" inputmode="tel" />
+        <button type="submit" class="btn btn--primary btn--sm">등록</button>
+      </form>
+    </div>`;
+}
+
+async function handleSaveProfilePhone(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  try {
+    const res = await API.updateProfile({ phone: String(fd.get('phone') || '').trim() });
+    API.setAuth(API.token, res.user);
+    if (typeof updateNavAuth === 'function') updateNavAuth();
+    showToast('연락처가 등록되었습니다.');
+    render();
+  } catch (err) {
+    showToast(err.message || '등록에 실패했습니다.');
+  }
+}
+window.handleSaveProfilePhone = handleSaveProfilePhone;
+
 function renderMypage() {
   const u = API.user;
   if (!u) {
@@ -344,6 +378,7 @@ function renderMypage() {
         <div class="mypage-profile__main">
           <p class="mypage-profile__name"><strong>${escapeHtml(u.name)}</strong>님</p>
           <p class="mypage-profile__email">${escapeHtml(u.email)}</p>
+          ${renderMypageProfileContact()}
         </div>
         <button type="button" class="btn btn--outline btn--sm mypage-profile__logout" onclick="doLogout()">로그아웃</button>
       </div>

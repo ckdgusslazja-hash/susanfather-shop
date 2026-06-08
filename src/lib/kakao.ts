@@ -64,6 +64,15 @@ export interface KakaoProfile {
   kakaoId: string;
   nickname: string;
   email: string | null;
+  phone: string | null;
+}
+
+function formatKoreanPhone(raw: string): string {
+  let digits = raw.replace(/\D/g, '');
+  if (digits.startsWith('82') && digits.length >= 11) digits = `0${digits.slice(2)}`;
+  if (digits.length === 11) return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+  if (digits.length === 10) return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  return raw.trim();
 }
 
 export async function fetchKakaoProfile(accessToken: string): Promise<KakaoProfile> {
@@ -79,6 +88,9 @@ export async function fetchKakaoProfile(accessToken: string): Promise<KakaoProfi
     kakao_account?: {
       email?: string;
       is_email_valid?: boolean;
+      name?: string;
+      phone_number?: string;
+      phone_number_needs_agreement?: boolean;
       profile?: { nickname?: string };
     };
   };
@@ -88,7 +100,11 @@ export async function fetchKakaoProfile(accessToken: string): Promise<KakaoProfi
   const kakaoId = String(data.id);
   const account = data.kakao_account || {};
   const profile = account.profile || {};
-  const nickname = profile.nickname || '카카오회원';
+  const nickname = (profile.nickname || account.name || '').trim() || '카카오회원';
   const email = account.email && account.is_email_valid ? account.email.toLowerCase() : null;
-  return { kakaoId, nickname, email };
+  const phone =
+    account.phone_number && account.phone_number_needs_agreement === false
+      ? formatKoreanPhone(account.phone_number)
+      : null;
+  return { kakaoId, nickname, email, phone };
 }

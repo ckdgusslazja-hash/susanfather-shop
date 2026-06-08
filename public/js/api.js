@@ -74,6 +74,9 @@ const API = {
   changePassword(body) {
     return this.request('/api/auth/change-password', { method: 'POST', body: JSON.stringify(body) });
   },
+  updateProfile(body) {
+    return this.request('/api/auth/profile', { method: 'POST', body: JSON.stringify(body) });
+  },
   getReviews(productId) {
     return this.request('/api/reviews?productId=' + encodeURIComponent(productId));
   },

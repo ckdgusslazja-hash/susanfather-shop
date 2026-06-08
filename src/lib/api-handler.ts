@@ -169,12 +169,15 @@ async function clearUserDefaultAddresses(userId: string) {
   });
 }
 
-function mapAdminUser(u: Pick<User, 'id' | 'email' | 'name' | 'phone' | 'role' | 'createdAt'>) {
+function mapAdminUser(
+  u: Pick<User, 'id' | 'email' | 'name' | 'phone' | 'role' | 'provider' | 'createdAt'>
+) {
   return {
     id: u.id,
     email: u.email,
     name: u.name,
     phone: u.phone,
+    provider: u.provider || 'email',
     role: u.role,
     created_at: u.createdAt instanceof Date ? u.createdAt.toISOString() : String(u.createdAt),
   };
@@ -407,12 +410,21 @@ async function findOrCreateKakaoUser(profile: {
   kakaoId: string;
   nickname: string;
   email: string | null;
+  phone: string | null;
 }): Promise<User> {
-  const { kakaoId, nickname, email } = profile;
+  const { kakaoId, nickname, email, phone } = profile;
   let user = await prisma.user.findFirst({
     where: { provider: 'kakao', providerId: kakaoId },
   });
-  if (user) return user;
+  if (user) {
+    const updates: { phone?: string; name?: string } = {};
+    if (!(user.phone || '').trim() && phone) updates.phone = phone;
+    if ((!user.name?.trim() || user.name === '카카오회원') && nickname) updates.name = nickname;
+    if (Object.keys(updates).length) {
+      user = await prisma.user.update({ where: { id: user.id }, data: updates });
+    }
+    return user;
+  }
 
   const userEmail = email || `kakao_${kakaoId}@kakao.local`;
   const emailTaken = await prisma.user.findUnique({ where: { email: userEmail } });
@@ -428,7 +440,7 @@ async function findOrCreateKakaoUser(profile: {
       email: userEmail,
       passwordHash: hash,
       name: nickname,
-      phone: '',
+      phone: phone || '',
       role: 'user',
       provider: 'kakao',
       providerId: kakaoId,
@@ -974,10 +986,27 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
       if (!auth) return json({ error: '로그인이 필요합니다.' }, 401);
       const user = await prisma.user.findUnique({
         where: { id: auth.id },
-        select: { id: true, email: true, name: true, phone: true, role: true },
+        select: { id: true, email: true, name: true, phone: true, role: true, provider: true },
       });
       if (!user) return json({ error: '로그인이 필요합니다.' }, 401);
-      return json({ user });
+      return json({ user: publicUser(user as User) });
+    }
+
+    if (method === 'POST' && b === 'profile') {
+      const auth = verifyToken(request);
+      if (!auth) return json({ error: '로그인이 필요합니다.' }, 401);
+      const body = await parseBody<{ name?: string; phone?: string }>(request);
+      const phone = (body.phone || '').trim();
+      const name = (body.name || '').trim();
+      if (!phone && !name) return json({ error: '변경할 정보를 입력해 주세요.' }, 400);
+      if (phone && normalizePhone(phone).length < 10) {
+        return json({ error: '올바른 연락처를 입력해 주세요.' }, 400);
+      }
+      const data: { phone?: string; name?: string } = {};
+      if (phone) data.phone = phone;
+      if (name) data.name = name;
+      const user = await prisma.user.update({ where: { id: auth.id }, data });
+      return json({ user: publicUser(user) });
     }
   }
 
@@ -1920,7 +1949,15 @@ export async function handleApi(request: Request, pathSegments: string[]): Promi
 
     if (method === 'GET' && b === 'users') {
       const rows = await prisma.user.findMany({
-        select: { id: true, email: true, name: true, phone: true, role: true, createdAt: true },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          phone: true,
+          role: true,
+          provider: true,
+          createdAt: true,
+        },
         orderBy: { createdAt: 'desc' },
       });
       return json(rows.map(mapAdminUser));
