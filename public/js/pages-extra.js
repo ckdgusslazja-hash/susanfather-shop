@@ -1,6 +1,47 @@
 state.reviewsCache = state.reviewsCache || {};
 state.reviewEligibility = state.reviewEligibility || {};
 state.authMessage = '';
+window.kakaoLoginEnabled = false;
+
+async function loadKakaoLoginStatus() {
+  try {
+    const data = await fetch('/api/auth/kakao/status').then((r) => r.json());
+    window.kakaoLoginEnabled = !!data.enabled;
+  } catch {
+    window.kakaoLoginEnabled = false;
+  }
+}
+
+function consumeKakaoAuthError() {
+  try {
+    const err = sessionStorage.getItem('gh_kakao_error');
+    if (err) {
+      sessionStorage.removeItem('gh_kakao_error');
+      state.authMessage = err;
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+function startKakaoLogin() {
+  window.location.href = '/api/auth/kakao';
+}
+window.startKakaoLogin = startKakaoLogin;
+
+function renderKakaoSocialBlock() {
+  if (!window.kakaoLoginEnabled) return '';
+  return `
+    <div class="auth-social">
+      <p class="auth-social__or">또는</p>
+      <button type="button" class="btn-kakao" onclick="startKakaoLogin()">
+        <span class="btn-kakao__icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.56 5.37 4 6.86L5 21l3.72-2.05c1.08.3 2.22.46 3.41.46 5.52 0 10-3.58 10-8.03C22 6.58 17.52 3 12 3z"/></svg>
+        </span>
+        카카오로 시작하기
+      </button>
+    </div>`;
+}
 
 const _origGetReviews = typeof getReviewsByProduct === 'function' ? getReviewsByProduct : () => [];
 
@@ -148,7 +189,8 @@ function renderLogin() {
       <div class="form-group"><label>이메일</label><input type="email" name="email" required placeholder="you@email.com" /></div>
       <div class="form-group"><label>비밀번호</label><input type="password" name="password" required minlength="8" /></div>
       <button type="submit" class="btn btn--primary btn--lg btn--block">로그인</button>
-    </form>`,
+    </form>
+    ${renderKakaoSocialBlock()}`,
     `<a href="#" onclick="navigate('signup');return false">회원가입</a>
      <a href="#" onclick="navigate('find-id');return false">아이디 찾기</a>
      <a href="#" onclick="navigate('find-pw');return false">비밀번호 찾기</a>
@@ -167,7 +209,8 @@ function renderSignup() {
       <div class="form-group"><label>비밀번호 (8자+) <span class="required">*</span></label><input type="password" name="password" required minlength="8" /></div>
       <div class="form-group"><label>비밀번호 확인</label><input type="password" name="password2" required minlength="8" /></div>
       <button type="submit" class="btn btn--primary btn--lg btn--block">가입하기</button>
-    </form>`,
+    </form>
+    ${renderKakaoSocialBlock()}`,
     `<a href="#" onclick="navigate('login');return false">로그인</a>
      <a href="#" onclick="navigate('home');return false">홈으로</a>`
   );
@@ -200,6 +243,11 @@ function renderFindPw() {
 function renderChangePassword() {
   if (!API.user) {
     navigate('login');
+    return '';
+  }
+  if (API.user.provider === 'kakao') {
+    navigate('mypage');
+    showToast('카카오 로그인 계정은 비밀번호 변경이 필요하지 않습니다.');
     return '';
   }
   return renderAuthWrap(
@@ -1538,4 +1586,10 @@ window.render = function () {
   }
 };
 
+const _initAppOrig = initApp;
+initApp = async function () {
+  consumeKakaoAuthError();
+  await loadKakaoLoginStatus();
+  return _initAppOrig();
+};
 initApp();

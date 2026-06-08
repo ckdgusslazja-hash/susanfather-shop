@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>카카오 로그인</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        color: #333;
+        background: #fafafa;
+      }
+    </style>
+  </head>
+  <body>
+    <p>로그인 처리 중입니다…</p>
+    <script>
+      (function () {
+        var params = new URLSearchParams(location.search);
+        var error = params.get('error');
+        var token = params.get('token');
+        var userStr = params.get('user');
+        if (error) {
+          try {
+            sessionStorage.setItem('gh_kakao_error', decodeURIComponent(error));
+          } catch (e) {}
+          location.replace('/#/login');
+          return;
+        }
+        if (token && userStr) {
+          try {
+            var user = JSON.parse(decodeURIComponent(userStr));
+            localStorage.setItem('gh_token', token);
+            localStorage.setItem('gh_user', JSON.stringify(user));
+            location.replace('/#/mypage');
+            return;
+          } catch (e) {}
+        }
+        location.replace('/#/login');
+      })();
+    </script>
+  </body>
+</html>
