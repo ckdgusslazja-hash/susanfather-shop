@@ -85,6 +85,10 @@ $kakao = Get-EnvValue "KAKAO_REST_API_KEY"
 if ($kakao) {
   Set-VercelEnv "KAKAO_REST_API_KEY" $kakao
   Set-VercelEnv "KAKAO_REDIRECT_URI" "$prodUrl/api/auth/kakao/callback"
+  $kakaoSecret = Get-EnvValue "KAKAO_CLIENT_SECRET"
+  if ($kakaoSecret) {
+    Set-VercelEnv "KAKAO_CLIENT_SECRET" $kakaoSecret
+  }
 }
 
 if ($dbUrl) {

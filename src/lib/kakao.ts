@@ -4,6 +4,7 @@ const KAKAO_USER_URL = 'https://kapi.kakao.com/v2/user/me';
 
 export interface KakaoConfig {
   restApiKey: string;
+  clientSecret: string;
   redirectUri: string;
   enabled: boolean;
 }
@@ -14,11 +15,12 @@ function stripEnv(value: string): string {
 
 export function getKakaoConfig(siteUrl: string): KakaoConfig {
   const restApiKey = stripEnv(process.env.KAKAO_REST_API_KEY || '');
+  const clientSecret = stripEnv(process.env.KAKAO_CLIENT_SECRET || '');
   const base = siteUrl || 'http://localhost:3000';
   const redirectUri = stripEnv(
     process.env.KAKAO_REDIRECT_URI || `${base.replace(/\/$/, '')}/api/auth/kakao/callback`
   );
-  return { restApiKey, redirectUri, enabled: !!restApiKey };
+  return { restApiKey, clientSecret, redirectUri, enabled: !!restApiKey };
 }
 
 export function buildAuthorizeUrl(config: KakaoConfig): string {
@@ -37,6 +39,9 @@ export async function exchangeCodeForToken(code: string, config: KakaoConfig): P
     redirect_uri: config.redirectUri,
     code,
   });
+  if (config.clientSecret) {
+    body.set('client_secret', config.clientSecret);
+  }
   const res = await fetch(KAKAO_TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8' },
@@ -44,7 +49,11 @@ export async function exchangeCodeForToken(code: string, config: KakaoConfig): P
   });
   const data = (await res.json()) as { access_token?: string; error?: string; error_description?: string };
   if (!res.ok) {
-    const msg = data.error_description || data.error || '카카오 토큰 발급 실패';
+    let msg = data.error_description || data.error || '카카오 토큰 발급 실패';
+    if (msg === 'Bad client credentials') {
+      msg =
+        '카카오 클라이언트 시크릿이 필요합니다. 카카오 콘솔 [플랫폼 키 > REST API 키 > 클라이언트 시크릿] 값을 확인해 주세요.';
+    }
     throw new Error(msg);
   }
   if (!data.access_token) throw new Error('카카오 토큰 발급 실패');
