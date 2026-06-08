@@ -4456,6 +4456,14 @@ body.is-mypage .header {
   color: #333;
 }
 
+.mypage-kakao-profile {
+  padding: 16px;
+}
+
+.mypage-kakao-profile__form {
+  margin-top: 16px;
+}
+
 .mypage-quick-nav {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
