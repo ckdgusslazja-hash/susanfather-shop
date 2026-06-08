@@ -24,6 +24,7 @@ const APP_PAGES = new Set([
   'customer-center',
   'inquiry',
   'write-review',
+  'complete-profile',
 ]);
 
 let state = {

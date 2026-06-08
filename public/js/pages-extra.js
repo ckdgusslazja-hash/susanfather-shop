@@ -24,6 +24,31 @@ function consumeKakaoAuthError() {
   }
 }
 
+function needsKakaoProfileComplete(user) {
+  if (!user || user.provider !== 'kakao') return false;
+  const phone = (user.phone || '').trim();
+  const name = (user.name || '').trim();
+  return !phone || !name || name === '카카오회원';
+}
+
+function getPostKakaoLoginPage(user) {
+  return needsKakaoProfileComplete(user) ? 'complete-profile' : 'mypage';
+}
+
+const KAKAO_PROFILE_SKIP_PAGES = new Set([
+  'complete-profile',
+  'login',
+  'home',
+  'detail',
+  'reviews',
+  'cart',
+  'shop-info',
+  'terms',
+  'privacy',
+  'customer-center',
+  'order-lookup',
+]);
+
 /** 카카오 OAuth 콜백 — middleware가 index.html로 넘긴 경우에도 토큰 처리 */
 function handleKakaoOAuthReturn() {
   const path = window.location.pathname.replace(/\/$/, '') || '/';
@@ -56,11 +81,9 @@ function handleKakaoOAuthReturn() {
       const user = JSON.parse(decodeURIComponent(userStr));
       API.setAuth(token, user);
       if (typeof updateNavAuth === 'function') updateNavAuth();
-      if (!(user.phone || '').trim()) {
-        showToast('마이메뉴에서 연락처를 등록해 주세요.');
-      }
-      history.replaceState(null, '', '/#/mypage');
-      return 'mypage';
+      const nextPage = getPostKakaoLoginPage(user);
+      history.replaceState(null, '', `/#/${nextPage}`);
+      return nextPage;
     } catch {
       state.authMessage = '카카오 로그인 처리에 실패했습니다.';
       history.replaceState(null, '', '/#/login');
@@ -336,39 +359,75 @@ async function handleChangePassword(e) {
 
 function renderMypageProfileContact() {
   const u = API.user;
-  if (!u) return '';
-  if ((u.phone || '').trim()) {
-    return `<p class="mypage-profile__phone">연락처 ${escapeHtml(u.phone)}</p>`;
-  }
-  return `
-    <div class="mypage-profile__phone-alert">
-      <p>주문·배송 안내를 위해 연락처를 등록해 주세요.</p>
-      <form class="mypage-phone-form" onsubmit="handleSaveProfilePhone(event)">
-        <input type="tel" name="phone" required placeholder="010-0000-0000" inputmode="tel" />
-        <button type="submit" class="btn btn--primary btn--sm">등록</button>
-      </form>
-    </div>`;
+  if (!u || !(u.phone || '').trim()) return '';
+  return `<p class="mypage-profile__phone">연락처 ${escapeHtml(u.phone)}</p>`;
 }
 
-async function handleSaveProfilePhone(e) {
+function renderCompleteProfile() {
+  if (!API.user) {
+    navigate('login');
+    return '';
+  }
+  if (!needsKakaoProfileComplete(API.user)) {
+    navigate('mypage');
+    return '';
+  }
+  const defaultName =
+    API.user.name === '카카오회원' || !(API.user.name || '').trim() ? '' : API.user.name;
+  return renderAuthWrap(
+    '추가 정보 등록',
+    `
+    <div class="complete-profile-intro">
+      <p class="complete-profile-intro__badge">카카오 간편로그인</p>
+      <p class="complete-profile-intro__text">
+        카카오 간편로그인으로 가입하셨습니다.<br />
+        주문·배송 안내를 위해 <strong>이름</strong>과 <strong>연락처</strong>를 등록해 주세요.
+      </p>
+    </div>
+    <form class="auth-form" onsubmit="handleCompleteProfile(event)">
+      <div class="form-group">
+        <label>이름 <span class="required">*</span></label>
+        <input name="name" required value="${escapeHtml(defaultName)}" placeholder="실명 또는 수령인 이름" />
+      </div>
+      <div class="form-group">
+        <label>연락처 <span class="required">*</span></label>
+        <input type="tel" name="phone" required placeholder="010-0000-0000" inputmode="tel" value="${escapeHtml(API.user.phone || '')}" />
+      </div>
+      <button type="submit" class="btn btn--primary btn--lg btn--block">등록하고 시작하기</button>
+    </form>`,
+    ''
+  );
+}
+
+async function handleCompleteProfile(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
+  const name = String(fd.get('name') || '').trim();
+  const phone = String(fd.get('phone') || '').trim();
+  if (!name || !phone) {
+    showToast('이름과 연락처를 모두 입력해 주세요.');
+    return;
+  }
   try {
-    const res = await API.updateProfile({ phone: String(fd.get('phone') || '').trim() });
+    const res = await API.updateProfile({ name, phone });
     API.setAuth(API.token, res.user);
     if (typeof updateNavAuth === 'function') updateNavAuth();
-    showToast('연락처가 등록되었습니다.');
-    render();
+    showToast('등록이 완료되었습니다.');
+    navigate('mypage');
   } catch (err) {
     showToast(err.message || '등록에 실패했습니다.');
   }
 }
-window.handleSaveProfilePhone = handleSaveProfilePhone;
+window.handleCompleteProfile = handleCompleteProfile;
 
 function renderMypage() {
   const u = API.user;
   if (!u) {
     navigate('login');
+    return '';
+  }
+  if (needsKakaoProfileComplete(u)) {
+    navigate('complete-profile');
     return '';
   }
   const tab = state.mypageTab || 'orders';
@@ -1614,6 +1673,7 @@ const EXTRA_PAGES = {
   'find-id': renderFindId,
   'find-pw': renderFindPw,
   'change-password': renderChangePassword,
+  'complete-profile': renderCompleteProfile,
   mypage: renderMypage,
   addresses: renderAddressBook,
   'shop-info': renderShopInfo,
@@ -1629,20 +1689,28 @@ const EXTRA_PAGES = {
 function updateNavAuth() {
   const el = document.getElementById('nav-auth');
   if (!el) return;
-  el.textContent = API.user ? '마이메뉴' : '로그인';
-  el.dataset.page = API.user ? 'mypage' : 'login';
+  const needsProfile = API.user && needsKakaoProfileComplete(API.user);
+  el.textContent = API.user ? (needsProfile ? '정보등록' : '마이메뉴') : '로그인';
+  el.dataset.page = API.user ? (needsProfile ? 'complete-profile' : 'mypage') : 'login';
   const bottomMypage = document.querySelector('.bottom-nav__item[data-nav="mypage"]');
   if (bottomMypage) {
     const spans = bottomMypage.querySelectorAll('span');
     const label = spans[spans.length - 1];
     if (label && !label.classList.contains('bottom-nav__icon') && !label.classList.contains('bottom-nav__badge')) {
-      label.textContent = API.user ? '마이메뉴' : '마이';
+      label.textContent = API.user ? (needsProfile ? '정보등록' : '마이') : '마이';
     }
   }
 }
 
 const _navigateOrig = navigate;
 window.navigate = function (page, params = {}) {
+  if (
+    API.user &&
+    needsKakaoProfileComplete(API.user) &&
+    !KAKAO_PROFILE_SKIP_PAGES.has(page)
+  ) {
+    page = 'complete-profile';
+  }
   if (page === 'addresses') addressBookLoaded = false;
   if (page === 'checkout') state.selectedAddressId = '';
   if (page === 'order-lookup') state.orderLookupResult = null;
@@ -1672,7 +1740,14 @@ initApp = async function () {
   if (!kakaoPage) consumeKakaoAuthError();
   await loadKakaoLoginStatus();
   await _initAppOrig();
-  if (kakaoPage === 'mypage' && typeof loadNotifications === 'function') {
+  if (
+    API.user &&
+    needsKakaoProfileComplete(API.user) &&
+    !KAKAO_PROFILE_SKIP_PAGES.has(state.page)
+  ) {
+    navigate('complete-profile', { replaceHash: true });
+  }
+  if ((kakaoPage === 'mypage' || kakaoPage === 'complete-profile') && typeof loadNotifications === 'function') {
     await loadNotifications();
     render();
   }

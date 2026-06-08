@@ -4430,30 +4430,30 @@ body.is-mypage .header {
   margin-top: 4px;
 }
 
-.mypage-profile__phone-alert {
-  margin-top: 10px;
-  padding: 10px 12px;
-  background: #fff8e6;
+.complete-profile-intro {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #fffde7;
+  border: 1px solid #f5e642;
   border-radius: var(--radius-md);
-  font-size: 0.85rem;
 }
 
-.mypage-profile__phone-alert p {
-  margin: 0 0 8px;
-  color: #8a6d00;
+.complete-profile-intro__badge {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 4px 10px;
+  background: #fee500;
+  color: #191919;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 999px;
 }
 
-.mypage-phone-form {
-  display: flex;
-  gap: 8px;
-}
-
-.mypage-phone-form input {
-  flex: 1;
-  min-width: 0;
-  padding: 8px 10px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+.complete-profile-intro__text {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #333;
 }
 
 .mypage-quick-nav {

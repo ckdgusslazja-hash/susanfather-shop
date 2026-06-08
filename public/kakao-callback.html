@@ -37,7 +37,13 @@
             var user = JSON.parse(decodeURIComponent(userStr));
             localStorage.setItem('gh_token', token);
             localStorage.setItem('gh_user', JSON.stringify(user));
-            location.replace('/#/mypage');
+            var phone = (user.phone || '').trim();
+            var name = (user.name || '').trim();
+            var next = '/#/mypage';
+            if (user.provider === 'kakao' && (!phone || !name || name === '카카오회원')) {
+              next = '/#/complete-profile';
+            }
+            location.replace(next);
             return;
           } catch (e) {}
         }
