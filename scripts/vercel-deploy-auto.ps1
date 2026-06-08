@@ -26,7 +26,17 @@ function Get-EnvValue($key) {
   return Strip-Bom $v
 }
 
-$dbUrl = Get-EnvValue "DATABASE_URL"
+function Get-ProdDbUrl() {
+  if (Test-Path ".env.prod") {
+    $line = Get-Content ".env.prod" | Where-Object { $_ -match '^\s*DATABASE_URL\s*=' } | Select-Object -First 1
+    if ($line) {
+      return Strip-Bom ($line -replace '^\s*DATABASE_URL\s*=\s*', '')
+    }
+  }
+  return Get-EnvValue "DATABASE_URL"
+}
+
+$dbUrl = Get-ProdDbUrl
 if (-not $dbUrl) {
   Write-Host "DATABASE_URL 없음 — Vercel 배포만 진행 (상품 JSON 폴백)"
 }

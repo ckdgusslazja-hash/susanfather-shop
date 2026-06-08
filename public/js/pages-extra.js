@@ -24,6 +24,51 @@ function consumeKakaoAuthError() {
   }
 }
 
+/** 카카오 OAuth 콜백 — middleware가 index.html로 넘긴 경우에도 토큰 처리 */
+function handleKakaoOAuthReturn() {
+  const path = window.location.pathname.replace(/\/$/, '') || '/';
+  const params = new URLSearchParams(window.location.search);
+  const error = params.get('error');
+  const token = params.get('token');
+  const userStr = params.get('user');
+  const isCallbackPath = path === '/kakao-callback.html';
+  if (!isCallbackPath && !error && !token) return null;
+
+  if (error) {
+    let msg = error;
+    try {
+      msg = decodeURIComponent(error);
+    } catch {
+      /* use raw */
+    }
+    try {
+      sessionStorage.setItem('gh_kakao_error', msg);
+    } catch {
+      /* ignore */
+    }
+    state.authMessage = msg;
+    history.replaceState(null, '', '/#/login');
+    return 'login';
+  }
+
+  if (token && userStr) {
+    try {
+      const user = JSON.parse(decodeURIComponent(userStr));
+      API.setAuth(token, user);
+      if (typeof updateNavAuth === 'function') updateNavAuth();
+      history.replaceState(null, '', '/#/mypage');
+      return 'mypage';
+    } catch {
+      state.authMessage = '카카오 로그인 처리에 실패했습니다.';
+      history.replaceState(null, '', '/#/login');
+      return 'login';
+    }
+  }
+
+  history.replaceState(null, '', '/#/login');
+  return 'login';
+}
+
 function startKakaoLogin() {
   window.location.href = '/api/auth/kakao';
 }
@@ -1588,8 +1633,13 @@ window.render = function () {
 
 const _initAppOrig = initApp;
 initApp = async function () {
-  consumeKakaoAuthError();
+  const kakaoPage = handleKakaoOAuthReturn();
+  if (!kakaoPage) consumeKakaoAuthError();
   await loadKakaoLoginStatus();
-  return _initAppOrig();
+  await _initAppOrig();
+  if (kakaoPage === 'mypage' && typeof loadNotifications === 'function') {
+    await loadNotifications();
+    render();
+  }
 };
 initApp();

@@ -12,6 +12,8 @@ function isStaticAsset(pathname: string) {
 
   if (/^\/google[a-z0-9]+\.html$/i.test(pathname)) return true;
 
+  if (pathname === '/kakao-callback.html') return true;
+
   return /\.[a-z0-9]{2,8}$/i.test(pathname) && !pathname.endsWith('.html');
 
 }
