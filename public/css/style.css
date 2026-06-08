@@ -4464,6 +4464,17 @@ body.is-mypage .header {
   margin-top: 16px;
 }
 
+.auth-links--stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.auth-links--stack .btn {
+  width: 100%;
+}
+
 .mypage-quick-nav {
   display: grid;
   grid-template-columns: repeat(5, 1fr);

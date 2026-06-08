@@ -24,11 +24,47 @@ function consumeKakaoAuthError() {
   }
 }
 
+function isPlaceholderKakaoName(name) {
+  const n = (name || '').trim();
+  return !n || n === '카카오회원' || n === '-' || n === '—';
+}
+
 function needsKakaoProfileComplete(user) {
   if (!user || user.provider !== 'kakao') return false;
   const phone = (user.phone || '').trim();
-  const name = (user.name || '').trim();
-  return !phone || !name || name === '카카오회원';
+  return !phone || isPlaceholderKakaoName(user.name);
+}
+
+function getKakaoProfileDefaultName(user) {
+  return isPlaceholderKakaoName(user?.name) ? '' : (user.name || '').trim();
+}
+
+function renderKakaoProfileFormHtml() {
+  const u = API.user;
+  if (!u) return '';
+  const defaultName = getKakaoProfileDefaultName(u);
+  return `
+    <div class="complete-profile-intro">
+      <p class="complete-profile-intro__badge">카카오 간편로그인</p>
+      <p class="complete-profile-intro__text">
+        카카오 간편로그인으로 가입하셨습니다.<br />
+        주문·배송 안내를 위해 <strong>이름</strong>과 <strong>연락처</strong>를 등록해 주세요.
+      </p>
+    </div>
+    <form class="auth-form mypage-kakao-profile__form" onsubmit="handleCompleteProfile(event)">
+      <div class="form-group">
+        <label>이름 <span class="required">*</span></label>
+        <input name="name" required value="${escapeHtml(defaultName)}" placeholder="실명 또는 수령인 이름" />
+      </div>
+      <div class="form-group">
+        <label>연락처 <span class="required">*</span></label>
+        <input type="tel" name="phone" required placeholder="010-0000-0000" inputmode="tel" value="${escapeHtml(u.phone || '')}" />
+      </div>
+      <button type="submit" class="btn btn--primary btn--lg btn--block">등록하고 시작하기</button>
+    </form>
+    <div class="auth-links auth-links--stack">
+      <button type="button" class="btn btn--outline btn--block" onclick="doLogout()">로그아웃</button>
+    </div>`;
 }
 
 function getPostKakaoLoginPage() {
@@ -368,28 +404,7 @@ function renderMypageProfileContact() {
 function renderMypageKakaoProfileForm() {
   const u = API.user;
   if (!u || !needsKakaoProfileComplete(u)) return '';
-  const defaultName = u.name === '카카오회원' || !(u.name || '').trim() ? '' : u.name;
-  return `
-    <section class="mypage-section mypage-kakao-profile">
-      <div class="complete-profile-intro">
-        <p class="complete-profile-intro__badge">카카오 간편로그인</p>
-        <p class="complete-profile-intro__text">
-          카카오 간편로그인으로 가입하셨습니다.<br />
-          주문·배송 안내를 위해 <strong>이름</strong>과 <strong>연락처</strong>를 등록해 주세요.
-        </p>
-      </div>
-      <form class="auth-form mypage-kakao-profile__form" onsubmit="handleCompleteProfile(event)">
-        <div class="form-group">
-          <label>이름 <span class="required">*</span></label>
-          <input name="name" required value="${escapeHtml(defaultName)}" placeholder="실명 또는 수령인 이름" />
-        </div>
-        <div class="form-group">
-          <label>연락처 <span class="required">*</span></label>
-          <input type="tel" name="phone" required placeholder="010-0000-0000" inputmode="tel" value="${escapeHtml(u.phone || '')}" />
-        </div>
-        <button type="submit" class="btn btn--primary btn--lg btn--block">등록하고 시작하기</button>
-      </form>
-    </section>`;
+  return `<section class="mypage-section mypage-kakao-profile">${renderKakaoProfileFormHtml()}</section>`;
 }
 
 function renderCompleteProfile() {
@@ -397,8 +412,11 @@ function renderCompleteProfile() {
     navigate('login');
     return '';
   }
-  navigate('mypage', { mypageTab: 'profile', replaceHash: true });
-  return '';
+  if (!needsKakaoProfileComplete(API.user)) {
+    navigate('mypage');
+    return '';
+  }
+  return renderAuthWrap('추가 정보 등록', renderKakaoProfileFormHtml(), '');
 }
 
 async function handleCompleteProfile(e) {
